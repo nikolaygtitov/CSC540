@@ -53,10 +53,11 @@ from tabulate import tabulate
 import pandas as pd
 
 # Initialization of constants
+# Change all the constants accordingly USER, PASSWORD, DB
 HOST = 'classdb2.csc.ncsu.edu'
-USER = 'ngtitov'
-PASSWORD = '001029047'
-DB = 'ngtitov'
+USER = 'unity_id'
+PASSWORD = 'student_id'
+DB = 'db'
 
 # Actual program starts here
 # Establish a DB connection
