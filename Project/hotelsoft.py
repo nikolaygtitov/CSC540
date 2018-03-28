@@ -186,141 +186,141 @@ def main():
     wolfinn.addquery(Query('updatehotel', 
         'UPDATE A HOTEL',
         ['id', 'name', 'street', 'city', 'state', 'zip', 'phone_number'],
-        lambda *args : call_update_hotel(*args)))
+        lambda *args : wolfinn.helper.call_update_hotel(*args)))
     wolfinn.addquery(Query('deletehotel',
         'DELETE A HOTEL',
         ['id'],
-        lambda *args : call_delete_hotel(*args)))    
+        lambda *args : wolfinn.helper.call_delete_hotel(*args)))    
     wolfinn.addquery(Query('addroom',
         'ADD A NEW ROOM TO A HOTEL',
         ['hotel_id', 'room_number', 'category', 'occupancy', 'rate'],
-        lambda *args : call_add_room(*args)))
+        lambda *args : wolfinn.helper.call_add_room(*args)))
     wolfinn.addquery(Query('updateroom',
         'UPDATE A ROOM',
         ['hotel_id', 'room_number', 'category', 'occupancy', 'rate'],
-        lambda *args : call_update_room(*args)))
+        lambda *args : wolfinn.helper.call_update_room(*args)))
     wolfinn.addquery(Query('deleteroom',
         'DELETE A ROOM',
         ['hotel_id', 'room_number'],
-        lambda *args : call_delete_room(*args)))
+        lambda *args : wolfinn.helper.call_delete_room(*args)))
     wolfinn.addquery(Query('addstaff',
         'ADD A NEW STAFF MEMBER',
         ['name', 'title', 'date_of_birth', 'department', 'phone_number', 'street',
          'zip', 'works_for_hotel_id', 'assigned_hotel_id', 'assigned_room_number'],
-        lambda *args : call_add_staff(*args)))
+        lambda *args : wolfinn.helper.call_add_staff(*args)))
     wolfinn.addquery(Query('updatestaff',
         'UPDATE A STAFF MEMBER',
         ['id', 'name', 'title', 'date_of_birth', 'department', 'phone_number', 'street',
          'zip', 'works_for_hotel_id', 'assigned_hotel_id', 'assigned_room_number'],
-        lambda *args : call_update_staff(*args)))
+        lambda *args : wolfinn.helper.call_update_staff(*args)))
     wolfinn.addquery(Query('deletestaff',
         'DELETE A STAFF MEMBER',
         ['id'],
-        lambda *args : call_delete_staff(*args)))
+        lambda *args : wolfinn.helper.call_delete_staff(*args)))
     wolfinn.addquery(Query('addcust',
         'ADD A NEW CUSTOMER',
         ['name', 'date_of_birth', 'phone_number', 'email', 'street', 'zip', 'ssn',
             'account_number', 'is_hotel_card'],
-        lambda *args : call_add_customer(*args)))
+        lambda *args : wolfinn.helper.call_add_customer(*args)))
     wolfinn.addquery(Query('updatecust',
         'UPDATE A CUSTOMER',
         ['id','name', 'date_of_birth', 'phone_number', 'email', 'street', 'zip', 
             'ssn', 'account_number', 'is_hotel_card'],
-        lambda *args : call_update_customer(*args)))
+        lambda *args : wolfinn.helper.call_update_customer(*args)))
     wolfinn.addquery(Query('deletecust',
         'DELETE A CUSTOMER',
         ['id'],
-        lambda *args : call_delete_customer(*args)))
+        lambda *args : wolfinn.helper.call_delete_customer(*args)))
     wolfinn.addquery(Query('addres',
         'ADD A NEW RESERVATION',
         ['number_of_guests', 'start_date', 'end_date', 'hotel_id', 'room_number', 
             'customer_id', 'check_in_time', 'check_out_time'],
-        lambda *args : call_create_reservation(*args)))
+        lambda *args : wolfinn.helper.call_create_reservation(*args)))
     wolfinn.addquery(Query('updateres',
         'UPDATE A RESERVATION',
         ['id', 'number_of_guests', 'start_date', 'end_date', 'hotel_id', 
             'room_number', 'customer_id', 'check_in_time', 'check_out_time'],
-        lambda *args : call_update_reservation(*args)))
+        lambda *args : wolfinn.helper.call_update_reservation(*args)))
     wolfinn.addquery(Query('deleteres',
         'DELETE A RESERVATION',
         ['id'],
-        lambda *args : call_delete_reservation(*args)))
+        lambda *args : wolfinn.helper.call_delete_reservation(*args)))
     wolfinn.addquery(Query('checkin', 
         'CHECK IN A GUEST',
         ['id'],        #reservation id
-        lambda *args : call_update_reservation(*args)))
+        lambda *args : wolfinn.helper.call_update_reservation(*args)))
     wolfinn.addquery(Query('checkout',
         'CHECK OUT A GUEST',
         ['id'],          #reservation id
-        lambda *args : call_check_out(*args)))
+        lambda *args : wolfinn.helper.call_check_out(*args)))
     wolfinn.addquery(Query('assignstaff',
         'ASSIGN STAFF TO A ROOM',
         ['id'],            # staff id
-        lambda *args : call_assign_staff(*args)))
+        lambda *args : wolfinn.helper.call_assign_staff(*args)))
     wolfinn.addquery(Query('addcharge',
         'APPLY A TRANSACTION TO A RESERVATION',
         ['amount', 'type', 'date, reservation_id'],
-        lambda *args : call_add_transaction(*args)))
+        lambda *args : wolfinn.helper.call_add_transaction(*args)))
     wolfinn.addquery(Query('updatecharge',
         'UPDATE A TRANSACTION',
         ['id','amount', 'type', 'date, reservation_id'],
-        lambda *args : call_update_transaction(*args)))
+        lambda *args : wolfinn.helper.call_update_transaction(*args)))
     wolfinn.addquery(Query('deletecharge',
         'DELETE A TRANSACTION',
         ['id'],
-        lambda *args : call_delete_transaction(*args)))
+        lambda *args : wolfinn.helper.call_delete_transaction(*args)))
     wolfinn.addquery(Query('genbill',
         'GENERATE BILL',
         ['id'],
-        lambda *args : call_generate_bill(*args)))
+        lambda *args : wolfinn.helper.call_generate_bill(*args)))
     wolfinn.addquery(Query('occhotel',
         'OCCUPANCY BY HOTEL',
         [],
-        lambda *args : call_occupancy_hotel(*args)))
+        lambda *args : wolfinn.helper.call_occupancy_hotel(*args)))
     wolfinn.addquery(Query('occroom',
         'OCCUPANCY BY ROOM TYPE',
         [],
-        lambda *args : call_occupancy_roomtype(*args)))
+        lambda *args : wolfinn.helper.call_occupancy_roomtype(*args)))
     wolfinn.addquery(Query('occcity',
         'OCCUPANCY BY CITY',
         [],
-        lambda *args : call_occupancy_city(*args)))
+        lambda *args : wolfinn.helper.call_occupancy_city(*args)))
     wolfinn.addquery(Query('occdate',
         'OCCUPANCY BY DATE',
         ['start_date', 'end_date'],
-        lambda *args : call_occupancy_date(*args)))
+        lambda *args : wolfinn.helper.call_occupancy_date(*args)))
     wolfinn.addquery(Query('liststaff',
         'STAFF BY ROLE',
         [],
-        lambda *args : call_staff_report(*args)))
+        lambda *args : wolfinn.helper.call_staff_report(*args)))
     wolfinn.addquery(Query('custinter',
         'CUSTOMER INTERACTIONS',
         ['id'],
-        lambda *args : call_cust_inter(*args)))
+        lambda *args : wolfinn.helper.call_cust_inter(*args)))
     wolfinn.addquery(Query('revhotel',
         'REVENUE BY HOTEL',
         ['id'],   #hotel_id
-        lambda *args : call_revenue_hotel(*args)))
+        lambda *args : wolfinn.helper.call_revenue_hotel(*args)))
     wolfinn.addquery(Query('revall',
         'REVENUE FOR ALL HOTELS',
         [],
-        lambda *args : call_revenue_all(*args)))
+        lambda *args : wolfinn.helper.call_revenue_all(*args)))
     wolfinn.addquery(Query('custnocard', 
         'CUSTOMERS WITH NO HOTEL CREDIT CARD',
         [],
-        lambda *args : call_cust_no_card(*args)))
+        lambda *args : wolfinn.helper.call_cust_no_card(*args)))
     wolfinn.addquery(Query('prescust',
         'CURRENT PRESIDENTIAL CUSTOMERS',
         [],
-        lambda *args : call_pres_cust(*args)))
+        lambda *args : wolfinn.helper.call_pres_cust(*args)))
     wolfinn.addquery(Query('roomavail1',
         'ROOM AVAILABILITY BY HOTEL',
         ['id'],          #hotel id
-        lambda *args : call_avail_hotel(*args)))
+        lambda *args : wolfinn.helper.call_avail_hotel(*args)))
     wolfinn.addquery(Query('roomavail2',
         'ROOM AVAILABILITY BY HOTEL AND ROOM TYPE',
         ['id'],
-        lambda *args : call_avail_roomtype(*args)))
+        lambda *args : wolfinn.helper.call_avail_roomtype(*args)))
 
     #Add main menus 
     wolfinn.addmenu(Menu('main','MAIN MENU'))

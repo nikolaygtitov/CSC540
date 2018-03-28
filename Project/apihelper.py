@@ -1,6 +1,11 @@
 from apps import Apps
 import pandas as pd
 
+
+################################################################################
+# Interface from UI to API
+# - Edit this file to control interactions between UI and Apps
+################################################################################
 class APIHelper(object):
     def __init__(self, db):
         self.apps = Apps(db)
@@ -18,67 +23,67 @@ class APIHelper(object):
 
     def call_update_hotel(self, param_dict):
         return 'Error - not yet implemented' 
-    def call_delete_hotel(param_dict):
+    def call_delete_hotel(self, param_dict):
         return 'Error - not yet implemented' 
-    def call_add_room(param_dict):
+    def call_add_room(self, param_dict):
         return 'Error - not yet implemented' 
-    def call_update_room(param_dict):
+    def call_update_room(self, param_dict):
         return 'Error - not yet implemented' 
-    def call_delete_room(param_dict):
+    def call_delete_room(self, param_dict):
         return 'Error - not yet implemented'
-    def call_add_staff(param_dict):
+    def call_add_staff(self, param_dict):
         return 'Error - not yet implemented'
-    def call_update_staff(param_dict):
+    def call_update_staff(self, param_dict):
         return 'Error - not yet implemented'
-    def call_delete_staff(param_dict):
+    def call_delete_staff(self, param_dict):
         return 'Error - not yet implemented'
-    def call_add_customer(param_dict):
+    def call_add_customer(self, param_dict):
         return 'Error - not yet implemented'
-    def call_update_customer(param_dict):        
+    def call_update_customer(self, param_dict):        
         return 'Error - not yet implemented'
-    def call_delete_customer(param_dict):
+    def call_delete_customer(self, param_dict):
         return 'Error - not yet implemented'
-    def call_create_reservation(param_dict):
+    def call_create_reservation(self, param_dict):
         return 'Error - not yet implemented'
-    def call_update_reservation(param_dict):
+    def call_update_reservation(self, param_dict):
         return 'Error - not yet implemented'
-    def call_delete_reservation(param_dict):
+    def call_delete_reservation(self, param_dict):
         return 'Error - not yet implemented'
-    def call_check_out(param_dict):
+    def call_check_out(self, param_dict):
         return 'Error - not yet implemented'
-    def call_check_out(param_dict):
+    def call_check_out(self, param_dict):
         return 'Error - not yet implemented'
-    def call_assign_staff(param_dict):
+    def call_assign_staff(self, param_dict):
         return 'Error - not yet implemented'
-    def call_add_transaction(param_dict):
+    def call_add_transaction(self, param_dict):
         return 'Error - not yet implemented'
-    def call_update_transaction(param_dict):
+    def call_update_transaction(self, param_dict):
         return 'Error - not yet implemented'
-    def call_delete_transaction(param_dict):
+    def call_delete_transaction(self, param_dict):
         return 'Error - not yet implemented'
-    def call_generate_bill(param_dict):
+    def call_generate_bill(self, param_dict):
         return 'Error - not yet implemented'
-    def call_occupancy_hotel(param_dict):
+    def call_occupancy_hotel(self, param_dict):
         return 'Error - not yet implemented'
-    def call_occupancy_roomtype(param_dict):
+    def call_occupancy_roomtype(self, param_dict):
         return 'Error - not yet implemented'
-    def call_occupancy_city(param_dict):
+    def call_occupancy_city(self, param_dict):
         return 'Error - not yet implemented'
-    def call_occupancy_date(param_dict):
+    def call_occupancy_date(self, param_dict):
         return 'Error - not yet implemented'
-    def call_staff_report(param_dict):
+    def call_staff_report(self, param_dict):
         return 'Error - not yet implemented'
-    def call_cust_inter(param_dict):
+    def call_cust_inter(self, param_dict):
         return 'Error - not yet implemented'
-    def call_revenue_hotel(param_dict):
+    def call_revenue_hotel(self, param_dict):
         return 'Error - not yet implemented'
-    def call_revenue_all(param_dict):
+    def call_revenue_all(self, param_dict):
         return 'Error - not yet implemented'
-    def call_cust_no_card(param_dict):
+    def call_cust_no_card(self, param_dict):
         return 'Error - not yet implemented'
-    def call_pres_cust(param_dict):
+    def call_pres_cust(self, param_dict):
         return 'Error - not yet implemented'
-    def call_avail_hotel(param_dict):
+    def call_avail_hotel(self, param_dict):
         return 'Error - not yet implemented'
-    def call_avail_roomtype(param_dict):
+    def call_avail_roomtype(self, param_dict):
         return 'Error - not yet implemented'
