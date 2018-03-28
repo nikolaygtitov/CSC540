@@ -36,9 +36,9 @@ It provides a user with friendly UI to select tasks and operations user
 needs/wants to perform.
 All of the following operations are performed on MySQL MariaDB Server at NCSU
 (classdb2.csc.ncsu.edu):
-    - INSERTs
-    - SELECTs
-    - DROP TABLEs
+    - INSERT
+    - SELECT
+    - DROP TABLE
 
 Description of the program apps.py:
 It provides the wrappers around MySQL queries allowing the northbound (UI) to
@@ -46,7 +46,7 @@ call appropriate functions to perform MySQL interaction including storing,
 retrieving and deleting data.
 
 Execute the program run:
- > python project.py
+ > python apps.py
 
 @version: 1.0
 @todo: Integrate with UI, Add Transactions, Add Documentation, Testing, Demo
@@ -56,7 +56,7 @@ Execute the program run:
 @requires: Connection to MariaDB server at the NCSU.
            Option 1: Establish connection through NCSU VPN.
                      Installation of Cisco AnyConnect VPN Software is required.
-                     Installation instructions of Cisco AnyConnect can be 
+                     Installation instructions of Cisco AnyConnect can be
                      found here:
 https://oit.ncsu.edu/campus-it/campus-data-network/network-security/vpn/
 
@@ -75,15 +75,52 @@ scp project.py unity_id@remote.eos.ncsu.edu:/afs/unity.ncsu.edu/users/u/unity_id
 """
 
 # Import required Python and MySQL libraries
-import mysql.connector as mariadb
+import mysql.connector as maria_db
 import pandas as pd
 from datetime import datetime
 
 
-class Apps:
-    def __init__(self, mariadb_connection, check=False):
-        self.mariadb_connection = mariadb_connection
-        self.cursor = mariadb_connection.cursor()
+# This is the Apps class that contains all program applications (APIs)
+class Apps(object):
+    """
+    Supports all defined program applications (APIs) in the Project Report 1
+    and interacts with MariaDB MySQL server at NCSU (classdb2.csc.ncsu.edu)
+    to store, update, and delete data.
+    Creates and returns a Applications object with the given MariaDB connection
+    and MariaDB CHECK constraint whether enabled or disabled.
+
+    It inherits Python default object class if any of the object features need
+    to be utilized.
+
+    There are 2 (two) options to instantiate this class, depending on the
+    CHECK constraints that are ignored by all MySQL engines, including the
+    current MariaDB version used in the class. To enable CHECK constraints at
+    the program application level, create an instance of this class as follows:
+
+    object = Apps(maria_db_connection, check=True)
+
+    To disable CHECK constraints at the program application level, ignore the
+    check parameter:
+
+    object = Apps(maria_db_connection)
+    """
+    def __init__(self, maria_db_connection, check=False):
+        """
+        Constructor method for the Apps class
+
+        When an object of the class is constructed, this method is called to
+        instantiate the object with given parameters.
+
+        Parameters:
+            :param maria_db_connection: MariaDB connection that created in the
+            caller application based on the host, user, password, and database
+            arguments. For this project host=classdb2.csc.ncsu.edu
+            :param check: MySQL CHECK constraint boolean. Since CHECK
+            constraint is ignored by all MySQL engines, all the check
+            constraints must be performed at the application level.
+        """
+        self.maria_db_connection = maria_db_connection
+        self.cursor = maria_db_connection.cursor()
         self.check = check
 
     def execute_select_query(self, attributes, table_name, where_clause=None):
@@ -103,7 +140,7 @@ class Apps:
             to be shown in the resulting table.
 
         Returns:
-            :returns: On SUCCESS - Pandas DataFrame (two-dimensional
+            :return: On SUCCESS - Pandas DataFrame (two-dimensional
             size-mutable, heterogeneous tabular data structure with labeled
             axes) containing desired tuple(s)/row(s);
             On FAILURE - Error message
@@ -116,19 +153,23 @@ class Apps:
             else:
                 select_query = "SELECT {} FROM {} WHERE {}".format(
                     attributes, table_name, where_clause)
-            data_frame = pd.read_sql(select_query, con=self.mariadb_connection)
+            data_frame = pd.read_sql(select_query, con=self.maria_db_connection)
             return data_frame
-        except mariadb.Error as error:
+        except maria_db.Error as error:
             return error
 
     def execute_insert_query(self, dictionary, table_name):
         """Generates and executes INSERT query in python format.
 
         For a given dictionary of attributes and values to be stored in a
-        particular table, specified as an dictionary argument, it 1) Generates
-        an INSERT query statement, 2) Executes this generated INSERT query and
-        3) Commits or rollback depending if there were any errors. The query is
-        generated within the Python standards to prevent MySQL injection.
+        particular table, specified as an dictionary argument, it does the
+        following:
+        1) Generates an INSERT query statement
+        2) Executes this generated INSERT query
+        3) Commits or rollback depending if there were any errors within this
+        operation
+        The query is generated within the Python standards to prevent MySQL
+        injection.
 
         Parameters:
             :param dictionary: Dictionary of attributes and values to be stored
@@ -137,7 +178,7 @@ class Apps:
             executed
 
         Returns:
-            :returns: On SUCCESS - None; On FAILURE - Error message
+            :return: On SUCCESS - None; On FAILURE - Error message
 
         TODO:
         """
@@ -157,19 +198,26 @@ class Apps:
                 table_name, attributes_tuple, values_tuple)
             # Execute insert query
             self.cursor.execute(insert_query, data_values_list)
-            self.mariadb_connection.commit()
+            self.maria_db_connection.commit()
             return None
-        except mariadb.Error as error:
+        except maria_db.Error as error:
             return error
 
     def execute_update_query(self, table_name, dictionary, where_clause_dict):
         """Generates and executes UPDATE query in python format.
 
         For a given dictionary of attributes and values to be updated in a
-        particular table, specified as an dictionary argument, it 1) Generates
-        an UPDATE query statement, 2) Executes this generated UPDATE query and
-        3) Commits or rollback depending if there were any errors. The query is
-        generated within the Python standards to prevent MySQL injection.
+        particular table, specified as an dictionary argument, it does the
+        following:
+        1) Generates an UPDATE query statement
+        2) Executes this generated UPDATE query
+        3) Commits or rollback depending if there were any errors within this
+        operation
+        4) Generates an WHERE clause for the SELECT query
+        5) Calls a helper function execute_select_query() to retrieve updated
+        tuple(s)
+        The query is generated within the Python standards to prevent MySQL
+        injection.
 
         Parameters:
             :param dictionary: Dictionary of attributes and values to be
@@ -181,7 +229,11 @@ class Apps:
             executed
 
         Returns:
-            :returns: On SUCCESS - None; On FAILURE - Error message
+            :return: On SUCCESS - Pandas DataFrame (two-dimensional
+            size-mutable, heterogeneous tabular data structure with labeled
+            axes) retrieved from the helper function execute_select_query(),
+            which contains a tuple(s) with successfully updated data in MySQL;
+            On FAILURE - Error message
 
         TODO:
         """
@@ -207,17 +259,70 @@ class Apps:
                 table_name, set_attr, where_attr_update)
             # Execute update query
             self.cursor.execute(update_query, data_values_list)
-            self.mariadb_connection.commit()
+            self.maria_db_connection.commit()
             # Generate WHERE clause for SELECT query
             where_clause = ''
             for attr, value in where_attr_select.items():
                 where_clause += attr + '=' + value + ' AND '
             where_clause = where_clause.rstrip(' AND ')
             # Query for this updated tuple and return it as Pandas DataFrame
-            data_frame = self.execute_select_query('*', table_name,
-                                                   where_clause)
+            data_frame = self.execute_select_query(
+                '*', table_name, where_clause)
             return data_frame
-        except mariadb.Error as error:
+        except maria_db.Error as error:
+            return error
+
+    def execute_delete_query(self, table_name, dictionary):
+        """Generates and executes DELETE query in python format.
+
+        For a given dictionary of attributes and values, specified as an
+        dictionary argument, that must identify a tuple(s) in a particular
+        table, it does the following:
+        1) Generates an DELETE query statement
+        2) Executes this generated DELETE query
+        3) Commits or rollback depending if there were any errors within this
+        operation
+        4) Generates an WHERE clause for the SELECT query
+        5) Calls a helper function execute_select_query() to retrieve updated
+        tuple(s)
+        The query is generated within the Python standards to prevent MySQL
+        injection.
+
+        Parameters:
+            :param table_name: Name of the table for which DELETE query is
+            executed
+            :param dictionary: Dictionary of attributes and values that
+            identifies a tuple(s) in a table
+
+        Returns:
+            :return: On SUCCESS - Pandas DataFrame (two-dimensional
+            size-mutable, heterogeneous tabular data structure with labeled
+            axes) retrieved from the helper function execute_select_query(),
+            which contains a tuple(s) with successfully updated data in MySQL;
+            On FAILURE - Error message
+        """
+        try:
+            # Construct delete query statement
+            where_attr_delete = ''
+            where_attr_select = ''
+            data_values_list = []
+            # Get all attributes and values for WHERE clause from dictionary
+            for attribute, value in dictionary.items():
+                where_attr_delete += attribute + '=%s, '
+                where_attr_select += attribute + '=' + value + ' AND '
+                data_values_list.append(value)
+            where_attr_delete = where_attr_delete.rstrip(', ')
+            where_attr_select = where_attr_select.rstrip(' AND ')
+            delete_query = "DELETE FROM {} WHERE {}".format(
+                table_name, where_attr_delete)
+            # Execute delete query
+            self.cursor.execute(delete_query, data_values_list)
+            self.maria_db_connection.commit()
+            # Query this deleted tuple and return it as empty Pandas DataFrame
+            data_frame = self.execute_select_query(
+                '*', table_name, where_attr_select)
+            return data_frame
+        except maria_db.Error as error:
             return error
 
     # Implementation of the program applications for the ZipToCityState table
@@ -244,9 +349,11 @@ class Apps:
                 - state: State that corresponds to the ZIP code
 
         Returns:
-            :returns: On SUCCESS - Pandas DataFrame (two-dimensional
+            :return: On SUCCESS - Pandas DataFrame (two-dimensional
             size-mutable, heterogeneous tabular data structure with labeled
-            axes) containing a tuple of successfully stored data in MySQL;
+            axes) retrieved from the helper function execute_select_query(),
+            which contains a tuple(s) with successfully stored data in the
+            ZipToCityState table;
             On FAILURE - Error message
 
         TODO:
@@ -296,7 +403,7 @@ class Apps:
             attributes and corresponding values.
 
         Returns:
-            :returns: On SUCCESS - Pandas DataFrame (two-dimensional
+            :return: On SUCCESS - Pandas DataFrame (two-dimensional
             size-mutable, heterogeneous tabular data structure with labeled
             axes) containing a tuple of successfully update tuple in the
             ZipToCityState table;
@@ -318,6 +425,29 @@ class Apps:
             return data_frame
         except AssertionError, e:
             return e
+
+    def delete_zip(self, zip_dict):
+        """Deletes a tuple(s) from ZipToCityState table.
+
+        The ZipToCityState table must exist. It deletes a tuple(s) from the
+        ZipToCityState table identified by attributes and values in the
+        zip_dict argument. The information gets deleted from the table by
+        calling helper function execute_delete_query() that generates DELETE
+        query statement and executes it. Once data is successfully deleted from
+        the table, the helper function also tries to query this tuple and must
+        return it as an empty Pandas DataFrame.
+
+        Parameters:
+            :param zip_dict: Dictionary of attributes and values that identify
+            a tuple(s) in the ZipToCityState table
+
+        Returns:
+            :return: On SUCCESS - Empty Pandas DataFrame (two-dimensional
+            size-mutable, heterogeneous tabular data structure with labeled
+            axes);
+            On FAILURE - Error message
+        """
+        return self.execute_delete_query('ZipToCityState', zip_dict)
 
     # Implementation of the program applications for the Hotels table
     def add_hotel(self, hotel_dict):
@@ -347,9 +477,11 @@ class Apps:
                 - phone_number: Phone number of the hotel
 
         Returns:
-            :returns: On SUCCESS - Pandas DataFrame (two-dimensional
+            :return: On SUCCESS - Pandas DataFrame (two-dimensional
             size-mutable, heterogeneous tabular data structure with labeled
-            axes) containing a tuple of successfully stored data in MySQL;
+            axes) retrieved from the helper function execute_select_query(),
+            which contains a tuple(s) with successfully stored data in the
+            Hotels table;
             On FAILURE - Error message
 
         TODO:
@@ -401,7 +533,7 @@ class Apps:
             attributes and corresponding values.
 
         Returns:
-            :returns: On SUCCESS - Pandas DataFrame (two-dimensional
+            :return: On SUCCESS - Pandas DataFrame (two-dimensional
             size-mutable, heterogeneous tabular data structure with labeled
             axes) containing a tuple of successfully update tuple in the Hotels
             table;
@@ -423,6 +555,29 @@ class Apps:
             return data_frame
         except AssertionError, e:
             return e
+
+    def delete_hotel(self, hotel_dict):
+        """Deletes a tuple(s) from Hotels table.
+
+        The Hotels table must exist. It deletes a tuple(s) from the Hotels
+        table identified by attributes and values in the hotel_dict argument.
+        The information gets deleted from the table by calling helper function
+        execute_delete_query() that generates DELETE query statement and
+        executes it. Once data is successfully deleted from the table, the
+        helper function also tries to query this tuple and must return it as an
+        empty Pandas DataFrame.
+
+        Parameters:
+            :param hotel_dict: Dictionary of attributes and values that
+            identify a tuple(s) in the Hotels table
+
+        Returns:
+            :return: On SUCCESS - Empty Pandas DataFrame (two-dimensional
+            size-mutable, heterogeneous tabular data structure with labeled
+            axes);
+            On FAILURE - Error message
+        """
+        return self.execute_delete_query('Hotels', hotel_dict)
 
     # Implementation of the program applications for the Rooms table
     def add_room(self, room_dict):
@@ -452,9 +607,11 @@ class Apps:
                 - rate: Rate per one night in US dollars of the room
 
         Returns:
-            :returns: On SUCCESS - Pandas DataFrame (two-dimensional
+            :return: On SUCCESS - Pandas DataFrame (two-dimensional
             size-mutable, heterogeneous tabular data structure with labeled
-            axes) containing a tuple of successfully stored data in MySQL;
+            axes) retrieved from the helper function execute_select_query(),
+            which contains a tuple(s) with successfully stored data in the
+            Rooms table;
             On FAILURE - Error message
 
         TODO:
@@ -506,7 +663,7 @@ class Apps:
             attributes and corresponding values.
 
         Returns:
-            :returns: On SUCCESS - Pandas DataFrame (two-dimensional
+            :return: On SUCCESS - Pandas DataFrame (two-dimensional
             size-mutable, heterogeneous tabular data structure with labeled
             axes) containing a tuple of successfully update tuple in the Rooms
             table;
@@ -528,6 +685,29 @@ class Apps:
             return data_frame
         except AssertionError, e:
             return e
+
+    def delete_room(self, room_dict):
+        """Deletes a tuple(s) from Rooms table.
+
+        The Rooms table must exist. It deletes a tuple(s) from the Rooms table
+        identified by attributes and values in the room_dict argument. The
+        information gets deleted from the table by calling helper function
+        execute_delete_query() that generates DELETE query statement and
+        executes it. Once data is successfully deleted from the table, the
+        helper function also tries to query this tuple and must return it as an
+        empty Pandas DataFrame.
+
+        Parameters:
+            :param room_dict: Dictionary of attributes and values that
+            identify a tuple(s) in the Rooms table
+
+        Returns:
+            :return: On SUCCESS - Empty Pandas DataFrame (two-dimensional
+            size-mutable, heterogeneous tabular data structure with labeled
+            axes);
+            On FAILURE - Error message
+        """
+        return self.execute_delete_query('Rooms', room_dict)
 
     # Implementation of the program applications for the Staff table
     def add_staff(self, staff_dict):
@@ -571,9 +751,11 @@ class Apps:
                 can be assigned to at most one room in one particular hotel.
 
         Returns:
-            :returns: On SUCCESS - Pandas DataFrame (two-dimensional
+            :return: On SUCCESS - Pandas DataFrame (two-dimensional
             size-mutable, heterogeneous tabular data structure with labeled
-            axes) containing a tuple of successfully stored data in MySQL;
+            axes) retrieved from the helper function execute_select_query(),
+            which contains a tuple(s) with successfully stored data in the
+            Staff table;
             On FAILURE - Error message
 
         TODO: If staff member is assigned to a particular room and hotel, we
@@ -648,7 +830,7 @@ class Apps:
             attributes and corresponding values.
 
         Returns:
-            :returns: On SUCCESS - Pandas DataFrame (two-dimensional
+            :return: On SUCCESS - Pandas DataFrame (two-dimensional
             size-mutable, heterogeneous tabular data structure with labeled
             axes) containing a tuple of successfully update tuple in the Staff
             table;
@@ -672,6 +854,29 @@ class Apps:
             return data_frame
         except AssertionError, e:
             return e
+
+    def delete_staff(self, staff_dict):
+        """Deletes a tuple(s) from Staff table.
+
+        The Staff table must exist. It deletes a tuple(s) from the Staff table
+        identified by attributes and values in the room_dict argument. The
+        information gets deleted from the table by calling helper function
+        execute_delete_query() that generates DELETE query statement and
+        executes it. Once data is successfully deleted from the table, the
+        helper function also tries to query this tuple and must return it as an
+        empty Pandas DataFrame.
+
+        Parameters:
+            :param staff_dict: Dictionary of attributes and values that
+            identify a tuple(s) in the Staff table
+
+        Returns:
+            :return: On SUCCESS - Empty Pandas DataFrame (two-dimensional
+            size-mutable, heterogeneous tabular data structure with labeled
+            axes);
+            On FAILURE - Error message
+        """
+        return self.execute_delete_query('Staff', staff_dict)
 
     # Implementation of the program applications for the Customers table
     def add_customer(self, customer_dict):
@@ -714,9 +919,11 @@ class Apps:
                 credit card.
 
         Returns:
-            :returns: On SUCCESS - Pandas DataFrame (two-dimensional
+            :return: On SUCCESS - Pandas DataFrame (two-dimensional
             size-mutable, heterogeneous tabular data structure with labeled
-            axes) containing a tuple of successfully stored data in MySQL;
+            axes) retrieved from the helper function execute_select_query(),
+            which contains a tuple(s) with successfully stored data in the
+            Customers table;
             On FAILURE - Error message
 
         TODO:
@@ -779,7 +986,7 @@ class Apps:
             attributes and corresponding values.
 
         Returns:
-            :returns: On SUCCESS - Pandas DataFrame (two-dimensional
+            :return: On SUCCESS - Pandas DataFrame (two-dimensional
             size-mutable, heterogeneous tabular data structure with labeled
             axes) containing a tuple of successfully update tuple in the
             Customers table;
@@ -803,6 +1010,29 @@ class Apps:
             return data_frame
         except AssertionError, e:
             return e
+
+    def delete_customer(self, customer_dict):
+        """Deletes a tuple(s) from Customers table.
+
+        The Customers table must exist. It deletes a tuple(s) from the
+        Customers table identified by attributes and values in the room_dict
+        argument. The information gets deleted from the table by calling helper
+        function execute_delete_query() that generates DELETE query statement
+        and executes it. Once data is successfully deleted from the table, the
+        helper function also tries to query this tuple and must return it as an
+        empty Pandas DataFrame.
+
+        Parameters:
+            :param customer_dict: Dictionary of attributes and values that
+            identify a tuple(s) in the Customers table
+
+        Returns:
+            :return: On SUCCESS - Empty Pandas DataFrame (two-dimensional
+            size-mutable, heterogeneous tabular data structure with labeled
+            axes);
+            On FAILURE - Error message
+        """
+        return self.execute_delete_query('Customers', customer_dict)
 
     # Implementation of the program applications for the Reservations table
     def add_reservation(self, reservation_dict):
@@ -842,9 +1072,11 @@ class Apps:
                 follow the DATETIME format YYYY-MM-DD HH:MM:SS.
 
         Returns:
-            :returns: On SUCCESS - Pandas DataFrame (two-dimensional
+            :return: On SUCCESS - Pandas DataFrame (two-dimensional
             size-mutable, heterogeneous tabular data structure with labeled
-            axes) containing a tuple of successfully stored data in MySQL;
+            axes) retrieved from the helper function execute_select_query(),
+            which contains a tuple(s) with successfully stored data in the
+            Reservations table;
             On FAILURE - Error message
 
         TODO: Need to determine the Staff ID who adds this reservation and ID
@@ -922,7 +1154,7 @@ class Apps:
             attributes and corresponding values.
 
         Returns:
-            :returns: On SUCCESS - Pandas DataFrame (two-dimensional
+            :return: On SUCCESS - Pandas DataFrame (two-dimensional
             size-mutable, heterogeneous tabular data structure with labeled
             axes) containing a tuple of successfully update tuple in the
             Reservations table;
@@ -946,6 +1178,29 @@ class Apps:
             return data_frame
         except AssertionError, e:
             return e
+
+    def delete_reservation(self, reservation_dict):
+        """Deletes a tuple(s) from Reservations table.
+
+        The Reservations table must exist. It deletes a tuple(s) from the
+        Reservations table identified by attributes and values in the room_dict
+        argument. The information gets deleted from the table by calling helper
+        function execute_delete_query() that generates DELETE query statement
+        and executes it. Once data is successfully deleted from the table, the
+        helper function also tries to query this tuple and must return it as an
+        empty Pandas DataFrame.
+
+        Parameters:
+            :param reservation_dict: Dictionary of attributes and values that
+            identify a tuple(s) in the Reservations table
+
+        Returns:
+            :return: On SUCCESS - Empty Pandas DataFrame (two-dimensional
+            size-mutable, heterogeneous tabular data structure with labeled
+            axes);
+            On FAILURE - Error message
+        """
+        return self.execute_delete_query('Reservations', reservation_dict)
 
     # Implementation of the program applications for the Reservations table
     def add_transaction(self, transaction_dict):
@@ -980,9 +1235,11 @@ class Apps:
                 reservation.
 
         Returns:
-            :returns: On SUCCESS - Pandas DataFrame (two-dimensional
+            :return: On SUCCESS - Pandas DataFrame (two-dimensional
             size-mutable, heterogeneous tabular data structure with labeled
-            axes) containing a tuple of successfully stored data in MySQL;
+            axes) retrieved from the helper function execute_select_query(),
+            which contains a tuple(s) with successfully stored data in the
+            Transactions table;
             On FAILURE - Error message
 
         TODO:
@@ -1035,7 +1292,7 @@ class Apps:
             attributes and corresponding values.
 
         Returns:
-            :returns: On SUCCESS - Pandas DataFrame (two-dimensional
+            :return: On SUCCESS - Pandas DataFrame (two-dimensional
             size-mutable, heterogeneous tabular data structure with labeled
             axes) containing a tuple of successfully update tuple in the
             Transactions table;
@@ -1057,6 +1314,29 @@ class Apps:
             return data_frame
         except AssertionError, e:
             return e
+
+    def delete_transaction(self, transaction_dict):
+        """Deletes a tuple(s) from Transactions table.
+
+        The Transactions table must exist. It deletes a tuple(s) from the
+        Transactions table identified by attributes and values in the room_dict
+        argument. The information gets deleted from the table by calling helper
+        function execute_delete_query() that generates DELETE query statement
+        and executes it. Once data is successfully deleted from the table, the
+        helper function also tries to query this tuple and must return it as an
+        empty Pandas DataFrame.
+
+        Parameters:
+            :param transaction_dict: Dictionary of attributes and values that
+            identify a tuple(s) in the Transactions table
+
+        Returns:
+            :return: On SUCCESS - Empty Pandas DataFrame (two-dimensional
+            size-mutable, heterogeneous tabular data structure with labeled
+            axes);
+            On FAILURE - Error message
+        """
+        return self.execute_delete_query('Reservations', transaction_dict)
 
     # Implementation of the program applications for the Serves table
     def add_serves(self, serves_dict):
@@ -1085,9 +1365,11 @@ class Apps:
                 member
 
         Returns:
-            :returns: On SUCCESS - Pandas DataFrame (two-dimensional
+            :return: On SUCCESS - Pandas DataFrame (two-dimensional
             size-mutable, heterogeneous tabular data structure with labeled
-            axes) containing a tuple of successfully stored data in MySQL;
+            axes) retrieved from the helper function execute_select_query(),
+            which contains a tuple(s) with successfully stored data in the
+            Serves table;
             On FAILURE - Error message
 
         TODO:
@@ -1125,7 +1407,7 @@ class Apps:
             attributes and corresponding values.
 
         Returns:
-            :returns: On SUCCESS - Pandas DataFrame (two-dimensional
+            :return: On SUCCESS - Pandas DataFrame (two-dimensional
             size-mutable, heterogeneous tabular data structure with labeled
             axes) containing a tuple of successfully update tuple in the Serves
             table;
@@ -1138,3 +1420,26 @@ class Apps:
         data_frame = self.execute_update_query(
             'Rooms', serves_dict, where_clause_dict)
         return data_frame
+
+    def delete_serves(self, serves_dict):
+        """Deletes a tuple(s) from Serves table.
+
+        The Serves table must exist. It deletes a tuple(s) from theServes table
+        identified by attributes and values in the room_dict argument. The
+        information gets deleted from the table by calling helper
+        function execute_delete_query() that generates DELETE query statement
+        and executes it. Once data is successfully deleted from the table, the
+        helper function also tries to query this tuple and must return it as an
+        empty Pandas DataFrame.
+
+        Parameters:
+            :param serves_dict: Dictionary of attributes and values that
+            identify a tuple(s) in the Serves table
+
+        Returns:
+            :return: On SUCCESS - Empty Pandas DataFrame (two-dimensional
+            size-mutable, heterogeneous tabular data structure with labeled
+            axes);
+            On FAILURE - Error message
+        """
+        return self.execute_delete_query('Serves', serves_dict)
