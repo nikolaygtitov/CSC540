@@ -1,17 +1,17 @@
 
 import unittest
 import mysql.connector as mariadb
+import pandas as pd
 
 from unittest_base import SQLUnitTestBase
-from Project.apps import Apps
+from Project.transaction import sql_transaction
 
 
-class TestApps(SQLUnitTestBase):
+class TestTransaction(SQLUnitTestBase):
 
     @staticmethod
     def _connect_to_test_db():
-        con = mariadb.connect(host='classdb2.csc.ncsu.edu', user='nfschnoo', password='001027748',
-                              database='nfschnoo')
+        con = mariadb.connect(host='classdb2.csc.ncsu.edu', user='nfschnoo', password='001027748', database='nfschnoo')
         return con
 
     def setUp(self):
@@ -177,30 +177,31 @@ class TestApps(SQLUnitTestBase):
             pass
         self._con.commit()
 
-    def test_add_zip(self):
-        apps = Apps(self._con, True)
-        df = apps.add_zip({'zip': '27511', 'city': 'Cary', 'state': 'NC'})
-        self.assertEqual(len(df.index), 1)
-        self.assertEqual(df['zip'].ix[0], '27511')
-        self.assertEqual(df['city'].ix[0], 'Cary')
-        self.assertEqual(df['state'].ix[0], 'NC')
-        apps.cursor.close()
+    def test_transaction_commit(self):
+        cursor = self._con.cursor()
+        with sql_transaction(self._con):
+            cursor.execute("INSERT INTO ZipToCityState(zip, city, state) VALUES ('27965', 'Raleigh', 'NC')")
+            df = pd.read_sql('SELECT * from ZipToCityState', con=self._con)
+        self.assertEqual(1, len(df.index))
+        self.assertEqual('27965', df['zip'].ix[0])
+        self.assertEqual('Raleigh', df['city'].ix[0])
+        self.assertEqual('NC', df['state'].ix[0])
+        cursor.close()
 
-    def test_update_zip(self):
-        apps = Apps(self._con, True)
-        # Add zip
-        df = apps.add_zip({'zip': '27511', 'city': 'Raleigh', 'state': 'NC'})
-        self.assertEqual(len(df.index), 1)
-        self.assertEqual(df['zip'].ix[0], '27511')
-        self.assertEqual(df['city'].ix[0], 'Raleigh')
-        self.assertEqual(df['state'].ix[0], 'NC')
-        # Update zip
-        df = apps.update_zip({'city': 'Cary'}, {'zip': '27511'})
-        self.assertEqual(len(df.index), 1)
-        self.assertEqual(df['zip'].ix[0], '27511')
-        self.assertEqual(df['city'].ix[0], 'Cary')
-        self.assertEqual(df['state'].ix[0], 'NC')
-        apps.cursor.close()
+    def test_transaction_rollback(self):
+        cursor = self._con.cursor()
+        try:
+            with sql_transaction(self._con):
+                cursor.execute("INSERT INTO ZipToCityState(zip, city, state) VALUES ('27965', 'Raleigh', 'NC')")
+                cursor.execute("INSERT INTO ZipToCityState(zip, city, state) VALUES ('27965', 'Raleigh', 'NC')")
+                # Should not reach this point
+                self.assertTrue(False)
+        except Exception as e:
+            # Verify rollback
+            df = pd.read_sql('SELECT * from ZipToCityState', con=self._con)
+            self.assertEqual(0, len(df.index))
+        finally:
+            cursor.close()
 
 
 if __name__ == '__main__':
