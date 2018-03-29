@@ -250,11 +250,11 @@ class Apps(object):
         try:
             # Get all attributes for SET clause
             set_attr_format = ', '.join([x + '=%s' for x in dictionary.iterkeys()])
-            set_attr_args = map(self._format_query_value, dictionary.values())
+            set_attr_args = dictionary.values()
 
             # Get all attributes for WHERE clause
             where_attr_format = ' AND '.join([x + '=%s' for x in where_clause_dict.iterkeys()])
-            where_attr_args = map(self._format_query_value, where_clause_dict.values())
+            where_attr_args = where_clause_dict.values()
 
             # Construct update query statement
             update_query = "UPDATE {} SET {} WHERE {}".format(
@@ -265,7 +265,7 @@ class Apps(object):
             self.maria_db_connection.commit()
 
             # Generate WHERE clause for SELECT query
-            where_clause = where_attr_format % where_attr_args
+            where_clause = where_attr_format % tuple(where_attr_args)
 
             # Query for this updated tuple and return it as Pandas DataFrame
             data_frame = self.execute_select_query(
@@ -319,7 +319,7 @@ class Apps(object):
             data_frame = self.execute_select_query(
                 '*', table_name, where_attr_select)
             return data_frame
-        
+
         except maria_db.Error as error:
             return error
 
