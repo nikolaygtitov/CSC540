@@ -1,5 +1,5 @@
-
 from contextlib import contextmanager
+
 
 @contextmanager
 def sql_transaction(con):
