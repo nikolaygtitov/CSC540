@@ -185,6 +185,22 @@ class TestApps(unittest.TestCase):
         self.assertEqual(df['state'].ix[0], 'NC')
         apps.cursor.close()
 
+    def test_update_zip(self):
+        apps = Apps(self._con, True)
+        # Add zip
+        df = apps.add_zip({'zip': '27511', 'city': 'Raleigh', 'state': 'NC'})
+        self.assertEqual(len(df.index), 1)
+        self.assertEqual(df['zip'].ix[0], '27511')
+        self.assertEqual(df['city'].ix[0], 'Raleigh')
+        self.assertEqual(df['state'].ix[0], 'NC')
+        # Update zip
+        df = apps.update_zip({'city': 'Cary'}, {'zip': '27511'})
+        self.assertEqual(len(df.index), 1)
+        self.assertEqual(df['zip'].ix[0], '27511')
+        self.assertEqual(df['city'].ix[0], 'Cary')
+        self.assertEqual(df['state'].ix[0], 'NC')
+        apps.cursor.close()
+
 
 if __name__ == '__main__':
     unittest.main()

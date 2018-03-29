@@ -184,20 +184,10 @@ class Apps(object):
         """
         try:
             # Construct insert query statement
-            attributes_tuple = ''
-            values_tuple = ''
-            data_values_list = []
-            # Get all attributes and values from dictionary
-            for attribute, value in dictionary.items():
-                attributes_tuple += attribute + ', '
-                values_tuple += '%s, '
-                data_values_list.append(value)
-            attributes_tuple = attributes_tuple.rstrip(', ')
-            values_tuple = values_tuple.rstrip(', ')
             insert_query = "INSERT INTO {} ({}) VALUES ({})".format(
-                table_name, attributes_tuple, values_tuple)
+                table_name, ', '.join(dictionary.keys()), ', '.join(['%s' for x in dictionary.iterkeys()]))
             # Execute insert query
-            self.cursor.execute(insert_query, data_values_list)
+            self.cursor.execute(insert_query, dictionary.values())
             self.maria_db_connection.commit()
             return None
         except maria_db.Error as error:
