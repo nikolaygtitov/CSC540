@@ -123,6 +123,23 @@ class Apps(object):
         self.cursor = maria_db_connection.cursor()
         self.check = check
 
+    @staticmethod
+    def _format_query_value(value):
+        """Formats query values (adds quotes when needed).
+
+        For a string input, single quotes are added. Other input types are converted to strings (without quotes).
+
+        Parameters:
+            :param value: The input value to be formatted for SQL queries
+
+        Returns:
+            :return: The result of formatting value so it can be used in a SQL query
+        """
+        if isinstance(value, str):
+            return "'%s'" % value
+        else:
+            return str(value)
+
     def execute_select_query(self, attributes, table_name, where_clause=None):
         """Generates and executes SELECT query in python format.
 
@@ -144,6 +161,7 @@ class Apps(object):
             size-mutable, heterogeneous tabular data structure with labeled
             axes) containing desired tuple(s)/row(s);
             On FAILURE - Error message
+        TODO: Possible SQL-injection when using pre-formatted where clause
         """
         try:
             # Query for desired tuple(s) and return it as Pandas DataFrame
@@ -186,10 +204,12 @@ class Apps(object):
             # Construct insert query statement
             insert_query = "INSERT INTO {} ({}) VALUES ({})".format(
                 table_name, ', '.join(dictionary.keys()), ', '.join(['%s' for x in dictionary.iterkeys()]))
+
             # Execute insert query
             self.cursor.execute(insert_query, dictionary.values())
             self.maria_db_connection.commit()
             return None
+
         except maria_db.Error as error:
             return error
 
@@ -228,37 +248,30 @@ class Apps(object):
         TODO:
         """
         try:
-            # Construct update query statement
-            set_attr = ''
-            data_values_list = []
-            where_attr_update = ''
-            where_attr_select = {}
-            # Get all attributes and values from dictionary
-            for set_attribute, set_value in dictionary.items():
-                set_attr += set_attribute + '=%s, '
-                data_values_list.append(set_value)
-                where_attr_select[set_attribute] = set_value
-            set_attr = set_attr.rstrip(', ')
+            # Get all attributes for SET clause
+            set_attr_format = ', '.join([x + '=%s' for x in dictionary.iterkeys()])
+            set_attr_args = map(self._format_query_value, dictionary.values())
+
             # Get all attributes for WHERE clause
-            for where_attribute, where_value in where_clause_dict.items():
-                where_attr_update += where_attribute + '=%s AND '
-                data_values_list.append(where_value)
-                where_attr_select[where_attribute] = where_value
-                where_attr_update = where_attr_update.rstrip(' AND ')
+            where_attr_format = ' AND '.join([x + '=%s' for x in where_clause_dict.iterkeys()])
+            where_attr_args = map(self._format_query_value, where_clause_dict.values())
+
+            # Construct update query statement
             update_query = "UPDATE {} SET {} WHERE {}".format(
-                table_name, set_attr, where_attr_update)
+                table_name, set_attr_format, where_attr_format)
+
             # Execute update query
-            self.cursor.execute(update_query, data_values_list)
+            self.cursor.execute(update_query, set_attr_args + where_attr_args)
             self.maria_db_connection.commit()
+
             # Generate WHERE clause for SELECT query
-            where_clause = ''
-            for attr, value in where_attr_select.items():
-                where_clause += attr + '=' + value + ' AND '
-            where_clause = where_clause.rstrip(' AND ')
+            where_clause = where_attr_format % where_attr_args
+
             # Query for this updated tuple and return it as Pandas DataFrame
             data_frame = self.execute_select_query(
                 '*', table_name, where_clause)
             return data_frame
+
         except maria_db.Error as error:
             return error
 
@@ -293,25 +306,20 @@ class Apps(object):
         """
         try:
             # Construct delete query statement
-            where_attr_delete = ''
-            where_attr_select = ''
-            data_values_list = []
-            # Get all attributes and values for WHERE clause from dictionary
-            for attribute, value in dictionary.items():
-                where_attr_delete += attribute + '=%s, '
-                where_attr_select += attribute + '=' + value + ' AND '
-                data_values_list.append(value)
-            where_attr_delete = where_attr_delete.rstrip(', ')
-            where_attr_select = where_attr_select.rstrip(' AND ')
+            where_attr_delete_format = ', '.join([x + '=%s' for x in dictionary.iterkeys()])
+            where_attr_select = ' AND '.join([k + '=' + self._format_query_value(v) for k, v in dictionary.iteritems()])
             delete_query = "DELETE FROM {} WHERE {}".format(
-                table_name, where_attr_delete)
+                table_name, where_attr_delete_format)
+
             # Execute delete query
-            self.cursor.execute(delete_query, data_values_list)
+            self.cursor.execute(delete_query, map(self._format_query_value, dictionary.values()))
             self.maria_db_connection.commit()
+
             # Query this deleted tuple and return it as empty Pandas DataFrame
             data_frame = self.execute_select_query(
                 '*', table_name, where_attr_select)
             return data_frame
+        
         except maria_db.Error as error:
             return error
 
