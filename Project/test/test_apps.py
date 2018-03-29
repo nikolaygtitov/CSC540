@@ -7,31 +7,33 @@ from Project.apps import Apps
 
 class TestApps(unittest.TestCase):
 
-    def __init__(self, *args, **kwargs):
-        self._con, self._cursor = self._connect_to_test_db()
-        super(TestApps, self).__init__(*args, **kwargs)
+    @staticmethod
+    def _connect_to_test_db():
+        con = mariadb.connect(host='classdb2.csc.ncsu.edu', user='nfschnoo', password='001027748',
+                              database='nfschnoo')
+        return con
 
     def setUp(self):
-        super(TestApps, self).setUp()
+        self._con = self._connect_to_test_db()
+        cursor = self._con.cursor()
         print 'Dropping tables'
-        self._delete_tables()
+        self._delete_tables(cursor)
         print 'Creating tables'
-        self._create_tables()
+        self._create_tables(cursor)
+        cursor.close()
 
-    def _connect_to_test_db(self):
-        con = mariadb.connect(host='classdb2.csc.ncsu.edu', user='nfschnoo', password='001027748', database='nfschnoo')
-        cursor = con.cursor()
-        return con, cursor
+    def tearDown(self):
+        self._con.close()
 
-    def _create_tables(self):
-        self._cursor.execute("""
+    def _create_tables(self, cursor):
+        cursor.execute("""
             CREATE TABLE ZipToCityState (
                 zip VARCHAR(10) PRIMARY KEY,
                 city VARCHAR(32) NOT NULL,
                 state VARCHAR(2) NOT NULL,
                 CHECK(LENGTH(zip)>=5 AND LENGTH(city)>0 AND LENGTH(state)=2)
             );""")
-        self._cursor.execute("""
+        cursor.execute("""
             CREATE TABLE Hotels (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 name VARCHAR(128) NOT NULL,
@@ -43,7 +45,7 @@ class TestApps(unittest.TestCase):
                 CONSTRAINT uc_hotels UNIQUE (street, zip),
                 CHECK(LENGTH(name)>0 AND LENGTH(street)>0 AND LENGTH(phone_number)>0)	
             );""")
-        self._cursor.execute("""
+        cursor.execute("""
             CREATE TABLE Rooms (
                 hotel_id INT,
                 room_number SMALLINT UNSIGNED,
@@ -56,7 +58,7 @@ class TestApps(unittest.TestCase):
                 CHECK(LENGTH(category)>0 AND (occupancy BETWEEN 1 AND 9))
             );""")
 
-        self._cursor.execute("""
+        cursor.execute("""
             CREATE TABLE Staff (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 name VARCHAR(64) NOT NULL,
@@ -79,7 +81,7 @@ class TestApps(unittest.TestCase):
                     AND LENGTH(street)>0)
             );""")
 
-        self._cursor.execute("""
+        cursor.execute("""
             CREATE TABLE Customers (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 name VARCHAR(64) NOT NULL,
@@ -97,7 +99,7 @@ class TestApps(unittest.TestCase):
                     AND LENGTH(ssn)=11 AND LENGTH(account_number)>0)
             );""")
 
-        self._cursor.execute("""
+        cursor.execute("""
             CREATE TABLE Reservations (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 number_of_guests TINYINT UNSIGNED NOT NULL,
@@ -116,7 +118,7 @@ class TestApps(unittest.TestCase):
                     AND check_out_time >= end_date)
             );""")
 
-        self._cursor.execute("""
+        cursor.execute("""
             CREATE TABLE Transactions (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 amount DECIMAL(8,2) UNSIGNED NOT NULL,
@@ -128,7 +130,7 @@ class TestApps(unittest.TestCase):
                 CHECK(LENGTH(type)>0)
             );""")
 
-        self._cursor.execute("""
+        cursor.execute("""
             CREATE TABLE Serves (
                 staff_id INT NOT NULL,
                 reservation_id INT NOT NULL,
@@ -137,40 +139,42 @@ class TestApps(unittest.TestCase):
                 CONSTRAINT fk_serves_reservation_id FOREIGN KEY (reservation_id) REFERENCES Reservations(id) 
                     ON UPDATE CASCADE ON DELETE CASCADE
             );""")
+        self._con.commit()
 
-    def _delete_tables(self):
+    def _delete_tables(self, cursor):
         try:
-            self._cursor.execute('DROP TABLE Serves;')
+            cursor.execute('DROP TABLE Serves')
         except:
             pass
         try:
-            self._cursor.execute('DROP TABLE Transactions;')
+            cursor.execute('DROP TABLE Transactions')
         except:
             pass
         try:
-            self._cursor.execute('DROP TABLE Reservations;')
+            cursor.execute('DROP TABLE Reservations')
         except:
             pass
         try:
-            self._cursor.execute('DROP TABLE Customers;')
+            cursor.execute('DROP TABLE Customers')
         except:
             pass
         try:
-            self._cursor.execute('DROP TABLE Staff;')
+            cursor.execute('DROP TABLE Staff')
         except:
             pass
         try:
-            self._cursor.execute('DROP TABLE Rooms;')
+            cursor.execute('DROP TABLE Rooms')
         except:
             pass
         try:
-            self._cursor.execute('DROP TABLE Hotels;')
+            cursor.execute('DROP TABLE Hotels')
         except:
             pass
         try:
-            self._cursor.execute('DROP TABLE ZipToCityState;')
+            cursor.execute('DROP TABLE ZipToCityState')
         except:
             pass
+        self._con.commit()
 
     def test_add_zip(self):
         apps = Apps(self._con, True)
@@ -179,6 +183,7 @@ class TestApps(unittest.TestCase):
         self.assertEqual(df['zip'].ix[0], '27511')
         self.assertEqual(df['city'].ix[0], 'Cary')
         self.assertEqual(df['state'].ix[0], 'NC')
+        apps.cursor.close()
 
 
 if __name__ == '__main__':
