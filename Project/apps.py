@@ -123,23 +123,6 @@ class Apps(object):
         self.cursor = maria_db_connection.cursor()
         self.check = check
 
-    @staticmethod
-    def _format_query_value(value):
-        """Formats query values (adds quotes when needed).
-
-        For a string input, single quotes are added. Other input types are converted to strings (without quotes).
-
-        Parameters:
-            :param value: The input value to be formatted for SQL queries
-
-        Returns:
-            :return: The result of formatting value so it can be used in a SQL query
-        """
-        if isinstance(value, str):
-            return "'%s'" % value
-        else:
-            return str(value)
-
     def execute_select_query(self, attributes, table_name, where_clause=None):
         """Generates and executes SELECT query in python format.
 
