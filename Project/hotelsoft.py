@@ -127,10 +127,10 @@ class HotelSoft(object):
 
     def get_inputs(self, query, last_menu):
         print(query.title)
-        if len(query.arglist) > 0:
+        if len(query.arg_list) > 0:
             print('Enter the following fields:')
         param_dict = {}
-        for arg in query.arglist:
+        for arg in query.arg_list:
             item = raw_input(arg + ': ').strip()
             if item != '':
                 param_dict[arg] = item
