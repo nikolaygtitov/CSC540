@@ -1,6 +1,6 @@
 import sys
 import os
-import pandas as pd
+# import pandas as pd
 from tabulate import tabulate
 import mysql.connector as maria_db
 from apihelper import APIHelper
@@ -126,28 +126,31 @@ class HotelSoft(object):
             last_menu))
 
     def get_inputs(self, query, last_menu):
-        print(query.title)
-        if len(query.arg_list) > 0:
-            print('Enter the following fields:')
-        param_dict = {}
-        for arg in query.arg_list:
-            item = raw_input(arg + ': ').strip()
-            if item != '':
-                param_dict[arg] = item
-            else:
-                param_dict[arg] = None
-        result = query.handler(param_dict)
-        if isinstance(result, pd.DataFrame):
+        try:
+            print(query.title)
+            if len(query.arg_list) > 0:
+                print('Enter the following fields:')
+            param_dict = {}
+            for arg in query.arg_list:
+                item = raw_input(arg + ': ').strip()
+                if item != '':
+                    param_dict[arg] = item
+                else:
+                    param_dict[arg] = None
+            result = query.handler(param_dict)
             print '\nQuery Successful ' + u"\u2713"
             print tabulate(result, headers=result.columns.values.tolist(),
                            tablefmt='psql')
             print '\n'
-        else:
-            print '\n' 
-            print result 
+            self.get_choice(last_menu)
+        except AssertionError, error:
             print '\n'
-               
-        self.get_choice(last_menu)
+            print error
+            print '\n'
+        except maria_db.Error as error:
+            print '\n'
+            print error
+            print '\n'
 
     def show_menu(self, menu):
         return lambda: self.get_choice(self.get_menu(menu))

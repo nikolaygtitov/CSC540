@@ -143,7 +143,7 @@ class Apps(object):
             :return: On SUCCESS - Pandas DataFrame (two-dimensional
             size-mutable, heterogeneous tabular data structure with labeled
             axes) containing desired tuple(s)/row(s);
-            On FAILURE - Error message
+            On FAILURE - Raises MySQL Connector exception
         TODO:
         """
         try:
@@ -157,7 +157,7 @@ class Apps(object):
             data_frame = pd.read_sql(select_query, con=self.maria_db_connection)
             return data_frame
         except maria_db.Error as error:
-            return error
+            raise error
 
     def execute_insert_query(self, dictionary, table_name):
         """Generates and executes INSERT query in python format.
@@ -179,22 +179,23 @@ class Apps(object):
             executed
 
         Returns:
-            :return: On SUCCESS - None; On FAILURE - Error message
+            :return: On SUCCESS - None;
+            On FAILURE - Raises MySQL Connector exception
 
         TODO:
         """
         try:
             # Construct insert query statement
             insert_query = "INSERT INTO {} ({}) VALUES ({})".format(
-                table_name, ', '.join(dictionary.keys()), ', '.join(['%s' for x in dictionary.iterkeys()]))
+                table_name, ', '.join(dictionary.keys()), ', '.join(
+                    ['%s' for _ in dictionary.iterkeys()]))
 
             # Execute insert query
             self.cursor.execute(insert_query, dictionary.values())
-            self.maria_db_connection.commit()
-            return None
-
+            # Can transaction manager take care of the commit?
+            # self.maria_db_connection.commit()
         except maria_db.Error as error:
-            return error
+            raise error
 
     def execute_update_query(self, table_name, dictionary, where_clause_dict):
         """Generates and executes UPDATE query in python format.
@@ -226,17 +227,19 @@ class Apps(object):
             size-mutable, heterogeneous tabular data structure with labeled
             axes) retrieved from the helper function execute_select_query(),
             which contains a tuple(s) with successfully updated data in MySQL;
-            On FAILURE - Error message
+            On FAILURE - Raises MySQL Connector exception
 
         TODO:
         """
         try:
             # Get all attributes for SET clause
-            set_attr_format = ', '.join([x + '=%s' for x in dictionary.iterkeys()])
+            set_attr_format = ', '.join(
+                [attr + '=%s' for attr in dictionary.iterkeys()])
             set_attr_args = dictionary.values()
 
             # Get all attributes for WHERE clause
-            where_attr_format = ' AND '.join([x + '=%s' for x in where_clause_dict.iterkeys()])
+            where_attr_format = ' AND '.join(
+                [attr + '=%s' for attr in where_clause_dict.iterkeys()])
             where_attr_args = where_clause_dict.values()
 
             # Construct update query statement
@@ -245,7 +248,8 @@ class Apps(object):
 
             # Execute update query
             self.cursor.execute(update_query, set_attr_args + where_attr_args)
-            self.maria_db_connection.commit()
+            # Can transaction manager take care of commit?
+            # self.maria_db_connection.commit()
 
             # Generate WHERE clause for SELECT query
             where_clause = where_attr_format % tuple(where_attr_args)
@@ -256,7 +260,7 @@ class Apps(object):
             return data_frame
 
         except maria_db.Error as error:
-            return error
+            raise error
 
     def execute_delete_query(self, table_name, dictionary):
         """Generates and executes DELETE query in python format.
@@ -285,18 +289,21 @@ class Apps(object):
             size-mutable, heterogeneous tabular data structure with labeled
             axes) retrieved from the helper function execute_select_query(),
             which contains a tuple(s) with successfully updated data in MySQL;
-            On FAILURE - Error message
+            On FAILURE - Raises MySQL Connector exception
         """
         try:
             # Construct delete query statement
-            where_attr_delete_format = ', '.join([x + '=%s' for x in dictionary.iterkeys()])
-            where_attr_select = ' AND '.join([k + '=' + v for k, v in dictionary.iteritems()])
+            where_attr_delete_format = ', '.join(
+                [attr + '=%s' for attr in dictionary.iterkeys()])
+            where_attr_select = ' AND '.join(
+                [attr + '=' + value for attr, value in dictionary.iteritems()])
             delete_query = "DELETE FROM {} WHERE {}".format(
                 table_name, where_attr_delete_format)
 
             # Execute delete query
             self.cursor.execute(delete_query, dictionary.values())
-            self.maria_db_connection.commit()
+            # Can transaction manager take care of commit?
+            # self.maria_db_connection.commit()
 
             # Query this deleted tuple and return it as empty Pandas DataFrame
             data_frame = self.execute_select_query(
@@ -304,7 +311,7 @@ class Apps(object):
             return data_frame
 
         except maria_db.Error as error:
-            return error
+            raise error
 
     # Implementation of the program applications for the ZipToCityState table
     def add_zip(self, zip_dict):
@@ -335,7 +342,8 @@ class Apps(object):
             axes) retrieved from the helper function execute_select_query(),
             which contains a tuple(s) with successfully stored data in the
             ZipToCityState table;
-            On FAILURE - Error message
+            On FAILURE - Raises Assertion Error exception or MySQL Connector
+            exception
 
         TODO:
         """
@@ -351,15 +359,15 @@ class Apps(object):
                     'Exception: State must be specified and must be exactly ' \
                     'two characters.\n'
             # Execute insert query
-            result = self.execute_insert_query(zip_dict, 'ZipToCityState')
-            if result is not None:
-                return result
+            self.execute_insert_query(zip_dict, 'ZipToCityState')
             # Query for this inserted tuple and return it as Pandas DataFrame
             data_frame = self.execute_select_query(
                 '*', 'ZipToCityState', 'zip={}'.format(zip_dict['zip']))
             return data_frame
-        except AssertionError, e:
-            return e
+        except AssertionError, error:
+            raise error
+        except maria_db.Error as error:
+            raise error
 
     def update_zip(self, zip_dict, where_clause_dict):
         """Updates a tuple in the ZipToCityState table.
@@ -388,7 +396,8 @@ class Apps(object):
             size-mutable, heterogeneous tabular data structure with labeled
             axes) containing a tuple of successfully update tuple in the
             ZipToCityState table;
-            On FAILURE - Error message
+            On FAILURE - Raises Assertion Error exception or MySQL Connector
+            exception
 
         TODO:
         """
@@ -404,8 +413,10 @@ class Apps(object):
             data_frame = self.execute_update_query(
                 'ZipToCityState', zip_dict, where_clause_dict)
             return data_frame
-        except AssertionError, e:
-            return e
+        except AssertionError, error:
+            raise error
+        except maria_db.Error as error:
+            raise error
 
     def delete_zip(self, zip_dict):
         """Deletes a tuple(s) from ZipToCityState table.
@@ -426,9 +437,12 @@ class Apps(object):
             :return: On SUCCESS - Empty Pandas DataFrame (two-dimensional
             size-mutable, heterogeneous tabular data structure with labeled
             axes);
-            On FAILURE - Error message
+            On FAILURE - Raises MySQL Connector exception
         """
-        return self.execute_delete_query('ZipToCityState', zip_dict)
+        try:
+            return self.execute_delete_query('ZipToCityState', zip_dict)
+        except maria_db.Error as error:
+            raise error
 
     # Implementation of the program applications for the Hotels table
     def add_hotel(self, hotel_dict):
@@ -463,7 +477,8 @@ class Apps(object):
             axes) retrieved from the helper function execute_select_query(),
             which contains a tuple(s) with successfully stored data in the
             Hotels table;
-            On FAILURE - Error message
+            On FAILURE - Raises Assertion Error exception or MySQL Connector
+            exception
 
         TODO:
         """
@@ -481,15 +496,15 @@ class Apps(object):
                     'Exception: Phone number of the hotel must be specified ' \
                     'and must be non-empty.\n'
             # Execute insert query
-            result = self.execute_insert_query(hotel_dict, 'Hotels')
-            if result is not None:
-                return result
+            self.execute_insert_query(hotel_dict, 'Hotels')
             # Query for this inserted tuple and return it as Pandas DataFrame
             data_frame = self.execute_select_query(
                 '*', 'Hotels', 'id=LAST_INSERT_ID()')
             return data_frame
-        except AssertionError, e:
-            return e
+        except AssertionError, error:
+            raise error
+        except maria_db.Error as error:
+            raise error
 
     def update_hotel(self, hotel_dict, where_clause_dict):
         """Updates a tuple in the Hotels table.
@@ -518,7 +533,8 @@ class Apps(object):
             size-mutable, heterogeneous tabular data structure with labeled
             axes) containing a tuple of successfully update tuple in the Hotels
             table;
-            On FAILURE - Error message
+            On FAILURE - Raises Assertion Error exception or MySQL Connector
+            exception
 
         TODO:
         """
@@ -534,8 +550,10 @@ class Apps(object):
             data_frame = self.execute_update_query(
                 'Hotels', hotel_dict, where_clause_dict)
             return data_frame
-        except AssertionError, e:
-            return e
+        except AssertionError, error:
+            raise error
+        except maria_db.Error as error:
+            raise error
 
     def delete_hotel(self, hotel_dict):
         """Deletes a tuple(s) from Hotels table.
@@ -556,9 +574,12 @@ class Apps(object):
             :return: On SUCCESS - Empty Pandas DataFrame (two-dimensional
             size-mutable, heterogeneous tabular data structure with labeled
             axes);
-            On FAILURE - Error message
+            On FAILURE - Raises MySQL Connector exception
         """
-        return self.execute_delete_query('Hotels', hotel_dict)
+        try:
+            return self.execute_delete_query('Hotels', hotel_dict)
+        except maria_db.Error as error:
+            raise error
 
     # Implementation of the program applications for the Rooms table
     def add_room(self, room_dict):
@@ -593,7 +614,8 @@ class Apps(object):
             axes) retrieved from the helper function execute_select_query(),
             which contains a tuple(s) with successfully stored data in the
             Rooms table;
-            On FAILURE - Error message
+            On FAILURE - Raises Assertion Error exception or MySQL Connector
+            exception
 
         TODO:
         """
@@ -611,17 +633,16 @@ class Apps(object):
                     'Exception: Maximum occupancy of the room must be ' \
                     'between 1 and 9 inclusive.\n'
             # Execute insert query
-            result = self.execute_insert_query(room_dict, 'Rooms')
-            if result is not None:
-                return result
+            self.execute_insert_query(room_dict, 'Rooms')
             # Query for this inserted tuple and return it as Pandas DataFrame
             data_frame = self.execute_select_query(
                 '*', 'Rooms', 'hotel_id={} AND room_number = {}'.format(
                     room_dict['hotel_id'], room_dict['room_number']))
             return data_frame
-        except AssertionError, e:
-            print e
-            return
+        except AssertionError, error:
+            raise error
+        except maria_db.Error as error:
+            raise error
 
     def update_room(self, room_dict, where_clause_dict):
         """Updates a tuple in the Rooms table.
@@ -648,7 +669,8 @@ class Apps(object):
             size-mutable, heterogeneous tabular data structure with labeled
             axes) containing a tuple of successfully update tuple in the Rooms
             table;
-            On FAILURE - Error message
+            On FAILURE - Raises Assertion Error exception or MySQL Connector
+            exception
 
         TODO:
         """
@@ -664,8 +686,10 @@ class Apps(object):
             data_frame = self.execute_update_query(
                 'Rooms', room_dict, where_clause_dict)
             return data_frame
-        except AssertionError, e:
-            return e
+        except AssertionError, error:
+            return error
+        except maria_db.Error as error:
+            raise error
 
     def delete_room(self, room_dict):
         """Deletes a tuple(s) from Rooms table.
@@ -686,9 +710,12 @@ class Apps(object):
             :return: On SUCCESS - Empty Pandas DataFrame (two-dimensional
             size-mutable, heterogeneous tabular data structure with labeled
             axes);
-            On FAILURE - Error message
+            On FAILURE - Raises MySQL Connector exception
         """
-        return self.execute_delete_query('Rooms', room_dict)
+        try:
+            return self.execute_delete_query('Rooms', room_dict)
+        except maria_db.Error as error:
+            raise error
 
     # Implementation of the program applications for the Staff table
     def add_staff(self, staff_dict):
@@ -737,7 +764,8 @@ class Apps(object):
             axes) retrieved from the helper function execute_select_query(),
             which contains a tuple(s) with successfully stored data in the
             Staff table;
-            On FAILURE - Error message
+            On FAILURE - Raises Assertion Error exception or MySQL Connector
+            exception
 
         TODO: If staff member is assigned to a particular room and hotel, we
         need to determine Staff ID and Reservation ID to call
@@ -778,16 +806,15 @@ class Apps(object):
                         'staff member is assigned to as dedicated staff must ' \
                         'be specified.\n'
             # Execute insert query
-            result = self.execute_insert_query(staff_dict, 'Staff')
-            if result is not None:
-                return result
+            self.execute_insert_query(staff_dict, 'Staff')
             # Query for this inserted tuple and return it as Pandas DataFrame
             data_frame = self.execute_select_query(
                 '*', 'Staff', 'id=LAST_INSERT_ID()')
             return data_frame
-        except AssertionError, e:
-            print e
-            return
+        except AssertionError, error:
+            raise error
+        except maria_db.Error as error:
+            raise error
 
     def update_staff(self, staff_dict, where_clause_dict):
         """Updates a tuple in the Staff table.
@@ -815,7 +842,8 @@ class Apps(object):
             size-mutable, heterogeneous tabular data structure with labeled
             axes) containing a tuple of successfully update tuple in the Staff
             table;
-            On FAILURE - Error message
+            On FAILURE - Raises Assertion Error exception or MySQL Connector
+            exception
 
         TODO:
         """
@@ -833,8 +861,10 @@ class Apps(object):
             data_frame = self.execute_update_query(
                 'Staff', staff_dict, where_clause_dict)
             return data_frame
-        except AssertionError, e:
-            return e
+        except AssertionError, error:
+            return error
+        except maria_db.Error as error:
+            raise error
 
     def delete_staff(self, staff_dict):
         """Deletes a tuple(s) from Staff table.
@@ -855,9 +885,12 @@ class Apps(object):
             :return: On SUCCESS - Empty Pandas DataFrame (two-dimensional
             size-mutable, heterogeneous tabular data structure with labeled
             axes);
-            On FAILURE - Error message
+            On FAILURE - Raises MySQL Connector exception
         """
-        return self.execute_delete_query('Staff', staff_dict)
+        try:
+            return self.execute_delete_query('Staff', staff_dict)
+        except maria_db.Error as error:
+            raise error
 
     # Implementation of the program applications for the Customers table
     def add_customer(self, customer_dict):
@@ -905,7 +938,8 @@ class Apps(object):
             axes) retrieved from the helper function execute_select_query(),
             which contains a tuple(s) with successfully stored data in the
             Customers table;
-            On FAILURE - Error message
+            On FAILURE - Raises Assertion Error exception or MySQL Connector
+            exception
 
         TODO:
         """
@@ -933,16 +967,15 @@ class Apps(object):
                     'Exception: Social Security Number must be specified and ' \
                     'must follow the NNN-NN-NNNN format.\n'
             # Execute insert query
-            result = self.execute_insert_query(customer_dict, 'Customers')
-            if result is not None:
-                return result
+            self.execute_insert_query(customer_dict, 'Customers')
             # Query for this inserted tuple and return it as Pandas DataFrame
             data_frame = self.execute_select_query(
                 '*', 'Customers', 'id=LAST_INSERT_ID()')
             return data_frame
-        except AssertionError, e:
-            print e
-            return
+        except AssertionError, error:
+            raise error
+        except maria_db.Error as error:
+            raise error
 
     def update_customer(self, customer_dict, where_clause_dict):
         """Updates a tuple in the Customers table.
@@ -971,7 +1004,8 @@ class Apps(object):
             size-mutable, heterogeneous tabular data structure with labeled
             axes) containing a tuple of successfully update tuple in the
             Customers table;
-            On FAILURE - Error message
+            On FAILURE - Raises Assertion Error exception or MySQL Connector
+            exception
 
         TODO:
         """
@@ -989,8 +1023,10 @@ class Apps(object):
             data_frame = self.execute_update_query(
                 'Customers', customer_dict, where_clause_dict)
             return data_frame
-        except AssertionError, e:
-            return e
+        except AssertionError, error:
+            return error
+        except maria_db.Error as error:
+            raise error
 
     def delete_customer(self, customer_dict):
         """Deletes a tuple(s) from Customers table.
@@ -1011,9 +1047,12 @@ class Apps(object):
             :return: On SUCCESS - Empty Pandas DataFrame (two-dimensional
             size-mutable, heterogeneous tabular data structure with labeled
             axes);
-            On FAILURE - Error message
+            On FAILURE - Raises MySQL Connector exception
         """
-        return self.execute_delete_query('Customers', customer_dict)
+        try:
+            return self.execute_delete_query('Customers', customer_dict)
+        except maria_db.Error as error:
+            raise error
 
     # Implementation of the program applications for the Reservations table
     def add_reservation(self, reservation_dict):
@@ -1058,7 +1097,8 @@ class Apps(object):
             axes) retrieved from the helper function execute_select_query(),
             which contains a tuple(s) with successfully stored data in the
             Reservations table;
-            On FAILURE - Error message
+            On FAILURE - Raises Assertion Error exception or MySQL Connector
+            exception
 
         TODO: Need to determine the Staff ID who adds this reservation and ID
         of this newly created reservation. This function always needs to call
@@ -1101,16 +1141,15 @@ class Apps(object):
                         'specified and must follow the DATETIME format: ' \
                         'YYYY-MM-DD HH:MM:SS.\n'
             # Execute insert query
-            result = self.execute_insert_query(reservation_dict, 'Reservations')
-            if result is not None:
-                return result
+            self.execute_insert_query(reservation_dict, 'Reservations')
             # Query for this inserted tuple and return it as Pandas DataFrame
             data_frame = self.execute_select_query(
                 '*', 'Reservations', 'id=LAST_INSERT_ID()')
             return data_frame
-        except AssertionError, e:
-            print e
-            return
+        except AssertionError, error:
+            raise error
+        except maria_db.Error as error:
+            raise error
 
     def update_reservation(self, reservation_dict, where_clause_dict):
         """Updates a tuple in the Reservations table.
@@ -1139,7 +1178,8 @@ class Apps(object):
             size-mutable, heterogeneous tabular data structure with labeled
             axes) containing a tuple of successfully update tuple in the
             Reservations table;
-            On FAILURE - Error message
+            On FAILURE - Raises Assertion Error exception or MySQL Connector
+            exception
 
         TODO:
         """
@@ -1157,8 +1197,10 @@ class Apps(object):
             data_frame = self.execute_update_query(
                 'Reservations', reservation_dict, where_clause_dict)
             return data_frame
-        except AssertionError, e:
-            return e
+        except AssertionError, error:
+            return error
+        except maria_db.Error as error:
+            raise error
 
     def delete_reservation(self, reservation_dict):
         """Deletes a tuple(s) from Reservations table.
@@ -1179,9 +1221,12 @@ class Apps(object):
             :return: On SUCCESS - Empty Pandas DataFrame (two-dimensional
             size-mutable, heterogeneous tabular data structure with labeled
             axes);
-            On FAILURE - Error message
+            On FAILURE - Raises MySQL Connector exception
         """
-        return self.execute_delete_query('Reservations', reservation_dict)
+        try:
+            return self.execute_delete_query('Reservations', reservation_dict)
+        except maria_db.Error as error:
+            raise error
 
     # Implementation of the program applications for the Reservations table
     def add_transaction(self, transaction_dict):
@@ -1221,7 +1266,8 @@ class Apps(object):
             axes) retrieved from the helper function execute_select_query(),
             which contains a tuple(s) with successfully stored data in the
             Transactions table;
-            On FAILURE - Error message
+            On FAILURE - Raises Assertion Error exception or MySQL Connector
+            exception
 
         TODO:
         """
@@ -1239,16 +1285,15 @@ class Apps(object):
                     'Exception: Date of the transaction must follow the DATE ' \
                     'format: YYYY-MM-DD.\n'
             # Execute insert query
-            result = self.execute_insert_query(transaction_dict, 'Transactions')
-            if result is not None:
-                return result
+            self.execute_insert_query(transaction_dict, 'Transactions')
             # Query for this inserted tuple and return it as Pandas DataFrame
             data_frame = self.execute_select_query(
                 '*', 'Transactions', 'id=LAST_INSERT_ID()')
             return data_frame
-        except AssertionError, e:
-            print e
-            return
+        except AssertionError, error:
+            raise error
+        except maria_db.Error as error:
+            raise error
 
     def update_transaction(self, transaction_dict, where_clause_dict):
         """Updates a tuple in the Transactions table.
@@ -1277,7 +1322,8 @@ class Apps(object):
             size-mutable, heterogeneous tabular data structure with labeled
             axes) containing a tuple of successfully update tuple in the
             Transactions table;
-            On FAILURE - Error message
+            On FAILURE - Raises Assertion Error exception or MySQL Connector
+            exception
 
         TODO:
         """
@@ -1293,8 +1339,10 @@ class Apps(object):
             data_frame = self.execute_update_query(
                 'Rooms', transaction_dict, where_clause_dict)
             return data_frame
-        except AssertionError, e:
-            return e
+        except AssertionError, error:
+            raise error
+        except maria_db.Error as error:
+            raise error
 
     def delete_transaction(self, transaction_dict):
         """Deletes a tuple(s) from Transactions table.
@@ -1315,9 +1363,12 @@ class Apps(object):
             :return: On SUCCESS - Empty Pandas DataFrame (two-dimensional
             size-mutable, heterogeneous tabular data structure with labeled
             axes);
-            On FAILURE - Error message
+            On FAILURE - Raises MySQL Connector exception
         """
-        return self.execute_delete_query('Reservations', transaction_dict)
+        try:
+            return self.execute_delete_query('Reservations', transaction_dict)
+        except maria_db.Error as error:
+            raise error
 
     # Implementation of the program applications for the Serves table
     def add_serves(self, serves_dict):
@@ -1351,19 +1402,20 @@ class Apps(object):
             axes) retrieved from the helper function execute_select_query(),
             which contains a tuple(s) with successfully stored data in the
             Serves table;
-            On FAILURE - Error message
+            On FAILURE - Raises MySQL Connector exception
 
         TODO:
         """
-        # Execute insert query
-        result = self.execute_insert_query(serves_dict, 'Serves')
-        if result is not None:
-            return result
-        # Query for this inserted tuple and return it as Pandas DataFrame
-        data_frame = self.execute_select_query(
-            '*', 'Serves', 'staff_id={} AND reservation_id={}'.format(
-                serves_dict['staff_id'], serves_dict['reservation_id']))
-        return data_frame
+        try:
+            # Execute insert query
+            self.execute_insert_query(serves_dict, 'Serves')
+            # Query for this inserted tuple and return it as Pandas DataFrame
+            data_frame = self.execute_select_query(
+                '*', 'Serves', 'staff_id={} AND reservation_id={}'.format(
+                    serves_dict['staff_id'], serves_dict['reservation_id']))
+            return data_frame
+        except maria_db.Error as error:
+            raise error
 
     def update_serves(self, serves_dict, where_clause_dict):
         """Updates a tuple in the Serves table.
@@ -1392,15 +1444,18 @@ class Apps(object):
             size-mutable, heterogeneous tabular data structure with labeled
             axes) containing a tuple of successfully update tuple in the Serves
             table;
-            On FAILURE - Error message
+            On FAILURE - Raises MySQL Connector exception
 
         TODO:
         """
-        # Execute update query
-        # Also queries for updated tuple and returns it as Pandas DataFrame
-        data_frame = self.execute_update_query(
-            'Rooms', serves_dict, where_clause_dict)
-        return data_frame
+        try:
+            # Execute update query
+            # Also queries for updated tuple and returns it as Pandas DataFrame
+            data_frame = self.execute_update_query(
+                'Rooms', serves_dict, where_clause_dict)
+            return data_frame
+        except maria_db.Error as error:
+            raise error
 
     def delete_serves(self, serves_dict):
         """Deletes a tuple(s) from Serves table.
@@ -1421,6 +1476,9 @@ class Apps(object):
             :return: On SUCCESS - Empty Pandas DataFrame (two-dimensional
             size-mutable, heterogeneous tabular data structure with labeled
             axes);
-            On FAILURE - Error message
+            On FAILURE - Raises MySQL Connector exception
         """
-        return self.execute_delete_query('Serves', serves_dict)
+        try:
+            return self.execute_delete_query('Serves', serves_dict)
+        except maria_db.Error as error:
+            raise error
