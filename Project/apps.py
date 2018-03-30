@@ -161,7 +161,7 @@ class Apps(object):
             size-mutable, heterogeneous tabular data structure with labeled
             axes) containing desired tuple(s)/row(s);
             On FAILURE - Error message
-        TODO: Possible SQL-injection when using pre-formatted where clause
+        TODO:
         """
         try:
             # Query for desired tuple(s) and return it as Pandas DataFrame
@@ -307,12 +307,12 @@ class Apps(object):
         try:
             # Construct delete query statement
             where_attr_delete_format = ', '.join([x + '=%s' for x in dictionary.iterkeys()])
-            where_attr_select = ' AND '.join([k + '=' + self._format_query_value(v) for k, v in dictionary.iteritems()])
+            where_attr_select = ' AND '.join([k + '=' + v for k, v in dictionary.iteritems()])
             delete_query = "DELETE FROM {} WHERE {}".format(
                 table_name, where_attr_delete_format)
 
             # Execute delete query
-            self.cursor.execute(delete_query, map(self._format_query_value, dictionary.values()))
+            self.cursor.execute(delete_query, dictionary.values())
             self.maria_db_connection.commit()
 
             # Query this deleted tuple and return it as empty Pandas DataFrame

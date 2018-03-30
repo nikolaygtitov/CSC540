@@ -39,6 +39,17 @@ class TestApps(SQLUnitTestBase):
         self.assertEqual('NC', df['state'].ix[0])
         apps.cursor.close()
 
+    def test_delete_zip(self):
+        apps = Apps(self._con, True)
+        df = apps.add_zip({'zip': '27511', 'city': 'Cary', 'state': 'NC'})
+        self.assertEqual(1, len(df.index))
+        df = apps.delete_zip({'zip': '27511'})
+        self.assertEqual(0, len(df.index))
+        df = apps.execute_select_query('*', 'ZipToCityState')
+        self.assertEqual(0, len(df.index))
+        apps.cursor.close()
+
+
 
 if __name__ == '__main__':
     unittest.main()
