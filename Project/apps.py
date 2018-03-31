@@ -371,13 +371,16 @@ class Apps(object):
         Assigns staff member to a room by adding it into Serves table.
 
         Request to assign staff to a room may come from four different internal
-        functions:
+        functions and upper layer (directly from UI):
         i) add_staff() - Staff is immediately assigned to a room once is added
         ii) update_staff() - Staff is assigned to a room as an update
         iii) add_reservation() - Customer checks-in immediately when
         reservation is created and this reservation is for Presidential Suite
         iv) update_reservation() - Customer checks-in and this reservation is
         for Presidential Suite
+        v) UI request - User wants to assign staff to a room using this API.
+        Alternative API would be update_staff() and specify assigned_hotel_id
+        and assigned room_number.
         If request comes from Staff functions, for a given hotel ID, room
         number, and staff ID, it does the following:
         1) Determines reservation ID
@@ -391,10 +394,13 @@ class Apps(object):
         2) Inserts both staff IDs and reservation ID into Serves table by
         calling helper function add_serves() with appropriate dictionary of
         attributes and values
-
         If neither staff ID nor reservation ID cannot be found, nothing gets
         inserted into Serves table, but transaction must still succeed, unless
         there are some cursor errors.
+        If request comes from UI, all of the arguments must be specified. In
+        this case, it calls helper function update_staff(), which sets assigned
+        hotel and room number for this staff member and does callback to insert
+        new tuple into the add_serves().
 
         Parameters:
             :param hotel_id: ID of a hotel is needed for identifying unique
@@ -462,6 +468,21 @@ class Apps(object):
                     if staff_tuples is not None and staff_tuples[0][0]:
                         self.add_serves({'staff_id': staff_tuples[0][0],
                                          'reservation_id': reservation_id})
+        if staff_id and reservation_id:
+            # This request comes from UI, needs to call update_staff accordingly
+            self.add_serves({'staff_id': staff_id,
+                             'reservation_id': reservation_id})
+            # Determine hotel ID and room number based on the reservation ID
+            self.execute_simple_select_query('hotel_id, room_number',
+                                             'Reservations',
+                                             {'id': reservation_id})
+            reservation_tuple = self.cursor.fetchall()
+            if reservation_tuple is not None and reservation_tuple[0][0]:
+                # Call helper function that will do a callback here
+                self.update_staff(
+                    {'assigned_hotel_id': reservation_tuple[0][0],
+                     'assigned_room_number': reservation_tuple[0][1]},
+                    {'id': staff_id})
 
     # Implementation of the program applications for the ZipToCityState table
     def add_zip(self, zip_dict):
@@ -1440,8 +1461,6 @@ class Apps(object):
                             self.update_staff({'assigned_hotel_id': None,
                                                'assigned_room_number': None},
                                               {'id': staff_id})
-                    # Delete from Serves table
-                    self.delete_serves({'reservation_id': reservation[0]})
 
             # If Customer checks-in, check whether this reservation is
             # Presidential suite and assign one Catering Staff and one Room
