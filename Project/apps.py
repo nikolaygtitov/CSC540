@@ -126,9 +126,11 @@ class Apps(object):
     def execute_select_query(self, attributes, table_name, where_clause=None):
         """Generates and executes SELECT query in python format.
 
-        For a given table name and WHERE clause, 1) Generates SELECT query for
-        desired attributes specified by the argument; 2) Uses the SELECT query
-        to create a Pandas DataFrame and return it to the caller function.
+        For a given table name and WHERE clause, it does the following:
+        1) Generates SELECT query for desired attributes specified by the
+        argument
+        2) Uses the SELECT query to create a Pandas DataFrame and return it to
+        the caller function
 
         Parameters:
             :param attributes: String of attributes desired to be shown in the
@@ -140,10 +142,13 @@ class Apps(object):
             to be shown in the resulting table.
 
         Returns:
-            :return: On SUCCESS - Pandas DataFrame (two-dimensional
-            size-mutable, heterogeneous tabular data structure with labeled
-            axes) containing desired tuple(s)/row(s);
-            On FAILURE - Raises MySQL Connector exception
+            :return: Pandas DataFrame (two-dimensional size-mutable,
+            heterogeneous tabular data structure with labeled axes) containing
+            desired tuple(s)/row(s)
+
+        Exceptions:
+            :raise: MySQL Connector Error exception
+
         TODO:
         """
         try:
@@ -167,8 +172,6 @@ class Apps(object):
         following:
         1) Generates an INSERT query statement
         2) Executes this generated INSERT query
-        3) Commits or rollback depending if there were any errors within this
-        operation
         The query is generated within the Python standards to prevent MySQL
         injection.
 
@@ -179,8 +182,10 @@ class Apps(object):
             executed
 
         Returns:
-            :return: On SUCCESS - None;
-            On FAILURE - Raises MySQL Connector exception
+            :return: Does not return
+
+        Exceptions:
+            :raise: MySQL Connector Error exception
 
         TODO:
         """
@@ -189,11 +194,8 @@ class Apps(object):
             insert_query = "INSERT INTO {} ({}) VALUES ({})".format(
                 table_name, ', '.join(dictionary.keys()), ', '.join(
                     ['%s' for _ in dictionary.iterkeys()]))
-
             # Execute insert query
             self.cursor.execute(insert_query, dictionary.values())
-            # Can transaction manager take care of the commit?
-            # self.maria_db_connection.commit()
         except maria_db.Error as error:
             raise error
 
@@ -223,11 +225,13 @@ class Apps(object):
             executed
 
         Returns:
-            :return: On SUCCESS - Pandas DataFrame (two-dimensional
-            size-mutable, heterogeneous tabular data structure with labeled
-            axes) retrieved from the helper function execute_select_query(),
-            which contains a tuple(s) with successfully updated data in MySQL;
-            On FAILURE - Raises MySQL Connector exception
+            :return: Pandas DataFrame (two-dimensional size-mutable,
+            heterogeneous tabular data structure with labeled axes) retrieved
+            from the helper function execute_select_query(), which contains a
+            tuple(s) with successfully updated data in MySQL
+
+        Exceptions:
+            :raise: MySQL Connector Error exception
 
         TODO:
         """
@@ -285,11 +289,17 @@ class Apps(object):
             identifies a tuple(s) in a table
 
         Returns:
-            :return: On SUCCESS - Pandas DataFrame (two-dimensional
-            size-mutable, heterogeneous tabular data structure with labeled
-            axes) retrieved from the helper function execute_select_query(),
-            which contains a tuple(s) with successfully updated data in MySQL;
-            On FAILURE - Raises MySQL Connector exception
+            :return: Empty Pandas DataFrame (two-dimensional size-mutable,
+            heterogeneous tabular data structure with labeled axes) retrieved
+            from the helper function execute_select_query(). The DataFrame must
+            not contain any tuple(s), since the tuple(s) containing attribute
+            values specified in the dictionary argument are deleted from a
+            table.
+
+        Exceptions:
+            :raise: MySQL Connector Error exception
+
+        TODO:
         """
         try:
             # Construct delete query statement
@@ -337,13 +347,13 @@ class Apps(object):
                 - state: State that corresponds to the ZIP code
 
         Returns:
-            :return: On SUCCESS - Pandas DataFrame (two-dimensional
-            size-mutable, heterogeneous tabular data structure with labeled
-            axes) retrieved from the helper function execute_select_query(),
-            which contains a tuple(s) with successfully stored data in the
-            ZipToCityState table;
-            On FAILURE - Raises Assertion Error exception or MySQL Connector
-            exception
+            :return: Pandas DataFrame (two-dimensional size-mutable,
+            heterogeneous tabular data structure with labeled axes) retrieved
+            from the helper function execute_select_query(), which contains a
+            tuple(s) with successfully stored data in the ZipToCityState table
+
+        Exceptions:
+            :raise: Assertion Error or MySQL Connector Error exceptions
 
         TODO:
         """
@@ -392,12 +402,12 @@ class Apps(object):
             attributes and corresponding values.
 
         Returns:
-            :return: On SUCCESS - Pandas DataFrame (two-dimensional
-            size-mutable, heterogeneous tabular data structure with labeled
-            axes) containing a tuple of successfully update tuple in the
-            ZipToCityState table;
-            On FAILURE - Raises Assertion Error exception or MySQL Connector
-            exception
+            :return: Pandas DataFrame (two-dimensional size-mutable,
+            heterogeneous tabular data structure with labeled axes) containing
+            a tuple of successfully update tuple in the ZipToCityState table
+
+        Exceptions:
+            :raise: Assertion Error or MySQL Connector Error exceptions
 
         TODO:
         """
@@ -434,10 +444,13 @@ class Apps(object):
             a tuple(s) in the ZipToCityState table
 
         Returns:
-            :return: On SUCCESS - Empty Pandas DataFrame (two-dimensional
-            size-mutable, heterogeneous tabular data structure with labeled
-            axes);
-            On FAILURE - Raises MySQL Connector exception
+            :return: Empty Pandas DataFrame (two-dimensional size-mutable,
+            heterogeneous tabular data structure with labeled axes)
+
+        Exceptions:
+            :raise: MySQL Connector Error exception
+
+        TODO:
         """
         try:
             return self.execute_delete_query('ZipToCityState', zip_dict)
@@ -472,13 +485,13 @@ class Apps(object):
                 - phone_number: Phone number of the hotel
 
         Returns:
-            :return: On SUCCESS - Pandas DataFrame (two-dimensional
-            size-mutable, heterogeneous tabular data structure with labeled
-            axes) retrieved from the helper function execute_select_query(),
-            which contains a tuple(s) with successfully stored data in the
-            Hotels table;
-            On FAILURE - Raises Assertion Error exception or MySQL Connector
-            exception
+            :return: Pandas DataFrame (two-dimensional size-mutable,
+            heterogeneous tabular data structure with labeled axes) retrieved
+            from the helper function execute_select_query(), which contains a
+            tuple(s) with successfully stored data in the Hotels table
+
+        Exceptions:
+            :raise: Assertion Error or MySQL Connector Error exceptions
 
         TODO:
         """
@@ -529,12 +542,12 @@ class Apps(object):
             attributes and corresponding values.
 
         Returns:
-            :return: On SUCCESS - Pandas DataFrame (two-dimensional
-            size-mutable, heterogeneous tabular data structure with labeled
-            axes) containing a tuple of successfully update tuple in the Hotels
-            table;
-            On FAILURE - Raises Assertion Error exception or MySQL Connector
-            exception
+            :return: Pandas DataFrame (two-dimensional size-mutable,
+            heterogeneous tabular data structure with labeled axes) containing
+            a tuple of successfully update tuple in the Hotels table
+
+        Exceptions:
+            :raise: Assertion Error or MySQL Connector Error exceptions
 
         TODO:
         """
@@ -571,10 +584,13 @@ class Apps(object):
             identify a tuple(s) in the Hotels table
 
         Returns:
-            :return: On SUCCESS - Empty Pandas DataFrame (two-dimensional
-            size-mutable, heterogeneous tabular data structure with labeled
-            axes);
-            On FAILURE - Raises MySQL Connector exception
+            :return: Empty Pandas DataFrame (two-dimensional size-mutable,
+            heterogeneous tabular data structure with labeled axes)
+
+        Exceptions:
+            :raise: MySQL Connector Error exception
+
+        TODO:
         """
         try:
             return self.execute_delete_query('Hotels', hotel_dict)
@@ -609,13 +625,13 @@ class Apps(object):
                 - rate: Rate per one night in US dollars of the room
 
         Returns:
-            :return: On SUCCESS - Pandas DataFrame (two-dimensional
-            size-mutable, heterogeneous tabular data structure with labeled
-            axes) retrieved from the helper function execute_select_query(),
-            which contains a tuple(s) with successfully stored data in the
-            Rooms table;
-            On FAILURE - Raises Assertion Error exception or MySQL Connector
-            exception
+            :return: Pandas DataFrame (two-dimensional size-mutable,
+            heterogeneous tabular data structure with labeled axes) retrieved
+            from the helper function execute_select_query(), which contains a
+            tuple(s) with successfully stored data in the Rooms table
+
+        Exceptions:
+            :raise: Assertion Error or MySQL Connector Error exceptions
 
         TODO:
         """
@@ -665,12 +681,12 @@ class Apps(object):
             attributes and corresponding values.
 
         Returns:
-            :return: On SUCCESS - Pandas DataFrame (two-dimensional
-            size-mutable, heterogeneous tabular data structure with labeled
-            axes) containing a tuple of successfully update tuple in the Rooms
-            table;
-            On FAILURE - Raises Assertion Error exception or MySQL Connector
-            exception
+            :return: Pandas DataFrame (two-dimensional size-mutable,
+            heterogeneous tabular data structure with labeled axes) containing
+            a tuple of successfully update tuple in the Rooms table
+
+        Exceptions:
+            :raise: Assertion Error or MySQL Connector Error exceptions
 
         TODO:
         """
@@ -707,10 +723,13 @@ class Apps(object):
             identify a tuple(s) in the Rooms table
 
         Returns:
-            :return: On SUCCESS - Empty Pandas DataFrame (two-dimensional
-            size-mutable, heterogeneous tabular data structure with labeled
-            axes);
-            On FAILURE - Raises MySQL Connector exception
+            :return: Empty Pandas DataFrame (two-dimensional size-mutable,
+            heterogeneous tabular data structure with labeled axes)
+
+        Exceptions:
+            :raise: MySQL Connector Error exception
+
+        TODO:
         """
         try:
             return self.execute_delete_query('Rooms', room_dict)
@@ -759,13 +778,13 @@ class Apps(object):
                 can be assigned to at most one room in one particular hotel.
 
         Returns:
-            :return: On SUCCESS - Pandas DataFrame (two-dimensional
-            size-mutable, heterogeneous tabular data structure with labeled
-            axes) retrieved from the helper function execute_select_query(),
-            which contains a tuple(s) with successfully stored data in the
-            Staff table;
-            On FAILURE - Raises Assertion Error exception or MySQL Connector
-            exception
+            :return: Pandas DataFrame (two-dimensional size-mutable,
+            heterogeneous tabular data structure with labeled axes) retrieved
+            from the helper function execute_select_query(), which contains a
+            tuple(s) with successfully stored data in the Staff table
+
+        Exceptions:
+            :raise: Assertion Error or MySQL Connector Error exceptions
 
         TODO: If staff member is assigned to a particular room and hotel, we
         need to determine Staff ID and Reservation ID to call
@@ -838,14 +857,16 @@ class Apps(object):
             attributes and corresponding values.
 
         Returns:
-            :return: On SUCCESS - Pandas DataFrame (two-dimensional
-            size-mutable, heterogeneous tabular data structure with labeled
-            axes) containing a tuple of successfully update tuple in the Staff
-            table;
-            On FAILURE - Raises Assertion Error exception or MySQL Connector
-            exception
+            :return: Pandas DataFrame (two-dimensional size-mutable,
+            heterogeneous tabular data structure with labeled axes) containing
+            a tuple of successfully update tuple in the Staff table
 
-        TODO:
+        Exceptions:
+            :raise: Assertion Error or MySQL Connector Error exceptions
+
+        TODO: If Staff member gets assigned to a room as dedicated staff,
+        insert into Serves table this staff member id and reservation id of
+        that room and hotel.
         """
         try:
             # Perform validation on updating attributes
@@ -882,10 +903,13 @@ class Apps(object):
             identify a tuple(s) in the Staff table
 
         Returns:
-            :return: On SUCCESS - Empty Pandas DataFrame (two-dimensional
-            size-mutable, heterogeneous tabular data structure with labeled
-            axes);
-            On FAILURE - Raises MySQL Connector exception
+            :return: Empty Pandas DataFrame (two-dimensional size-mutable,
+            heterogeneous tabular data structure with labeled axes)
+
+        Exceptions:
+            :raise: MySQL Connector Error exception
+
+        TODO:
         """
         try:
             return self.execute_delete_query('Staff', staff_dict)
@@ -933,13 +957,13 @@ class Apps(object):
                 credit card.
 
         Returns:
-            :return: On SUCCESS - Pandas DataFrame (two-dimensional
-            size-mutable, heterogeneous tabular data structure with labeled
-            axes) retrieved from the helper function execute_select_query(),
-            which contains a tuple(s) with successfully stored data in the
-            Customers table;
-            On FAILURE - Raises Assertion Error exception or MySQL Connector
-            exception
+            :return: Pandas DataFrame (two-dimensional size-mutable,
+            heterogeneous tabular data structure with labeled axes) retrieved
+            from the helper function execute_select_query(), which contains a
+            tuple(s) with successfully stored data in the Customers table
+
+        Exceptions:
+            :raise: Assertion Error or MySQL Connector Error exceptions
 
         TODO:
         """
@@ -1000,12 +1024,12 @@ class Apps(object):
             attributes and corresponding values.
 
         Returns:
-            :return: On SUCCESS - Pandas DataFrame (two-dimensional
-            size-mutable, heterogeneous tabular data structure with labeled
-            axes) containing a tuple of successfully update tuple in the
-            Customers table;
-            On FAILURE - Raises Assertion Error exception or MySQL Connector
-            exception
+            :return: Pandas DataFrame (two-dimensional size-mutable,
+            heterogeneous tabular data structure with labeled axes) containing
+            a tuple of successfully update tuple in the Customers table
+
+        Exceptions:
+            :raise: Assertion Error or MySQL Connector Error exceptions
 
         TODO:
         """
@@ -1044,10 +1068,13 @@ class Apps(object):
             identify a tuple(s) in the Customers table
 
         Returns:
-            :return: On SUCCESS - Empty Pandas DataFrame (two-dimensional
-            size-mutable, heterogeneous tabular data structure with labeled
-            axes);
-            On FAILURE - Raises MySQL Connector exception
+            :return: Empty Pandas DataFrame (two-dimensional size-mutable,
+            heterogeneous tabular data structure with labeled axes)
+
+        Exceptions:
+            :raise: MySQL Connector Error exception
+
+        TODO:
         """
         try:
             return self.execute_delete_query('Customers', customer_dict)
@@ -1092,13 +1119,13 @@ class Apps(object):
                 follow the DATETIME format YYYY-MM-DD HH:MM:SS.
 
         Returns:
-            :return: On SUCCESS - Pandas DataFrame (two-dimensional
-            size-mutable, heterogeneous tabular data structure with labeled
-            axes) retrieved from the helper function execute_select_query(),
-            which contains a tuple(s) with successfully stored data in the
-            Reservations table;
-            On FAILURE - Raises Assertion Error exception or MySQL Connector
-            exception
+            :return: Pandas DataFrame (two-dimensional size-mutable,
+            heterogeneous tabular data structure with labeled axes) retrieved
+            from the helper function execute_select_query(), which contains a
+            tuple(s) with successfully stored data in the Reservations table
+
+        Exceptions:
+            :raise: Assertion Error or MySQL Connector Error exceptions
 
         TODO: Need to determine the Staff ID who adds this reservation and ID
         of this newly created reservation. This function always needs to call
@@ -1174,12 +1201,12 @@ class Apps(object):
             attributes and corresponding values.
 
         Returns:
-            :return: On SUCCESS - Pandas DataFrame (two-dimensional
-            size-mutable, heterogeneous tabular data structure with labeled
-            axes) containing a tuple of successfully update tuple in the
-            Reservations table;
-            On FAILURE - Raises Assertion Error exception or MySQL Connector
-            exception
+            :return: Pandas DataFrame (two-dimensional size-mutable,
+            heterogeneous tabular data structure with labeled axes) containing
+            a tuple of successfully update tuple in the Reservations table
+
+        Exceptions:
+            :raise: Assertion Error or MySQL Connector Error exceptions
 
         TODO:
         """
@@ -1218,10 +1245,13 @@ class Apps(object):
             identify a tuple(s) in the Reservations table
 
         Returns:
-            :return: On SUCCESS - Empty Pandas DataFrame (two-dimensional
-            size-mutable, heterogeneous tabular data structure with labeled
-            axes);
-            On FAILURE - Raises MySQL Connector exception
+            :return:  Empty Pandas DataFrame (two-dimensional size-mutable,
+            heterogeneous tabular data structure with labeled axes)
+
+        Exceptions:
+            :raise: MySQL Connector Error exception
+
+        TODO:
         """
         try:
             return self.execute_delete_query('Reservations', reservation_dict)
@@ -1261,13 +1291,13 @@ class Apps(object):
                 reservation.
 
         Returns:
-            :return: On SUCCESS - Pandas DataFrame (two-dimensional
-            size-mutable, heterogeneous tabular data structure with labeled
-            axes) retrieved from the helper function execute_select_query(),
-            which contains a tuple(s) with successfully stored data in the
-            Transactions table;
-            On FAILURE - Raises Assertion Error exception or MySQL Connector
-            exception
+            :return: Pandas DataFrame (two-dimensional size-mutable,
+            heterogeneous tabular data structure with labeled axes) retrieved
+            from the helper function execute_select_query(), which contains a
+            tuple(s) with successfully stored data in the Transactions table
+
+        Exceptions:
+            :raise: Assertion Error or MySQL Connector Error exceptions
 
         TODO:
         """
@@ -1318,12 +1348,12 @@ class Apps(object):
             attributes and corresponding values.
 
         Returns:
-            :return: On SUCCESS - Pandas DataFrame (two-dimensional
-            size-mutable, heterogeneous tabular data structure with labeled
-            axes) containing a tuple of successfully update tuple in the
-            Transactions table;
-            On FAILURE - Raises Assertion Error exception or MySQL Connector
-            exception
+            :return: Pandas DataFrame (two-dimensional size-mutable,
+            heterogeneous tabular data structure with labeled axes) containing
+            a tuple of successfully update tuple in the Transactions table
+
+        Exceptions:
+            :raise: Assertion Error or MySQL Connector Error exceptions
 
         TODO:
         """
@@ -1360,10 +1390,13 @@ class Apps(object):
             identify a tuple(s) in the Transactions table
 
         Returns:
-            :return: On SUCCESS - Empty Pandas DataFrame (two-dimensional
-            size-mutable, heterogeneous tabular data structure with labeled
-            axes);
-            On FAILURE - Raises MySQL Connector exception
+            :return: Empty Pandas DataFrame (two-dimensional size-mutable,
+            heterogeneous tabular data structure with labeled axes)
+
+        Exceptions:
+            :raise: MySQL Connector Error exception
+
+        TODO:
         """
         try:
             return self.execute_delete_query('Reservations', transaction_dict)
@@ -1397,12 +1430,13 @@ class Apps(object):
                 member
 
         Returns:
-            :return: On SUCCESS - Pandas DataFrame (two-dimensional
-            size-mutable, heterogeneous tabular data structure with labeled
-            axes) retrieved from the helper function execute_select_query(),
-            which contains a tuple(s) with successfully stored data in the
-            Serves table;
-            On FAILURE - Raises MySQL Connector exception
+            :return: Pandas DataFrame (two-dimensional size-mutable,
+            heterogeneous tabular data structure with labeled axes) retrieved
+            from the helper function execute_select_query(), which contains a
+            tuple(s) with successfully stored data in the Serves table
+
+        Exceptions:
+            :raise: Assertion Error or MySQL Connector Error exceptions
 
         TODO:
         """
@@ -1440,11 +1474,12 @@ class Apps(object):
             attributes and corresponding values.
 
         Returns:
-            :return: On SUCCESS - Pandas DataFrame (two-dimensional
-            size-mutable, heterogeneous tabular data structure with labeled
-            axes) containing a tuple of successfully update tuple in the Serves
-            table;
-            On FAILURE - Raises MySQL Connector exception
+            :return: Pandas DataFrame (two-dimensional size-mutable,
+            heterogeneous tabular data structure with labeled axes) containing
+            a tuple of successfully update tuple in the Serves table
+
+        Exceptions:
+            :raise: Assertion Error or MySQL Connector Error exceptions
 
         TODO:
         """
@@ -1473,10 +1508,13 @@ class Apps(object):
             identify a tuple(s) in the Serves table
 
         Returns:
-            :return: On SUCCESS - Empty Pandas DataFrame (two-dimensional
-            size-mutable, heterogeneous tabular data structure with labeled
-            axes);
-            On FAILURE - Raises MySQL Connector exception
+            :return: Empty Pandas DataFrame (two-dimensional size-mutable,
+            heterogeneous tabular data structure with labeled axes)
+
+        Exceptions:
+            :raise: MySQL Connector Error exception
+
+        TODO:
         """
         try:
             return self.execute_delete_query('Serves', serves_dict)
