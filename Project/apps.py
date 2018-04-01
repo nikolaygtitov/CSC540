@@ -118,51 +118,121 @@ class Apps(object):
             :param check: MySQL CHECK constraint boolean. Since CHECK
             constraint is ignored by all MySQL engines, all the check
             constraints must be performed at the application level.
+
+        Returns:
+            :return:
+
+        TODO:
         """
         self.maria_db_connection = maria_db_connection
         self.cursor = maria_db_connection.cursor()
         self.check = check
 
-    def execute_select_query(self, attributes, table_name, where_clause=None):
-        """Generates and executes SELECT query in python format.
+    def get_data_frame(self, attributes, table_name, where_clause=None):
+        """Generates Pandas DataFrame with desired tuple(s)/row(s) in a table.
 
         For a given table name and WHERE clause, it does the following:
         1) Generates SELECT query for desired attributes specified by the
         argument
-        2) Uses the SELECT query to create a Pandas DataFrame and return it to
-        the caller function
+        2) Uses the SELECT query to create a Pandas DataFrame
+        3) Returns Pandas DataFrame to the caller function
 
         Parameters:
             :param attributes: String of attributes desired to be shown in the
-            resulting table/clause (e.g. *)
-            :param table_name: Name of the table on which SELECT query needs to
-            be executed
+            resulting data frame or table (e.g. *)
+            :param table_name: Name of the table on which SELECT query is
+            performed for generating Pandas DataFrame
             :param where_clause: String specifying the WHERE clause for SELECT
             query. It can be None if all tuples (rows) in the table are desired
-            to be shown in the resulting table.
+            to be shown in the resulting data frame.
 
         Returns:
             :return: Pandas DataFrame (two-dimensional size-mutable,
             heterogeneous tabular data structure with labeled axes) containing
             desired tuple(s)/row(s)
 
-        Exceptions:
-            :raise: MySQL Connector Error exception
+        TODO:
+        """
+        # Query for desired tuple(s) and return it as Pandas DataFrame
+        if where_clause is None:
+            select_query = "SELECT {} FROM {}".format(attributes, table_name)
+        else:
+            select_query = "SELECT {} FROM {} WHERE {}".format(
+                attributes, table_name, where_clause)
+        data_frame = pd.read_sql(select_query, con=self.maria_db_connection)
+        return data_frame
+
+    def execute_simple_select_query(self, attributes, table_name,
+                                    where_clause_dict):
+        """Generates and executes SELECT query in python format with basic
+        WHERE clause having only AND key words
+
+        For a given attributes, table name, over which SELECT query is
+        executed, and dictionary of attributes and values for corresponding
+        WHERE clause, specified in the arguments respectively, it does the
+        following:
+        1) Generates WHERE clause with AND key words ONLY
+        2) Generates an SELECT query statement that includes simple WHERE clause
+        3) Executes this generated simple SELECT query
+        The query is generated within the Python standards to prevent MySQL
+        injection.
+
+        Parameters:
+            :param attributes: String of attributes separated by a comma for
+            which SELECT query is executed
+            :param table_name: Name of the table for which SELECT query is
+            executed
+            :param where_clause_dict: Dictionary of attributes and values used
+            for generating WHERE clause. If all tuples/rows in a table are
+            desired to be selected at once, this argument msut be None.
+
+        Returns:
+            :return:
 
         TODO:
         """
-        try:
-            # Query for desired tuple(s) and return it as Pandas DataFrame
-            if where_clause is None:
-                select_query = "SELECT {} FROM {}".format(attributes,
-                                                          table_name)
-            else:
-                select_query = "SELECT {} FROM {} WHERE {}".format(
-                    attributes, table_name, where_clause)
-            data_frame = pd.read_sql(select_query, con=self.maria_db_connection)
-            return data_frame
-        except maria_db.Error as error:
-            raise error
+        # Generate WHERE clause format only with AND key words
+        where_attr_format = ' AND '.join([attr + '=%s' for attr in
+                                          where_clause_dict.iterkeys()])
+        # Generate select query statement and execute it
+        select_query = "SELECT {} FROM {} WHERE {}".format(
+            attributes, table_name, where_attr_format)
+        self.cursor.execute(select_query, where_clause_dict.values())
+
+    def execute_select_query(self, attributes, table_name, where_clause=None,
+                             where_values_list=None):
+        """Generates and executes SELECT query in python format with
+        complicated WHERE clause
+
+        For a given attributes, table name, WHERE clause format, and list of
+        values used for WHERE clause, over which SELECT query is executed, it
+        does the following:
+        1) Generates an SELECT query statement that includes complicated WHERE
+        clause having different key words and even statements
+        2) Executes this generated SELECT query
+        The query is generated within the Python standards to prevent MySQL
+        injection.
+
+        Parameters:
+            :param attributes: String of attributes separated by a comma for
+            which SELECT query is executed
+            :param table_name: Name of the table for which SELECT query is
+            executed
+            :param where_clause: String with complex WHERE clause format
+            :param where_values_list: List of values used for WHERE clause
+            included into SELECT query
+
+        Returns:
+            :return:
+
+        TODO:
+        """
+        # Generate select query statement and execute it
+        if where_clause and where_values_list:
+            select_query = "SELECT {} FROM {} WHERE {}".format(
+                attributes, table_name, where_clause)
+            # Execute select query with complicated WHERE clause
+            self.cursor.execute(select_query, where_values_list)
 
     def execute_insert_query(self, dictionary, table_name):
         """Generates and executes INSERT query in python format.
@@ -182,36 +252,27 @@ class Apps(object):
             executed
 
         Returns:
-            :return: Does not return
-
-        Exceptions:
-            :raise: MySQL Connector Error exception
+            :return:
 
         TODO:
         """
-        try:
-            # Construct insert query statement
-            insert_query = "INSERT INTO {} ({}) VALUES ({})".format(
-                table_name, ', '.join(dictionary.keys()), ', '.join(
-                    ['%s' for _ in dictionary.iterkeys()]))
-            # Execute insert query
-            self.cursor.execute(insert_query, dictionary.values())
-        except maria_db.Error as error:
-            raise error
+        # Generate insert query statement
+        insert_query = "INSERT INTO {} ({}) VALUES ({})".format(
+            table_name, ', '.join(dictionary.keys()), ', '.join(
+                ['%s' for _ in dictionary.iterkeys()]))
+        # Execute insert query
+        self.cursor.execute(insert_query, dictionary.values())
 
     def execute_update_query(self, table_name, dictionary, where_clause_dict):
         """Generates and executes UPDATE query in python format.
 
         For a given dictionary of attributes and values to be updated in a
-        particular table, specified as an dictionary argument, it does the
-        following:
+        particular table, specified as an dictionary argument and table_name
+        respectively, it does the following:
         1) Generates an UPDATE query statement
         2) Executes this generated UPDATE query
-        3) Commits or rollback depending if there were any errors within this
-        operation
-        4) Generates an WHERE clause for the SELECT query
-        5) Calls a helper function execute_select_query() to retrieve updated
-        tuple(s)
+        3) Generates an WHERE clause for the SELECT query
+        4) Calls a helper function get_data_frame() to retrieve updated tuple(s)
         The query is generated within the Python standards to prevent MySQL
         injection.
 
@@ -227,44 +288,34 @@ class Apps(object):
         Returns:
             :return: Pandas DataFrame (two-dimensional size-mutable,
             heterogeneous tabular data structure with labeled axes) retrieved
-            from the helper function execute_select_query(), which contains a
+            from the helper function get_data_frame(), which contains a
             tuple(s) with successfully updated data in MySQL
-
-        Exceptions:
-            :raise: MySQL Connector Error exception
 
         TODO:
         """
-        try:
-            # Get all attributes for SET clause
-            set_attr_format = ', '.join(
-                [attr + '=%s' for attr in dictionary.iterkeys()])
-            set_attr_args = dictionary.values()
+        # Get all attributes for SET clause
+        set_attr_format = ', '.join([attr + '=%s' for attr in
+                                     dictionary.iterkeys()])
+        set_attr_args = dictionary.values()
 
-            # Get all attributes for WHERE clause
-            where_attr_format = ' AND '.join(
-                [attr + '=%s' for attr in where_clause_dict.iterkeys()])
-            where_attr_args = where_clause_dict.values()
+        # Get all attributes for WHERE clause
+        where_attr_format = ' AND '.join([attr + '=%s' for attr in
+                                          where_clause_dict.iterkeys()])
+        where_attr_args = where_clause_dict.values()
 
-            # Construct update query statement
-            update_query = "UPDATE {} SET {} WHERE {}".format(
-                table_name, set_attr_format, where_attr_format)
+        # Construct update query statement
+        update_query = "UPDATE {} SET {} WHERE {}".format(
+            table_name, set_attr_format, where_attr_format)
 
-            # Execute update query
-            self.cursor.execute(update_query, set_attr_args + where_attr_args)
-            # Can transaction manager take care of commit?
-            # self.maria_db_connection.commit()
+        # Execute update query
+        self.cursor.execute(update_query, set_attr_args + where_attr_args)
 
-            # Generate WHERE clause for SELECT query
-            where_clause = where_attr_format % tuple(where_attr_args)
+        # Generate WHERE clause for SELECT query
+        where_clause = where_attr_format % tuple(where_attr_args)
 
-            # Query for this updated tuple and return it as Pandas DataFrame
-            data_frame = self.execute_select_query(
-                '*', table_name, where_clause)
-            return data_frame
-
-        except maria_db.Error as error:
-            raise error
+        # Query for this updated tuple and return it as Pandas DataFrame
+        data_frame = self.get_data_frame('*', table_name, where_clause)
+        return data_frame
 
     def execute_delete_query(self, table_name, dictionary):
         """Generates and executes DELETE query in python format.
@@ -274,11 +325,8 @@ class Apps(object):
         table, it does the following:
         1) Generates an DELETE query statement
         2) Executes this generated DELETE query
-        3) Commits or rollback depending if there were any errors within this
-        operation
-        4) Generates an WHERE clause for the SELECT query
-        5) Calls a helper function execute_select_query() to retrieve updated
-        tuple(s)
+        3) Generates an WHERE clause for the SELECT query
+        4) Calls a helper function get_data_frame() to retrieve updated tuple(s)
         The query is generated within the Python standards to prevent MySQL
         injection.
 
@@ -291,37 +339,71 @@ class Apps(object):
         Returns:
             :return: Empty Pandas DataFrame (two-dimensional size-mutable,
             heterogeneous tabular data structure with labeled axes) retrieved
-            from the helper function execute_select_query(). The DataFrame must
-            not contain any tuple(s), since the tuple(s) containing attribute
+            from the helper function get_data_frame(). The DataFrame must not
+            contain any tuple(s), since the tuple(s) containing attribute
             values specified in the dictionary argument are deleted from a
             table.
 
-        Exceptions:
-            :raise: MySQL Connector Error exception
-
         TODO:
         """
-        try:
-            # Construct delete query statement
-            where_attr_delete_format = ', '.join(
-                [attr + '=%s' for attr in dictionary.iterkeys()])
-            where_attr_select = ' AND '.join(
-                [attr + '=' + value for attr, value in dictionary.iteritems()])
-            delete_query = "DELETE FROM {} WHERE {}".format(
-                table_name, where_attr_delete_format)
+        where_attr_delete_format = ', '.join([attr + '=%s' for attr in
+                                              dictionary.iterkeys()])
+        where_attr_select = ' AND '.join(
+            [attr + '=' + value for attr, value in dictionary.iteritems()])
 
-            # Execute delete query
-            self.cursor.execute(delete_query, dictionary.values())
-            # Can transaction manager take care of commit?
-            # self.maria_db_connection.commit()
+        # Generate delete query statement
+        delete_query = "DELETE FROM {} WHERE {}".format(
+            table_name, where_attr_delete_format)
 
-            # Query this deleted tuple and return it as empty Pandas DataFrame
-            data_frame = self.execute_select_query(
-                '*', table_name, where_attr_select)
-            return data_frame
+        # Execute delete query
+        self.cursor.execute(delete_query, dictionary.values())
 
-        except maria_db.Error as error:
-            raise error
+        # Query this deleted tuple and return it as empty Pandas DataFrame
+        data_frame = self.get_data_frame('*', table_name, where_attr_select)
+        return data_frame
+
+    def assign_staff_to_room(self, hotel_id, room_number):
+        """
+        Assigns staff member to a room by adding it into Serves table.
+
+        Once any Staff member gets assigned to particular room in a hotel,
+        specified by arguments hotel_id and room_number, this function does the
+        following:
+        1) Finds ID of a staff member who gets assigned to a room by calling
+        helper function execute_simple_select_query()
+        2) Finds reservation ID associated with the hotel ID and room number by
+        calling helper function execute_select_query().
+        Since there could be multiple reservations associated with hotel id and
+        room number, it finds reservation ID based on check-in and check-out
+        times. Reservation for the room must have check-in time entered, but
+        must not have check-out time (must be NULL or empty string)
+        3) Inserts staff ID and reservation ID into Serves table by calling
+        helper function add_serves() with appropriate dictionary of attributes
+        and values
+
+        Parameters:
+            :param hotel_id: ID of a hotel that staff member gets assigned to
+            :param room_number: Room number that staff member gets assigned to
+
+        Returns:
+            :return:
+
+        TODO: Testing
+        """
+        serves_dict = {}
+        # Determine Staff ID
+        self.execute_simple_select_query('id', 'Staff',
+                                         {'id': 'LAST_INSERT_ID('')'})
+        serves_dict['staff_id'] = self.cursor.fetchall()
+        # Determine Reservation ID
+        where_clause = "hotel_id=%s AND room_number=%s AND " \
+                       "check_in_time IS NOT NULL AND " \
+                       "TRIM(check_in_time)<>'' AND " \
+                       "(check_out_time IS NULL OR TRIM(check_out_time)='')"
+        self.execute_select_query('id', 'Reservations', where_clause,
+                                  [hotel_id, room_number])
+        serves_dict['reservation_id'] = self.cursor.fetchall()
+        self.add_serves(serves_dict)
 
     # Implementation of the program applications for the ZipToCityState table
     def add_zip(self, zip_dict):
@@ -332,7 +414,7 @@ class Apps(object):
         helper function execute_insert_query() that generates INSERT query
         statement and executes it. Once data is successfully stored in the
         table, it quires this tuple by calling helper function
-        execute_select_query(), which returns it as Pandas DataFrame. If check
+        get_data_frame(), which returns it as Pandas DataFrame. If check
         boolean parameter is enabled, it performs assertions ensuring that data
         to be added obeys MySQL constraints that are ignored by current MySQL
         MariaDB version.
@@ -349,7 +431,7 @@ class Apps(object):
         Returns:
             :return: Pandas DataFrame (two-dimensional size-mutable,
             heterogeneous tabular data structure with labeled axes) retrieved
-            from the helper function execute_select_query(), which contains a
+            from the helper function get_data_frame(), which contains a
             tuple(s) with successfully stored data in the ZipToCityState table
 
         Exceptions:
@@ -371,8 +453,8 @@ class Apps(object):
             # Execute insert query
             self.execute_insert_query(zip_dict, 'ZipToCityState')
             # Query for this inserted tuple and return it as Pandas DataFrame
-            data_frame = self.execute_select_query(
-                '*', 'ZipToCityState', 'zip={}'.format(zip_dict['zip']))
+            data_frame = self.get_data_frame('*', 'ZipToCityState',
+                                             'zip={}'.format(zip_dict['zip']))
             return data_frame
         except AssertionError, error:
             raise error
@@ -467,7 +549,7 @@ class Apps(object):
         calling helper function execute_insert_query() that generates INSERT
         query statement and executes it. Once data is successfully stored in
         the table, it quires this tuple by calling helper function
-        execute_select_query(), which returns it as Pandas DataFrame. If check
+        get_data_frame(), which returns it as Pandas DataFrame. If check
         boolean parameter is enabled, it performs assertions ensuring that data
         to be added obeys MySQL constraints that are ignored by current MySQL
         MariaDB version.
@@ -487,7 +569,7 @@ class Apps(object):
         Returns:
             :return: Pandas DataFrame (two-dimensional size-mutable,
             heterogeneous tabular data structure with labeled axes) retrieved
-            from the helper function execute_select_query(), which contains a
+            from the helper function get_data_frame(), which contains a
             tuple(s) with successfully stored data in the Hotels table
 
         Exceptions:
@@ -511,8 +593,8 @@ class Apps(object):
             # Execute insert query
             self.execute_insert_query(hotel_dict, 'Hotels')
             # Query for this inserted tuple and return it as Pandas DataFrame
-            data_frame = self.execute_select_query(
-                '*', 'Hotels', 'id=LAST_INSERT_ID()')
+            data_frame = self.get_data_frame('*', 'Hotels',
+                                             'id=LAST_INSERT_ID()')
             return data_frame
         except AssertionError, error:
             raise error
@@ -607,7 +689,7 @@ class Apps(object):
         calling helper function execute_insert_query() that generates INSERT
         query statement and executes it. Once data is successfully stored in
         the table, it quires this tuple by calling helper function
-        execute_select_query(), which returns it as Pandas DataFrame. If check
+        get_data_frame(), which returns it as Pandas DataFrame. If check
         boolean parameter is enabled, it performs assertions ensuring that data
         to be added obeys MySQL constraints that are ignored by current MySQL
         MariaDB version.
@@ -627,7 +709,7 @@ class Apps(object):
         Returns:
             :return: Pandas DataFrame (two-dimensional size-mutable,
             heterogeneous tabular data structure with labeled axes) retrieved
-            from the helper function execute_select_query(), which contains a
+            from the helper function get_data_frame(), which contains a
             tuple(s) with successfully stored data in the Rooms table
 
         Exceptions:
@@ -651,7 +733,7 @@ class Apps(object):
             # Execute insert query
             self.execute_insert_query(room_dict, 'Rooms')
             # Query for this inserted tuple and return it as Pandas DataFrame
-            data_frame = self.execute_select_query(
+            data_frame = self.get_data_frame(
                 '*', 'Rooms', 'hotel_id={} AND room_number = {}'.format(
                     room_dict['hotel_id'], room_dict['room_number']))
             return data_frame
@@ -746,10 +828,10 @@ class Apps(object):
         the table by calling helper function execute_insert_query() that
         generates INSERT query statement and executes it. Once data is
         successfully stored in the table, it quires this tuple by calling
-        helper function execute_select_query(), which returns it as Pandas
-        DataFrame. If check boolean parameter is enabled, it performs
-        assertions ensuring that data to be added obeys MySQL constraints that
-        are ignored by current MySQL MariaDB version.
+        helper function get_data_frame(), which returns it as Pandas DataFrame.
+        If check boolean parameter is enabled, it performs assertions ensuring
+        that data to be added obeys MySQL constraints that are ignored by
+        current MySQL MariaDB version.
 
         Parameters:
             :param staff_dict: Dictionary of staff member attributes and values
@@ -780,16 +862,13 @@ class Apps(object):
         Returns:
             :return: Pandas DataFrame (two-dimensional size-mutable,
             heterogeneous tabular data structure with labeled axes) retrieved
-            from the helper function execute_select_query(), which contains a
+            from the helper function get_data_frame(), which contains a
             tuple(s) with successfully stored data in the Staff table
 
         Exceptions:
             :raise: Assertion Error or MySQL Connector Error exceptions
 
-        TODO: If staff member is assigned to a particular room and hotel, we
-        need to determine Staff ID and Reservation ID to call
-        add_serves(staff_id, reservation_id) to add the staff-reservation
-        interaction into Serves table.
+        TODO: Testing
         """
         try:
             if self.check:
@@ -827,8 +906,13 @@ class Apps(object):
             # Execute insert query
             self.execute_insert_query(staff_dict, 'Staff')
             # Query for this inserted tuple and return it as Pandas DataFrame
-            data_frame = self.execute_select_query(
-                '*', 'Staff', 'id=LAST_INSERT_ID()')
+            data_frame = self.get_data_frame('*', 'Staff',
+                                             'id=LAST_INSERT_ID()')
+            # Add staff member into Serves table if he/she gets assigned to room
+            if 'assigned_hotel_id' in staff_dict and \
+                    'assigned_room_number' in staff_dict:
+                self.assign_staff_to_room(staff_dict['assigned_hotel_id'],
+                                          staff_dict['assigned_room_number'])
             return data_frame
         except AssertionError, error:
             raise error
@@ -864,9 +948,7 @@ class Apps(object):
         Exceptions:
             :raise: Assertion Error or MySQL Connector Error exceptions
 
-        TODO: If Staff member gets assigned to a room as dedicated staff,
-        insert into Serves table this staff member id and reservation id of
-        that room and hotel.
+        TODO: Testing
         """
         try:
             # Perform validation on updating attributes
@@ -881,6 +963,11 @@ class Apps(object):
             # Also queries for updated tuple and returns it as Pandas DataFrame
             data_frame = self.execute_update_query(
                 'Staff', staff_dict, where_clause_dict)
+            # Add staff member into Serves table if he/she gets assigned to room
+            if 'assigned_hotel_id' in staff_dict and \
+                    'assigned_room_number' in staff_dict:
+                self.assign_staff_to_room(staff_dict['assigned_hotel_id'],
+                                          staff_dict['assigned_room_number'])
             return data_frame
         except AssertionError, error:
             return error
@@ -926,10 +1013,10 @@ class Apps(object):
         the table by calling helper function execute_insert_query() that
         generates INSERT query statement and executes it. Once data is
         successfully stored in the table, it quires this tuple by calling
-        helper function execute_select_query(), which returns it as Pandas
-        DataFrame. If check boolean parameter is enabled, it performs
-        assertions ensuring that data to be added obeys MySQL constraints that
-        are ignored by current MySQL MariaDB version.
+        helper function get_data_frame(), which returns it as Pandas DataFrame.
+        If check boolean parameter is enabled, it performs assertions ensuring
+        that data to be added obeys MySQL constraints that are ignored by
+        current MySQL MariaDB version.
 
         Parameters:
             :param customer_dict: Dictionary of customer attributes and values
@@ -959,7 +1046,7 @@ class Apps(object):
         Returns:
             :return: Pandas DataFrame (two-dimensional size-mutable,
             heterogeneous tabular data structure with labeled axes) retrieved
-            from the helper function execute_select_query(), which contains a
+            from the helper function get_data_frame(), which contains a
             tuple(s) with successfully stored data in the Customers table
 
         Exceptions:
@@ -993,8 +1080,8 @@ class Apps(object):
             # Execute insert query
             self.execute_insert_query(customer_dict, 'Customers')
             # Query for this inserted tuple and return it as Pandas DataFrame
-            data_frame = self.execute_select_query(
-                '*', 'Customers', 'id=LAST_INSERT_ID()')
+            data_frame = self.get_data_frame('*', 'Customers',
+                                             'id=LAST_INSERT_ID()')
             return data_frame
         except AssertionError, error:
             raise error
@@ -1091,9 +1178,9 @@ class Apps(object):
         gets added into the table by calling helper function
         execute_insert_query() that generates INSERT query statement and
         executes it. Once data is successfully stored in the table, it quires
-        this tuple by calling helper function execute_select_query(), which
-        returns it as Pandas DataFrame. If check boolean parameter is enabled,
-        it performs assertions ensuring that data to be added obeys MySQL
+        this tuple by calling helper function get_data_frame(), which returns
+        it as Pandas DataFrame. If check boolean parameter is enabled, it
+        performs assertions ensuring that data to be added obeys MySQL
         constraints that are ignored by current MySQL MariaDB version.
 
         Parameters:
@@ -1121,7 +1208,7 @@ class Apps(object):
         Returns:
             :return: Pandas DataFrame (two-dimensional size-mutable,
             heterogeneous tabular data structure with labeled axes) retrieved
-            from the helper function execute_select_query(), which contains a
+            from the helper function get_data_frame(), which contains a
             tuple(s) with successfully stored data in the Reservations table
 
         Exceptions:
@@ -1170,8 +1257,8 @@ class Apps(object):
             # Execute insert query
             self.execute_insert_query(reservation_dict, 'Reservations')
             # Query for this inserted tuple and return it as Pandas DataFrame
-            data_frame = self.execute_select_query(
-                '*', 'Reservations', 'id=LAST_INSERT_ID()')
+            data_frame = self.get_data_frame('*', 'Reservations',
+                                             'id=LAST_INSERT_ID()')
             return data_frame
         except AssertionError, error:
             raise error
@@ -1268,10 +1355,10 @@ class Apps(object):
         values. The information gets added into the table by calling helper
         function execute_insert_query() that generates INSERT query statement
         and executes it. Once data is successfully stored in the table, it
-        quires this tuple by calling helper function execute_select_query(),
-        which returns it as Pandas DataFrame. If check boolean parameter is
-        enabled, it performs assertions ensuring that data to be added obeys
-        MySQL constraints that are ignored by current MySQL MariaDB version.
+        quires this tuple by calling helper function get_data_frame(), which
+        returns it as Pandas DataFrame. If check boolean parameter is enabled,
+        it performs assertions ensuring that data to be added obeys MySQL
+        constraints that are ignored by current MySQL MariaDB version.
 
         Parameters:
             :param transaction_dict: Dictionary of transaction attributes and
@@ -1293,7 +1380,7 @@ class Apps(object):
         Returns:
             :return: Pandas DataFrame (two-dimensional size-mutable,
             heterogeneous tabular data structure with labeled axes) retrieved
-            from the helper function execute_select_query(), which contains a
+            from the helper function get_data_frame(), which contains a
             tuple(s) with successfully stored data in the Transactions table
 
         Exceptions:
@@ -1317,8 +1404,8 @@ class Apps(object):
             # Execute insert query
             self.execute_insert_query(transaction_dict, 'Transactions')
             # Query for this inserted tuple and return it as Pandas DataFrame
-            data_frame = self.execute_select_query(
-                '*', 'Transactions', 'id=LAST_INSERT_ID()')
+            data_frame = self.get_data_frame('*', 'Transactions',
+                                             'id=LAST_INSERT_ID()')
             return data_frame
         except AssertionError, error:
             raise error
@@ -1412,8 +1499,8 @@ class Apps(object):
         calling helper function execute_insert_query() that generates INSERT
         query statement and executes it, only when any staff member serves a
         reservation. Once data is successfully stored in the table, it quires
-        this tuple by calling helper function execute_select_query(), which
-        returns it as Pandas DataFrame.
+        this tuple by calling helper function get_data_frame(), which returns
+        it as Pandas DataFrame.
         Staff member considered to be serving reservations if he/she is
         assigned to a room (reservation) as dedicated staff, creates
         reservation for a customer, prepares and delivers a meal, does dry
@@ -1432,7 +1519,7 @@ class Apps(object):
         Returns:
             :return: Pandas DataFrame (two-dimensional size-mutable,
             heterogeneous tabular data structure with labeled axes) retrieved
-            from the helper function execute_select_query(), which contains a
+            from the helper function get_data_frame(), which contains a
             tuple(s) with successfully stored data in the Serves table
 
         Exceptions:
@@ -1444,7 +1531,7 @@ class Apps(object):
             # Execute insert query
             self.execute_insert_query(serves_dict, 'Serves')
             # Query for this inserted tuple and return it as Pandas DataFrame
-            data_frame = self.execute_select_query(
+            data_frame = self.get_data_frame(
                 '*', 'Serves', 'staff_id={} AND reservation_id={}'.format(
                     serves_dict['staff_id'], serves_dict['reservation_id']))
             return data_frame
