@@ -184,7 +184,7 @@ class Apps(object):
             executed
             :param where_clause_dict: Dictionary of attributes and values used
             for generating WHERE clause. If all tuples/rows in a table are
-            desired to be selected at once, this argument msut be None.
+            desired to be selected at once, this argument must be None.
 
         Returns:
             :return:
@@ -407,7 +407,7 @@ class Apps(object):
             room. If request comes from Reservation functions, it is set to
             None.
             :param reservation_id: Reservation ID is needed to determine
-            whether this rservation for Presidential Suite. If request comes
+            whether this reservation for Presidential Suite. If request comes
             from Staff functions, it is set to None.
 
         Returns:
@@ -651,8 +651,8 @@ class Apps(object):
             # Execute insert query
             self.execute_insert_query(hotel_dict, 'Hotels')
             # Query for this inserted tuple and return it as Pandas DataFrame
-            data_frame = self.get_data_frame('*', 'Hotels',
-                                             'id=LAST_INSERT_ID()')
+            data_frame = self.get_data_frame(
+                '*', 'Hotels', 'id={}'.format(self.cursor.lastrowid))
             return data_frame
         except AssertionError, error:
             raise error
@@ -973,6 +973,7 @@ class Apps(object):
                     'assigned_room_number' in staff_dict and \
                     staff_dict['assigned_hotel_id'] and \
                     staff_dict['assigned_room_number']:
+                # Assign staff to a room
                 self.assign_staff_to_room(staff_dict['assigned_hotel_id'],
                                           staff_dict['assigned_room_number'],
                                           staff_id=staff_id,
@@ -1031,8 +1032,13 @@ class Apps(object):
                         assert value, \
                             'Exception: Attribute \'{}\' must be specified ' \
                             'to be updated.\n'.format(attribute)
-            self.execute_simple_select_query('id', 'Staff', where_clause_dict)
-            staff_tuples = self.cursor.fetchall()
+            if 'id' not in staff_dict and 'id' in where_clause_dict and \
+                    where_clause_dict['id']:
+                staff_tuples = [where_clause_dict['id']]
+            else:
+                self.execute_simple_select_query('id', 'Staff',
+                                                 where_clause_dict)
+                staff_tuples = self.cursor.fetchall()
             # If staff gets assigned to a room, add it into Serves table
             if staff_tuples is not None and 'assigned_hotel_id' in staff_dict \
                     and 'assigned_room_number' in staff_dict and \
@@ -1159,8 +1165,8 @@ class Apps(object):
             # Execute insert query
             self.execute_insert_query(customer_dict, 'Customers')
             # Query for this inserted tuple and return it as Pandas DataFrame
-            data_frame = self.get_data_frame('*', 'Customers',
-                                             'id=LAST_INSERT_ID()')
+            data_frame = self.get_data_frame(
+                '*', 'Customers', 'id={}'.format(self.cursor.lastrowid))
             return data_frame
         except AssertionError, error:
             raise error
@@ -1419,11 +1425,24 @@ class Apps(object):
             reservation_tuples = self.cursor.fetchall()
             # If check-out, free all assigned staff of this reservation
             if 'check_out_time' in reservation_dict and \
-                    reservation_dict['check_out_time']:
-                    if reservation_tuples is not None:
-                        for reservation in reservation_tuples:
-                            self.delete_serves({'reservation_id':
-                                                reservation[0]})
+                    reservation_dict['check_out_time'] and \
+                    reservation_tuples is not None:
+                for reservation in reservation_tuples:
+                    # Determine all staff assigned to this reservation
+                    self.execute_simple_select_query(
+                        'staff_id', 'Serves',
+                        {'reservation_id': reservation[0]})
+                    staff_tuples = self.cursor.fetchall()
+                    if staff_tuples is not None:
+                        for staff_id in staff_tuples:
+                            # Free all assigned staff by setting assigned hotel
+                            # and assigned room to NULL
+                            self.update_staff({'assigned_hotel_id': None,
+                                               'assigned_room_number': None},
+                                              {'id': staff_id})
+                    # Delete from Serves table
+                    self.delete_serves({'reservation_id': reservation[0]})
+
             # If Customer checks-in, check whether this reservation is
             # Presidential suite and assign one Catering Staff and one Room
             # Service Staff to this reservation
@@ -1532,8 +1551,8 @@ class Apps(object):
             # Execute insert query
             self.execute_insert_query(transaction_dict, 'Transactions')
             # Query for this inserted tuple and return it as Pandas DataFrame
-            data_frame = self.get_data_frame('*', 'Transactions',
-                                             'id=LAST_INSERT_ID()')
+            data_frame = self.get_data_frame(
+                '*', 'Transactions', 'id={}'.format(self.cursor.lastrowid))
             return data_frame
         except AssertionError, error:
             raise error
