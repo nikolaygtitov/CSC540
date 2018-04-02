@@ -311,7 +311,10 @@ class Apps(object):
         self.cursor.execute(update_query, set_attr_args + where_attr_args)
 
         # Generate WHERE clause for SELECT query
-        where_clause = where_attr_format % tuple(where_attr_args)
+        if 'id' in dictionary:
+            where_clause = set_attr_format % tuple(dictionary)
+        else:
+            where_clause = where_attr_format % tuple(where_attr_args)
 
         # Query for this updated tuple and return it as Pandas DataFrame
         data_frame = self.get_data_frame('*', table_name, where_clause)
@@ -362,48 +365,103 @@ class Apps(object):
         data_frame = self.get_data_frame('*', table_name, where_attr_select)
         return data_frame
 
-    def assign_staff_to_room(self, hotel_id, room_number):
+    def assign_staff_to_room(self, hotel_id, room_number, staff_id=None,
+                             reservation_id=None):
         """
         Assigns staff member to a room by adding it into Serves table.
 
-        Once any Staff member gets assigned to particular room in a hotel,
-        specified by arguments hotel_id and room_number, this function does the
-        following:
-        1) Finds ID of a staff member who gets assigned to a room by calling
-        helper function execute_simple_select_query()
-        2) Finds reservation ID associated with the hotel ID and room number by
-        calling helper function execute_select_query().
-        Since there could be multiple reservations associated with hotel id and
-        room number, it finds reservation ID based on check-in and check-out
-        times. Reservation for the room must have check-in time entered, but
-        must not have check-out time (must be NULL or empty string)
-        3) Inserts staff ID and reservation ID into Serves table by calling
+        Request to assign staff to a room may come from four different internal
+        functions:
+        i) add_staff() - Staff is immediately assigned to a room once is added
+        ii) update_staff() - Staff is assigned to a room as an update
+        iii) add_reservation() - Customer checks-in immediately when
+        reservation is created and this reservation is for Presidential Suite
+        iv) update_reservation() - Customer checks-in and this reservation is
+        for Presidential Suite
+        If request comes from Staff functions, for a given hotel ID, room
+        number, and staff ID, it does the following:
+        1) Determines reservation ID
+        2) Inserts staff ID and reservation ID into Serves table by calling
         helper function add_serves() with appropriate dictionary of attributes
         and values
+        If request comes from Reservation functions, for a given hotel ID, room
+        number, and reservation ID, it does the following:
+        1) Determines staff ID of one available Catering staff
+        2) Determines staff ID of one available Room Service staff
+        2) Inserts both staff IDs and reservation ID into Serves table by
+        calling helper function add_serves() with appropriate dictionary of
+        attributes and values
+
+        If neither staff ID nor reservation ID cannot be found, nothing gets
+        inserted into Serves table, but transaction must still succeed, unless
+        there are some cursor errors.
 
         Parameters:
-            :param hotel_id: ID of a hotel that staff member gets assigned to
-            :param room_number: Room number that staff member gets assigned to
+            :param hotel_id: ID of a hotel is needed for identifying unique
+            reservation ID or determining whether room category in this hotel
+            is Presidential Suite
+            :param room_number: Room number is needed for identifying unique
+            reservation ID or determining whether room category is Presidential
+            Suite
+            :param staff_id: ID of the staff member that gets assigned to a
+            room. If request comes from Reservation functions, it is set to
+            None.
+            :param reservation_id: Reservation ID is needed to determine
+            whether this rservation for Presidential Suite. If request comes
+            from Staff functions, it is set to None.
 
         Returns:
             :return:
 
         TODO: Testing
         """
-        serves_dict = {}
-        # Determine Staff ID
-        self.execute_simple_select_query('id', 'Staff',
-                                         {'id': 'LAST_INSERT_ID('')'})
-        serves_dict['staff_id'] = self.cursor.fetchall()
-        # Determine Reservation ID
-        where_clause = "hotel_id=%s AND room_number=%s AND " \
-                       "check_in_time IS NOT NULL AND " \
-                       "TRIM(check_in_time)<>'' AND " \
-                       "(check_out_time IS NULL OR TRIM(check_out_time)='')"
-        self.execute_select_query('id', 'Reservations', where_clause,
-                                  [hotel_id, room_number])
-        serves_dict['reservation_id'] = self.cursor.fetchall()
-        self.add_serves(serves_dict)
+        if staff_id and reservation_id is None:
+            # Staff is assigned from add_staff() or update_staff() functions
+            # Determine Reservation ID
+            where_clause = "hotel_id=%s AND room_number=%s AND " \
+                           "check_in_time IS NOT NULL AND " \
+                           "TRIM(check_in_time)<>'' AND " \
+                           "(check_out_time IS NULL OR TRIM(check_out_time)='')"
+            self.execute_select_query('id', 'Reservations', where_clause,
+                                      [hotel_id, room_number])
+            reservation_tuples = self.cursor.fetchall()
+            if reservation_tuples is not None and len(reservation_tuples) == 1:
+                self.add_serves({'staff_id': staff_id,
+                                 'reservation_id': reservation_tuples[0][0]})
+        if reservation_id and staff_id is None:
+            # Staff is assigned from add_reservation() or update_reservation()
+            # Check whether Reservation is Presidential Suite
+            self.execute_simple_select_query('category', 'Rooms',
+                                             {'hotel_id': hotel_id,
+                                              'room_number': room_number})
+            room_tuple = self.cursor.fetchall()
+            if room_tuple is not None:
+                room_category = room_tuple[0][0].split()
+                if 'presidential' in room_category.lower():
+                    # This is Presidential Suite, needs dedicated staff
+                    # Determine Staff ID
+                    where_clause = "works_for_hotel_id=%s AND " \
+                                   "title LIKE '%{}%'  AND " \
+                                   "(assigned_hotel_id IS NULL OR " \
+                                   "assigned_hotel_id='') AND " \
+                                   "(assigned_room_number IS NULL OR " \
+                                   "assigned_room_number='')"
+                    self.execute_select_query(
+                        'id', 'Staff',
+                        where_clause=where_clause.format('Catering'),
+                        where_values_list=[hotel_id])
+                    staff_tuples = self.cursor.fetchall()
+                    if staff_tuples is not None and staff_tuples[0][0]:
+                        self.add_serves({'staff_id': staff_tuples[0][0],
+                                         'reservation_id': reservation_id})
+                    self.execute_select_query(
+                        'id', 'Staff',
+                        where_clause=where_clause.format('Room Service'),
+                        where_values_list=[hotel_id])
+                    staff_tuples = self.cursor.fetchall()
+                    if staff_tuples is not None and staff_tuples[0][0]:
+                        self.add_serves({'staff_id': staff_tuples[0][0],
+                                         'reservation_id': reservation_id})
 
     # Implementation of the program applications for the ZipToCityState table
     def add_zip(self, zip_dict):
@@ -829,6 +887,10 @@ class Apps(object):
         generates INSERT query statement and executes it. Once data is
         successfully stored in the table, it quires this tuple by calling
         helper function get_data_frame(), which returns it as Pandas DataFrame.
+        If staff member immediately gets assigned to a room, it calls helper
+        function assign_staff_to_room(), which determines reservation ID, and
+        inserts a tuple into Serves table with appropriate staff ID and
+        reservation ID.
         If check boolean parameter is enabled, it performs assertions ensuring
         that data to be added obeys MySQL constraints that are ignored by
         current MySQL MariaDB version.
@@ -905,14 +967,19 @@ class Apps(object):
                         'be specified.\n'
             # Execute insert query
             self.execute_insert_query(staff_dict, 'Staff')
-            # Query for this inserted tuple and return it as Pandas DataFrame
-            data_frame = self.get_data_frame('*', 'Staff',
-                                             'id=LAST_INSERT_ID()')
-            # Add staff member into Serves table if he/she gets assigned to room
+            staff_id = self.cursor.lastrowid
+            # If staff gets assigned to a room, add it into Serves table
             if 'assigned_hotel_id' in staff_dict and \
-                    'assigned_room_number' in staff_dict:
+                    'assigned_room_number' in staff_dict and \
+                    staff_dict['assigned_hotel_id'] and \
+                    staff_dict['assigned_room_number']:
                 self.assign_staff_to_room(staff_dict['assigned_hotel_id'],
-                                          staff_dict['assigned_room_number'])
+                                          staff_dict['assigned_room_number'],
+                                          staff_id=staff_id,
+                                          reservation_id=None)
+            # Query for inserted Staff tuple and return it as Pandas DataFrame
+            data_frame = self.get_data_frame('*', 'Staff',
+                                             'id={}'.format(staff_id))
             return data_frame
         except AssertionError, error:
             raise error
@@ -927,9 +994,14 @@ class Apps(object):
         updated in the table by calling helper function execute_update_query()
         that generates UPDATE query statement and executes it. Once data is
         successfully updated in the table, the helper function also quires this
-        tuple and returns it as Pandas DataFrame. If check boolean parameter is
-        enabled, it performs assertions ensuring that data to be updated obeys
-        MySQL constraints that are ignored by current MySQL MariaDB version.
+        tuple and returns it as Pandas DataFrame.
+        If staff member gets assigned to a room through this update, it calls
+        helper function assign_staff_to_room(), which determines reservation
+        ID, and inserts a tuple into Serves table with appropriate staff ID and
+        reservation ID.
+        If check boolean parameter is enabled, it performs assertions ensuring
+        that data to be updated obeys MySQL constraints that are ignored by
+        current MySQL MariaDB version.
 
         Parameters:
             :param staff_dict: Dictionary of attributes and values to be
@@ -959,15 +1031,22 @@ class Apps(object):
                         assert value, \
                             'Exception: Attribute \'{}\' must be specified ' \
                             'to be updated.\n'.format(attribute)
+            self.execute_simple_select_query('id', 'Staff', where_clause_dict)
+            staff_tuples = self.cursor.fetchall()
+            # If staff gets assigned to a room, add it into Serves table
+            if staff_tuples is not None and 'assigned_hotel_id' in staff_dict \
+                    and 'assigned_room_number' in staff_dict and \
+                    staff_dict['assigned_hotel_id'] and \
+                    staff_dict['assigned_room_number']:
+                for staff in staff_tuples:
+                    self.assign_staff_to_room(
+                        staff_dict['assigned_hotel_id'],
+                        staff_dict['assigned_room_number'],
+                        staff_id=staff[0], reservation_id=None)
             # Execute update query
             # Also queries for updated tuple and returns it as Pandas DataFrame
             data_frame = self.execute_update_query(
                 'Staff', staff_dict, where_clause_dict)
-            # Add staff member into Serves table if he/she gets assigned to room
-            if 'assigned_hotel_id' in staff_dict and \
-                    'assigned_room_number' in staff_dict:
-                self.assign_staff_to_room(staff_dict['assigned_hotel_id'],
-                                          staff_dict['assigned_room_number'])
             return data_frame
         except AssertionError, error:
             return error
@@ -1179,9 +1258,15 @@ class Apps(object):
         execute_insert_query() that generates INSERT query statement and
         executes it. Once data is successfully stored in the table, it quires
         this tuple by calling helper function get_data_frame(), which returns
-        it as Pandas DataFrame. If check boolean parameter is enabled, it
-        performs assertions ensuring that data to be added obeys MySQL
-        constraints that are ignored by current MySQL MariaDB version.
+        it as Pandas DataFrame.
+        If Customer checks-in immediately after this reservation is created, it
+        calls helper function assign_staff_to_room(), which determines whether
+        this reservation is associate with Presidential Suite and if it is, it
+        inserts a tuple into Serves table with appropriate staff ID and
+        reservation ID.
+        If check boolean parameter is enabled, it performs assertions ensuring
+        that data to be added obeys MySQL constraints that are ignored by
+        current MySQL MariaDB version.
 
         Parameters:
             :param reservation_dict: Dictionary of reservation attributes and
@@ -1214,11 +1299,15 @@ class Apps(object):
         Exceptions:
             :raise: Assertion Error or MySQL Connector Error exceptions
 
-        TODO: Need to determine the Staff ID who adds this reservation and ID
-        of this newly created reservation. This function always needs to call
-        add_serves(staff_id, reservation_id) to add staff-reservation
-        interaction. May be need to call add_transaction() function to add this
-        transaction for this reservation.
+        TODO: 1) Not sure if still need this: Need to determine the Staff ID
+        who adds this reservation and ID of this newly created reservation.
+        This function always needs to call add_serves(staff_id, reservation_id)
+        to add staff-reservation interaction. May be need to call
+        add_transaction() function to add this transaction for this reservation.
+        2) If reservation is presidential suite, then at the
+        check-in time automatically assign Catering Staff and Room Service
+        Staff for this reservation.
+        Testing
         """
         try:
             if self.check:
@@ -1256,9 +1345,20 @@ class Apps(object):
                         'YYYY-MM-DD HH:MM:SS.\n'
             # Execute insert query
             self.execute_insert_query(reservation_dict, 'Reservations')
-            # Query for this inserted tuple and return it as Pandas DataFrame
+            reservation_id = self.cursor.lastrowid
+            # If Customer checks-in, check whether this reservation is
+            # Presidential suite and assign one Catering Staff and one Room
+            # Service Staff to this reservation
+            if 'check_in_time' in reservation_dict and \
+                    reservation_dict['check_in_time'] and \
+                    'check_out_time' not in reservation_dict:
+                self.assign_staff_to_room(reservation_dict['hotel_id'],
+                                          reservation_dict['room_number'],
+                                          staff_id=None,
+                                          reservation_id=reservation_id)
+            # Query for inserted tuple and return it as Pandas DataFrame
             data_frame = self.get_data_frame('*', 'Reservations',
-                                             'id=LAST_INSERT_ID()')
+                                             'id={}'.format(reservation_id))
             return data_frame
         except AssertionError, error:
             raise error
@@ -1273,8 +1373,15 @@ class Apps(object):
         information gets updated in the table by calling helper function
         execute_update_query() that generates UPDATE query statement and
         executes it. Once data is successfully updated in the table, the helper
-        function also quires this tuple and returns it as Pandas DataFrame. If
-        check boolean parameter is enabled, it performs assertions ensuring
+        function also quires this tuple and returns it as Pandas DataFrame.
+        If update registers check-out time, it frees all of assigned staff of
+        this reservation by calling helper function delete_serves().
+        If update registers check-in time (but check-out times is still not
+        registered), it calls helper function assign_staff_to_room(), which
+        determines whether this reservation is associate with Presidential
+        Suite and if it is, it inserts a tuple into Serves table with
+        appropriate staff ID and reservation ID.
+        If check boolean parameter is enabled, it performs assertions ensuring
         that data to be updated obeys MySQL constraints that are ignored by
         current MySQL MariaDB version.
 
@@ -1295,7 +1402,7 @@ class Apps(object):
         Exceptions:
             :raise: Assertion Error or MySQL Connector Error exceptions
 
-        TODO:
+        TODO: Testing
         """
         try:
             # Perform validation on updating attributes
@@ -1306,6 +1413,27 @@ class Apps(object):
                         assert value, \
                             'Exception: Attribute \'{}\' must be specified ' \
                             'to be updated.\n'.format(attribute)
+            # Determine Reservation tuple(s)
+            self.execute_simple_select_query(
+                'id, hotel_id, room_number', 'Reservations', where_clause_dict)
+            reservation_tuples = self.cursor.fetchall()
+            # If check-out, free all assigned staff of this reservation
+            if 'check_out_time' in reservation_dict and \
+                    reservation_dict['check_out_time']:
+                    if reservation_tuples is not None:
+                        for reservation in reservation_tuples:
+                            self.delete_serves({'reservation_id':
+                                                reservation[0]})
+            # If Customer checks-in, check whether this reservation is
+            # Presidential suite and assign one Catering Staff and one Room
+            # Service Staff to this reservation
+            if 'check_in_time' in reservation_dict and \
+                    reservation_dict['check_in_time'] and \
+                    'check_out_time' not in reservation_dict:
+                for reservation in reservation_tuples:
+                    self.assign_staff_to_room(reservation[1], reservation[2],
+                                              staff_id=None,
+                                              reservation_id=reservation[0])
             # Execute update query
             # Also queries for updated tuple and returns it as Pandas DataFrame
             data_frame = self.execute_update_query(
