@@ -419,70 +419,104 @@ class Apps(object):
         Returns:
             :return:
 
+        Exceptions:
+            :raise: Assertion Error or MySQL Connector Error exceptions
+
         TODO: Testing
         """
-        if staff_id and reservation_id is None:
-            # Staff is assigned from add_staff() or update_staff() functions
-            # Determine Reservation ID
-            where_clause = "hotel_id=%s AND room_number=%s AND " \
-                           "check_in_time IS NOT NULL AND " \
-                           "TRIM(check_in_time)<>'' AND " \
-                           "(check_out_time IS NULL OR TRIM(check_out_time)='')"
-            self.execute_select_query('id', 'Reservations', where_clause,
-                                      [hotel_id, room_number])
-            reservation_tuples = self.cursor.fetchall()
-            if reservation_tuples is not None and len(reservation_tuples) == 1:
-                self.add_serves({'staff_id': staff_id,
-                                 'reservation_id': reservation_tuples[0][0]})
-        if reservation_id and staff_id is None:
-            # Staff is assigned from add_reservation() or update_reservation()
-            # Check whether Reservation is Presidential Suite
-            self.execute_simple_select_query('category', 'Rooms',
-                                             {'hotel_id': hotel_id,
-                                              'room_number': room_number})
-            room_tuple = self.cursor.fetchall()
-            if room_tuple is not None:
-                room_category = room_tuple[0][0].split()
-                if 'presidential' in room_category.lower():
-                    # This is Presidential Suite, needs dedicated staff
-                    # Determine Staff ID
-                    where_clause = "works_for_hotel_id=%s AND " \
-                                   "title LIKE '%{}%'  AND " \
-                                   "(assigned_hotel_id IS NULL OR " \
-                                   "assigned_hotel_id='') AND " \
-                                   "(assigned_room_number IS NULL OR " \
-                                   "assigned_room_number='')"
-                    self.execute_select_query(
-                        'id', 'Staff',
-                        where_clause=where_clause.format('Catering'),
-                        where_values_list=[hotel_id])
-                    staff_tuples = self.cursor.fetchall()
-                    if staff_tuples is not None and staff_tuples[0][0]:
-                        self.add_serves({'staff_id': staff_tuples[0][0],
-                                         'reservation_id': reservation_id})
-                    self.execute_select_query(
-                        'id', 'Staff',
-                        where_clause=where_clause.format('Room Service'),
-                        where_values_list=[hotel_id])
-                    staff_tuples = self.cursor.fetchall()
-                    if staff_tuples is not None and staff_tuples[0][0]:
-                        self.add_serves({'staff_id': staff_tuples[0][0],
-                                         'reservation_id': reservation_id})
-        if staff_id and reservation_id:
-            # This request comes from UI, needs to call update_staff accordingly
-            self.add_serves({'staff_id': staff_id,
-                             'reservation_id': reservation_id})
-            # Determine hotel ID and room number based on the reservation ID
-            self.execute_simple_select_query('hotel_id, room_number',
-                                             'Reservations',
-                                             {'id': reservation_id})
-            reservation_tuple = self.cursor.fetchall()
-            if reservation_tuple is not None and reservation_tuple[0][0]:
-                # Call helper function that will do a callback here
-                self.update_staff(
-                    {'assigned_hotel_id': reservation_tuple[0][0],
-                     'assigned_room_number': reservation_tuple[0][1]},
-                    {'id': staff_id})
+        try:
+            if staff_id and reservation_id is None:
+                # Staff is assigned from add_staff() or update_staff() functions
+                # Determine Reservation ID
+                where_clause = "hotel_id=%s AND room_number=%s AND " \
+                               "check_in_time IS NOT NULL AND " \
+                               "TRIM(check_in_time)<>'' AND " \
+                               "(check_out_time IS NULL OR " \
+                               "TRIM(check_out_time)='')"
+                self.execute_select_query('id', 'Reservations', where_clause,
+                                          [hotel_id, room_number])
+                reservation_tuples = self.cursor.fetchall()
+                if reservation_tuples is not None and \
+                        len(reservation_tuples) == 1:
+                    self.add_serves(
+                        {'staff_id': staff_id,
+                         'reservation_id': reservation_tuples[0][0]})
+            if reservation_id and staff_id is None:
+                # Staff is assigned from add_reservation() or
+                # update_reservation() functions.
+                # Check whether Reservation is Presidential Suite
+                self.execute_simple_select_query('category', 'Rooms',
+                                                 {'hotel_id': hotel_id,
+                                                  'room_number': room_number})
+                room_tuple = self.cursor.fetchall()
+                if room_tuple is not None:
+                    room_category = room_tuple[0][0].split()
+                    if 'presidential' in room_category.lower():
+                        # This is Presidential Suite
+                        # Verify that this reservation is still active
+                        self.execute_simple_select_query('check_out_time',
+                                                         'Reservations',
+                                                         {'id': reservation_id})
+                        reservation_tuple = self.cursor.fetchall()
+                        if reservation_tuple is None or \
+                                not reservation_tuple[0][0] or \
+                                reservation_tuple[0][0] == 'NULL':
+                            # It needs to assign one available Catering staff
+                            # and one Room Service as dedicated staff.
+                            # Determine their Staff ID
+                            where_clause = "works_for_hotel_id=%s AND " \
+                                           "title LIKE '%{}%'  AND " \
+                                           "(assigned_hotel_id IS NULL OR " \
+                                           "assigned_hotel_id='') AND " \
+                                           "(assigned_room_number IS NULL OR " \
+                                           "assigned_room_number='')"
+                            self.execute_select_query(
+                                'id', 'Staff',
+                                where_clause=where_clause.format('Catering'),
+                                where_values_list=[hotel_id])
+                            staff_tuples = self.cursor.fetchall()
+                            if staff_tuples is not None and staff_tuples[0][0]:
+                                self.add_serves(
+                                    {'staff_id': staff_tuples[0][0],
+                                     'reservation_id': reservation_id})
+                            self.execute_select_query(
+                                'id', 'Staff',
+                                where_clause=where_clause.format(
+                                    'Room Service'),
+                                where_values_list=[hotel_id])
+                            staff_tuples = self.cursor.fetchall()
+                            if staff_tuples is not None and staff_tuples[0][0]:
+                                self.add_serves(
+                                    {'staff_id': staff_tuples[0][0],
+                                     'reservation_id': reservation_id})
+            if staff_id and reservation_id:
+                # This request comes from UI
+                # Verify that this reservation is still active
+                self.execute_simple_select_query('check_out_time',
+                                                 'Reservations',
+                                                 {'id': reservation_id})
+                reservation_tuple = self.cursor.fetchall()
+                assert reservation_tuple is None or \
+                    not reservation_tuple[0][0] or \
+                    reservation_tuple[0][0] == 'NULL', \
+                    'Cannot assign staff to a room whose customer already ' \
+                    'check-out. Room is not occupied by this reservation ' \
+                    'id \'{}\' any longer'.format(reservation_id)
+                # Determine hotel ID and room number based on the reservation ID
+                self.execute_simple_select_query('hotel_id, room_number',
+                                                 'Reservations',
+                                                 {'id': reservation_id})
+                reservation_tuple = self.cursor.fetchall()
+                if reservation_tuple is not None and reservation_tuple[0][0]:
+                    # Call helper function that does a callback here
+                    self.update_staff(
+                        {'assigned_hotel_id': reservation_tuple[0][0],
+                         'assigned_room_number': reservation_tuple[0][1]},
+                        {'id': staff_id})
+        except AssertionError, error:
+            raise error
+        except maria_db.Error as error:
+            raise error
 
     # Implementation of the program applications for the ZipToCityState table
     def add_zip(self, zip_dict):
