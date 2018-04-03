@@ -9,24 +9,48 @@ import pandas as pd
 class APIHelper(object):
     def __init__(self, db):
         self.apps = Apps(db)
+        self.db = db
 
     # Helper interfaces
-    def call_add_hotel(self, param_dict):
-        zip_dict = {x: param_dict[x] for x in ('zip', 'city', 'state')}
-        hotel_dict = {x: param_dict[x] for x in ('name', 'street', 'zip',
-                                                 'phone_number')}
-        result1 = self.apps.add_zip(zip_dict)
-        if isinstance(result1, pd.DataFrame):
-            return self.apps.add_hotel(hotel_dict)
+    def call_add_hotel(self, param_dict, prerequisite=None):
+        param_dict = param_dict['modify']
+        if prerequisite:
+            zip_dict = {k: param_dict[k] for k in ('city', 'state', 'zip')}
+            result = self.apps.add_zip(zip_dict)
+            if not isinstance(result, pd.DataFrame):
+                return result
         else:
-            return result1
+            zip_string = 'zip="%s"' % param_dict['zip']
+            zip_present = self.apps.get_data_frame('*', 'ZipToCityState', zip_string)
+            if len(zip_present) == 0:
+                return {'message': 'City and state required.'}
 
-    def call_update_hotel(self, param_dict):
-        return 'Error - not yet implemented'
+        hotel_dict = {k: param_dict[k] for k in ('name', 'street', 'zip', 'phone_number')}
+        return self.apps.add_hotel(hotel_dict)
+
+    def call_update_hotel(self, param_dict, prerequisite=None):
+        modify_dict = param_dict['modify']
+        where_dict = param_dict['where']
+        set_dict = {k:v for (k,v) in modify_dict.items() if v != None}
+        where_dict = {k: v for (k, v) in where_dict.items() if v != None}
+        if prerequisite:
+            zip_dict = {k: modify_dict[k] for k in ('city', 'state', 'zip')}
+            result = self.apps.add_zip(zip_dict)
+            if not isinstance(result, pd.DataFrame):
+                return result
+        elif 'zip' in set_dict:
+            zip_string = 'zip="%s"' % modify_dict['zip']
+            zip_present = self.apps.get_data_frame('*', 'ZipToCityState', zip_string)
+            if len(zip_present) == 0:
+                return {'message': 'City and state required to update zip.'}
+
+        hotel_dict = {k: set_dict[k] for k in ('id', 'name', 'street', 'zip', 'phone_number') if k in set_dict}
+        where_clause_dict = {k: where_dict[k] for k in ('id', 'name', 'street', 'zip', 'phone_number') if k in where_dict}
+        return self.apps.update_hotel(hotel_dict, where_clause_dict)
 
     def call_delete_hotel(self, param_dict):
-        return 'Error - not yet implemented'
-
+        where_dict = param_dict['modify']
+        return self.apps.delete_hotel(where_dict)
     def call_add_room(self, param_dict):
         return 'Error - not yet implemented'
 
@@ -48,7 +72,7 @@ class APIHelper(object):
     def call_add_customer(self, param_dict):
         return 'Error - not yet implemented'
 
-    def call_update_customer(self, param_dict):        
+    def call_update_customer(self, param_dict):
         return 'Error - not yet implemented'
 
     def call_delete_customer(self, param_dict):

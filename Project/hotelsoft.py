@@ -4,7 +4,7 @@ import os
 from tabulate import tabulate
 import mysql.connector as maria_db
 from apihelper import APIHelper
-
+from util import sql_transaction
 
 ################################################################################
 # Template for Menus
@@ -27,6 +27,8 @@ class Menu(object):
 
     def add(self, option):
         self.options.append(option)
+
+
 # End of Menu class
 
 
@@ -41,6 +43,8 @@ class MenuOption(object):
     def __init__(self, title, handler):
         self.title = title
         self.handler = handler
+
+
 # End of MenuOption class
 
 
@@ -52,11 +56,15 @@ class MenuOption(object):
 # 
 ################################################################################
 class Query(object):
-    def __init__(self, name, title, arg_list, handler):
+    def __init__(self, name, type, title, arg_list, handler, optional_args=None):
         self.name = name
+        self.type = type
         self.title = title
         self.arg_list = arg_list
         self.handler = handler
+        self.optional_args = optional_args
+
+
 # End of Query class
 
 
@@ -71,6 +79,7 @@ class HotelSoft(object):
         self.hotel_name = hotel_name
         self.menu_list = []
         self.query_list = []
+        self.db = db
 
     def add_menu(self, menu):
         self.menu_list.append(menu)
@@ -129,20 +138,47 @@ class HotelSoft(object):
         try:
             print(query.title)
             if len(query.arg_list) > 0:
-                print('Enter the following fields:')
-            param_dict = {}
+                if query.type == 'insert':
+                    print('Enter the following fields:')
+                elif query.type == 'update':
+                    print('Enter the new values for the fields you wish to update (set):')
+                    print('(Press enter to ignore a parameter)')
+                elif query.type == 'delete':
+                    print('Enter the primary key for the item you wish to delete:')
+            modify_dict = {}
             for arg in query.arg_list:
                 item = raw_input(arg + ': ').strip()
                 if item != '':
-                    param_dict[arg] = item
+                    modify_dict[arg] = item
                 else:
-                    param_dict[arg] = None
+                    modify_dict[arg] = None
+            where_dict = {}
+            if query.type == 'update':
+                print('\nEnter the existing values to use in finding items to update (where):')
+                print('(Press enter to ignore a parameter)')
+                for arg in query.arg_list:
+                    item = raw_input(arg + ': ').strip()
+                    if item != '':
+                        where_dict[arg] = item
+                    else:
+                        where_dict[arg] = None
+            param_dict = {'modify': modify_dict, 'where': where_dict}
             result = query.handler(param_dict)
+            if isinstance(result, dict):
+                print result['message']
+                for arg in query.optional_args:
+                    item = raw_input(arg + ': ').strip()
+                    if item != '':
+                        modify_dict[arg] = item
+                    else:
+                        modify_dict[arg] = None
+                param_dict = {'modify': modify_dict, 'where': where_dict}
+                result = query.handler(param_dict, True)
             print '\nQuery Successful ' + u"\u2713"
+            self.db.commit()
             print tabulate(result, headers=result.columns.values.tolist(),
                            tablefmt='psql')
             print '\n'
-            self.get_choice(last_menu)
         except AssertionError, error:
             print '\n'
             print error
@@ -151,21 +187,25 @@ class HotelSoft(object):
             print '\n'
             print error
             print '\n'
+        self.get_choice(last_menu)
 
     def show_menu(self, menu):
         return lambda: self.get_choice(self.get_menu(menu))
 
-    def get_choice(self, menu):
+    @staticmethod
+    def get_choice(menu):
         menu.printm()
         choice = input('-> ')
-        menu.options[choice-1].handler()
+        menu.options[choice - 1].handler()
 
     def start(self, menu):
         self.get_choice(self.get_menu(menu))
 
-    def exit_program(self):
+    @staticmethod
+    def exit_program():
         print('Bye')
         sys.exit()
+
 
 # end of HotelSoft class
 
@@ -174,13 +214,12 @@ class HotelSoft(object):
 # Build the hotel software and runs the program
 ################################################################################
 def main():
-
     ###############################################################
     # Update database details with correct settings               # 
-    db = maria_db.connect(host='127.0.0.1',                       #
-                          user='pscott',                          #
-                          password='FK8bb"IAlgnYGT8;G!/gy|SQ~',   #
-                          database='wolfinn')                     #
+    db = maria_db.connect(host='127.0.0.1',  #
+                          user='pscott',  #
+                          password='FK8bb"IAlgnYGT8;G!/gy|SQ~',  #
+                          database='wolfinn')  #
     ###############################################################
 
     wolf_inn = HotelSoft('WOLF INN RALEIGH', db)
@@ -188,36 +227,43 @@ def main():
     # Add queries with lambda functions to be called when they are selected
     wolf_inn.add_query(
         Query('add_hotel',
+              'insert',
               'ADD A NEW HOTEL',
-              ['name', 'street', 'city', 'state', 'zip', 'phone_number'],
-              lambda *args: wolf_inn.helper.call_add_hotel(*args)))
+              ['name', 'street', 'zip', 'phone_number'],
+              lambda *args: wolf_inn.helper.call_add_hotel(*args), ['city', 'state']))
     wolf_inn.add_query(
         Query('update_hotel',
+              'update',
               'UPDATE A HOTEL',
-              ['id', 'name', 'street', 'city', 'state', 'zip', 'phone_number'],
-              lambda *args: wolf_inn.helper.call_update_hotel(*args)))
+              ['id', 'name', 'street', 'zip', 'phone_number'],
+              lambda *args: wolf_inn.helper.call_update_hotel(*args), ['city', 'state']))
     wolf_inn.add_query(
         Query('delete_hotel',
+              'delete',
               'DELETE A HOTEL',
               ['id'],
               lambda *args: wolf_inn.helper.call_delete_hotel(*args)))
     wolf_inn.add_query(
         Query('add_room',
+              'insert',
               'ADD A NEW ROOM TO A HOTEL',
               ['hotel_id', 'room_number', 'category', 'occupancy', 'rate'],
               lambda *args: wolf_inn.helper.call_add_room(*args)))
     wolf_inn.add_query(
         Query('update_room',
+              'update',
               'UPDATE A ROOM',
               ['hotel_id', 'room_number', 'category', 'occupancy', 'rate'],
               lambda *args: wolf_inn.helper.call_update_room(*args)))
     wolf_inn.add_query(
         Query('delete_room',
+              'delete',
               'DELETE A ROOM',
               ['hotel_id', 'room_number'],
               lambda *args: wolf_inn.helper.call_delete_room(*args)))
     wolf_inn.add_query(
         Query('add_staff',
+              'insert',
               'ADD A NEW STAFF MEMBER',
               ['name', 'title', 'date_of_birth', 'department', 'phone_number',
                'street', 'zip', 'works_for_hotel_id', 'assigned_hotel_id',
@@ -225,6 +271,7 @@ def main():
               lambda *args: wolf_inn.helper.call_add_staff(*args)))
     wolf_inn.add_query(
         Query('update_staff',
+              'update',
               'UPDATE A STAFF MEMBER',
               ['id', 'name', 'title', 'date_of_birth', 'department',
                'phone_number', 'street', 'zip', 'works_for_hotel_id',
@@ -232,28 +279,33 @@ def main():
               lambda *args: wolf_inn.helper.call_update_staff(*args)))
     wolf_inn.add_query(
         Query('delete_staff',
+              'delete',
               'DELETE A STAFF MEMBER',
               ['id'],
               lambda *args: wolf_inn.helper.call_delete_staff(*args)))
     wolf_inn.add_query(
         Query('add_customer',
+              'insert',
               'ADD A NEW CUSTOMER',
               ['name', 'date_of_birth', 'phone_number', 'email', 'street',
                'zip', 'ssn', 'account_number', 'is_hotel_card'],
               lambda *args: wolf_inn.helper.call_add_customer(*args)))
     wolf_inn.add_query(
         Query('update_customer',
+              'update',
               'UPDATE A CUSTOMER',
               ['id', 'name', 'date_of_birth', 'phone_number', 'email',
                'street', 'zip', 'ssn', 'account_number', 'is_hotel_card'],
               lambda *args: wolf_inn.helper.call_update_customer(*args)))
     wolf_inn.add_query(
         Query('delete_customer',
+              'delete',
               'DELETE A CUSTOMER',
               ['id'],
               lambda *args: wolf_inn.helper.call_delete_customer(*args)))
     wolf_inn.add_query(
-        Query('address',
+        Query('new_res',
+              'insert',
               'ADD A NEW RESERVATION',
               ['number_of_guests', 'start_date', 'end_date', 'hotel_id',
                'room_number', 'customer_id', 'check_in_time',
@@ -261,6 +313,7 @@ def main():
               lambda *args: wolf_inn.helper.call_create_reservation(*args)))
     wolf_inn.add_query(
         Query('update_res',
+              'update',
               'UPDATE A RESERVATION',
               ['id', 'number_of_guests', 'start_date', 'end_date', 'hotel_id',
                'room_number', 'customer_id', 'check_in_time',
@@ -268,101 +321,121 @@ def main():
               lambda *args: wolf_inn.helper.call_update_reservation(*args)))
     wolf_inn.add_query(
         Query('delete_res',
+              'delete',
               'DELETE A RESERVATION',
               ['id'],
               lambda *args: wolf_inn.helper.call_delete_reservation(*args)))
     wolf_inn.add_query(
         Query('check_in',
+              None,
               'CHECK IN A GUEST',
               ['id'],  # reservation id
               lambda *args: wolf_inn.helper.call_update_reservation(*args)))
     wolf_inn.add_query(
         Query('check_out',
+              None,
               'CHECK OUT A GUEST',
               ['id'],  # reservation id
               lambda *args: wolf_inn.helper.call_check_out(*args)))
     wolf_inn.add_query(
         Query('assign_staff',
+              None,
               'ASSIGN STAFF TO A ROOM',
               ['id'],  # staff id
               lambda *args: wolf_inn.helper.call_assign_staff(*args)))
     wolf_inn.add_query(
         Query('add_charge',
+              'insert',
               'APPLY A TRANSACTION TO A RESERVATION',
               ['amount', 'type', 'date, reservation_id'],
               lambda *args: wolf_inn.helper.call_add_transaction(*args)))
     wolf_inn.add_query(
         Query('update_charge',
+              'update',
               'UPDATE A TRANSACTION',
               ['id', 'amount', 'type', 'date, reservation_id'],
               lambda *args: wolf_inn.helper.call_update_transaction(*args)))
     wolf_inn.add_query(
         Query('delete_charge',
+              'delete',
               'DELETE A TRANSACTION',
               ['id'],
               lambda *args: wolf_inn.helper.call_delete_transaction(*args)))
     wolf_inn.add_query(
         Query('gen_bill',
               'GENERATE BILL',
+              None,
               ['id'],
               lambda *args: wolf_inn.helper.call_generate_bill(*args)))
     wolf_inn.add_query(
         Query('occ_hotel',
+              None,
               'OCCUPANCY BY HOTEL',
               [],
               lambda *args: wolf_inn.helper.call_occupancy_hotel(*args)))
     wolf_inn.add_query(
         Query('occ_room',
+              None,
               'OCCUPANCY BY ROOM TYPE',
               [],
               lambda *args: wolf_inn.helper.call_occupancy_roomtype(*args)))
     wolf_inn.add_query(
         Query('occ_city',
+              None,
               'OCCUPANCY BY CITY',
               [],
               lambda *args: wolf_inn.helper.call_occupancy_city(*args)))
     wolf_inn.add_query(
         Query('occ_date',
+              None,
               'OCCUPANCY BY DATE',
               ['start_date', 'end_date'],
               lambda *args: wolf_inn.helper.call_occupancy_date(*args)))
     wolf_inn.add_query(
         Query('list_staff',
+              None,
               'STAFF BY ROLE',
               [],
               lambda *args: wolf_inn.helper.call_staff_report(*args)))
     wolf_inn.add_query(
         Query('customer_inter',
+              None,
               'CUSTOMER INTERACTIONS',
               ['id'],
               lambda *args: wolf_inn.helper.call_cust_inter(*args)))
     wolf_inn.add_query(
         Query('rev_hotel',
+              None,
               'REVENUE BY HOTEL',
               ['id'],  # hotel_id
               lambda *args: wolf_inn.helper.call_revenue_hotel(*args)))
     wolf_inn.add_query(
         Query('rev_all',
+              None,
               'REVENUE FOR ALL HOTELS',
               [],
               lambda *args: wolf_inn.helper.call_revenue_all(*args)))
     wolf_inn.add_query(
         Query('customer_no_card',
+              None,
               'CUSTOMERS WITH NO HOTEL CREDIT CARD',
               [],
               lambda *args: wolf_inn.helper.call_cust_no_card(*args)))
     wolf_inn.add_query(
         Query('pres_customer',
+              None,
               'CURRENT PRESIDENTIAL CUSTOMERS',
               [],
               lambda *args: wolf_inn.helper.call_pres_cust(*args)))
     wolf_inn.add_query(
         Query('room_avail1',
+              None,
               'ROOM AVAILABILITY BY HOTEL',
               ['id'],  # hotel id
               lambda *args: wolf_inn.helper.call_avail_hotel(*args)))
     wolf_inn.add_query(
         Query('room_avail2',
+              None,
               'ROOM AVAILABILITY BY HOTEL AND ROOM TYPE',
               ['id'],
               lambda *args: wolf_inn.helper.call_avail_roomtype(*args)))
