@@ -163,8 +163,8 @@ class Apps(object):
         data_frame = pd.read_sql(select_query, con=self.maria_db_connection)
         return data_frame
 
-    def __execute_simple_select_query(self, attributes, table_name,
-                                      where_clause_dict):
+    def _execute_simple_select_query(self, attributes, table_name,
+                                     where_clause_dict):
         """
         Generates and executes SELECT query in python format with basic WHERE
         clause having only AND key words.
@@ -203,8 +203,8 @@ class Apps(object):
             attributes, table_name, where_attr_format)
         self.cursor.execute(select_query, where_clause_dict.values())
 
-    def __execute_select_query(self, attributes, table_name, where_clause=None,
-                               where_values_list=None):
+    def _execute_select_query(self, attributes, table_name, where_clause=None,
+                              where_values_list=None):
         """
         Generates and executes SELECT query in python format with complicated
         WHERE clause.
@@ -241,7 +241,7 @@ class Apps(object):
             # Execute select query with complicated WHERE clause
             self.cursor.execute(select_query, where_values_list)
 
-    def __execute_insert_query(self, dictionary, table_name):
+    def _execute_insert_query(self, dictionary, table_name):
         """
         Generates and executes INSERT query in python format.
 
@@ -273,7 +273,7 @@ class Apps(object):
         # Execute insert query
         self.cursor.execute(insert_query, dictionary.values())
 
-    def __execute_update_query(self, table_name, dictionary, where_clause_dict):
+    def _execute_update_query(self, table_name, dictionary, where_clause_dict):
         """
         Generates and executes UPDATE query in python format.
 
@@ -328,7 +328,7 @@ class Apps(object):
         data_frame = self.get_data_frame('*', table_name, where_clause)
         return data_frame
 
-    def __execute_delete_query(self, table_name, dictionary):
+    def _execute_delete_query(self, table_name, dictionary):
         """
         Generates and executes DELETE query in python format.
 
@@ -373,7 +373,7 @@ class Apps(object):
         data_frame = self.get_data_frame('*', table_name, where_attr_select)
         return data_frame
 
-    def __check_out(self, reservation_id, check_out_time):
+    def _check_out(self, reservation_id, check_out_time):
         """
         Performs the check-out logic operations on Staff and Transaction tables.
 
@@ -403,7 +403,7 @@ class Apps(object):
         TODO: Testing
         """
         # Determine all staff assigned to this reservation
-        self.__execute_simple_select_query('staff_id', 'Serves',
+        self._execute_simple_select_query('staff_id', 'Serves',
                                            {'reservation_id': reservation_id})
         staff_tuples = self.cursor.fetchall()
         if staff_tuples is not None:
@@ -415,15 +415,15 @@ class Apps(object):
                                   {'id': staff_id})
         # Add Room Charge transaction into Transactions table
         # Determine amount needs to be charged for the reservation
-        self.__execute_simple_select_query(
+        self._execute_simple_select_query(
             'rate * DATEDIFF(end_date, start_date)',
             'Rooms NATURAL JOIN Reservations',
             {'id': reservation_id})
         amount = self.cursor.fetchall()
         # Determine number of nights customer reserved
-        self.__execute_simple_select_query('DATEDIFF(end_date, start_date)',
-                                           'Reservations',
-                                           {'id': reservation_id})
+        self._execute_simple_select_query('DATEDIFF(end_date, start_date)',
+                                          'Reservations',
+                                          {'id': reservation_id})
         number_nights = self.cursor.fetchall()
         if amount is not None and number_nights is not None:
             self.add_transaction(
@@ -433,7 +433,7 @@ class Apps(object):
                  'date': check_out_time,
                  'reservation_id': reservation_id})
 
-    def __assign_staff_to_room(self, hotel_id, room_number, staff_id=None,
+    def _assign_staff_to_room(self, hotel_id, room_number, staff_id=None,
                                reservation_id=None):
         """
         Assigns staff member to a room by adding it into Serves table.
@@ -493,8 +493,8 @@ class Apps(object):
                            "check_in_time IS NOT NULL AND " \
                            "TRIM(check_in_time)<>'' AND " \
                            "(check_out_time IS NULL OR TRIM(check_out_time)='')"
-            self.__execute_select_query('id', 'Reservations', where_clause,
-                                        [hotel_id, room_number])
+            self._execute_select_query('id', 'Reservations', where_clause,
+                                       [hotel_id, room_number])
             reservation_tuples = self.cursor.fetchall()
             assert len(reservation_tuples) == 1, \
                 'Cannot assign staff to a room \'{}\' in hotel \'{}\' for ' \
@@ -511,16 +511,16 @@ class Apps(object):
             # Staff is assigned from add_reservation() or
             # update_reservation() functions
             # Check whether Reservation is Presidential Suite
-            self.__execute_simple_select_query('category', 'Rooms',
-                                               {'hotel_id': hotel_id,
-                                                'room_number': room_number})
+            self._execute_simple_select_query('category', 'Rooms',
+                                              {'hotel_id': hotel_id,
+                                               'room_number': room_number})
             room_tuple = self.cursor.fetchall()
             if room_tuple is not None:
                 room_category = room_tuple[0][0].split()
                 if 'presidential' in room_category.lower():
                     # This is Presidential Suite
                     # Verify that this reservation is still active
-                    self.__execute_simple_select_query(
+                    self._execute_simple_select_query(
                         'check_out_time', 'Reservations',
                         {'id': reservation_id})
                     reservation_tuple = self.cursor.fetchall()
@@ -536,7 +536,7 @@ class Apps(object):
                                        "assigned_hotel_id='') AND " \
                                        "(assigned_room_number IS NULL OR " \
                                        "assigned_room_number='')"
-                        self.__execute_select_query(
+                        self._execute_select_query(
                             'id', 'Staff',
                             where_clause=where_clause.format('Catering'),
                             where_values_list=[hotel_id])
@@ -547,7 +547,7 @@ class Apps(object):
                                  'assigned_room_number': room_number},
                                 {'id': staff_tuples[0][0]},
                                 reservation_id=reservation_id)
-                        self.__execute_select_query(
+                        self._execute_select_query(
                             'id', 'Staff',
                             where_clause=where_clause.format(
                                 'Room Service'),
@@ -567,7 +567,7 @@ class Apps(object):
 
         The ZipToCityState table must exist. It adds new ZIP code with
         corresponding city and state into ZipToCityState table by calling
-        private helper function __execute_insert_query() that generates INSERT
+        private helper function _execute_insert_query() that generates INSERT
         query statement and executes it. Once data is successfully stored in
         the table, it queries this tuple by calling helper function
         get_data_frame(), which returns it as Pandas DataFrame.
@@ -607,7 +607,7 @@ class Apps(object):
                     'Exception: State must be specified and must be exactly ' \
                     'two characters.\n'
             # Execute insert query
-            self.__execute_insert_query(zip_dict, 'ZipToCityState')
+            self._execute_insert_query(zip_dict, 'ZipToCityState')
             # Query for this inserted tuple and return it as Pandas DataFrame
             data_frame = self.get_data_frame('*', 'ZipToCityState',
                                              'zip={}'.format(zip_dict['zip']))
@@ -624,7 +624,7 @@ class Apps(object):
         The ZipToCityState table must exist. It updates the ZipToCityState
         table with attributes and values specified in the zip_dict argument.
         The information gets updated in the table by calling private helper
-        function __execute_update_query() that generates UPDATE query statement
+        function _execute_update_query() that generates UPDATE query statement
         and executes it. Once data is successfully updated in the table, the
         helper function also queries this tuple and returns it as Pandas
         DataFrame.
@@ -660,7 +660,7 @@ class Apps(object):
                         'updated.\n'.format(attribute)
             # Execute update query
             # Also queries for updated tuple and returns it as Pandas DataFrame
-            data_frame = self.__execute_update_query(
+            data_frame = self._execute_update_query(
                 'ZipToCityState', zip_dict, where_clause_dict)
             return data_frame
         except AssertionError, error:
@@ -675,7 +675,7 @@ class Apps(object):
         The ZipToCityState table must exist. It deletes a tuple(s) from the
         ZipToCityState table identified by attributes and values in the
         zip_dict argument. The information gets deleted from the table by
-        calling private helper function __execute_delete_query() that generates
+        calling private helper function _execute_delete_query() that generates
         DELETE query statement and executes it. Once data is successfully
         deleted from the table, the helper function also tries to query this
         tuple and must return it as an empty Pandas DataFrame.
@@ -694,7 +694,7 @@ class Apps(object):
         TODO:
         """
         try:
-            return self.__execute_delete_query('ZipToCityState', zip_dict)
+            return self._execute_delete_query('ZipToCityState', zip_dict)
         except maria_db.Error as error:
             raise error
 
@@ -706,7 +706,7 @@ class Apps(object):
         The Hotels table must exist. It adds new hotel information into Hotels
         table with all corresponding information specified in the dictionary of
         attributes and values. The information gets added into the table by
-        calling private helper function __execute_insert_query() that generates
+        calling private helper function _execute_insert_query() that generates
         INSERT query statement and executes it. Once data is successfully
         stored in the table, it queries this tuple by calling helper function
         get_data_frame(), which returns it as Pandas DataFrame.
@@ -751,7 +751,7 @@ class Apps(object):
                     'Exception: Phone number of the hotel must be specified ' \
                     'and must be non-empty.\n'
             # Execute insert query
-            self.__execute_insert_query(hotel_dict, 'Hotels')
+            self._execute_insert_query(hotel_dict, 'Hotels')
             # Query for this inserted tuple and return it as Pandas DataFrame
             data_frame = self.get_data_frame(
                 '*', 'Hotels', 'id={}'.format(self.cursor.lastrowid))
@@ -768,7 +768,7 @@ class Apps(object):
         The Hotels table must exist. It updates the Hotels table with
         attributes and values specified in the hotel_dict argument. The
         information gets updated in the table by calling private helper
-        function __execute_update_query() that generates UPDATE query statement
+        function _execute_update_query() that generates UPDATE query statement
         and executes it. Once data is successfully updated in the table, the
         helper function also queries this tuple and returns it as Pandas
         DataFrame. 
@@ -804,7 +804,7 @@ If check boolean parameter is enabled, it performs
                         'updated.\n'.format(attribute)
             # Execute update query
             # Also queries for updated tuple and returns it as Pandas DataFrame
-            data_frame = self.__execute_update_query(
+            data_frame = self._execute_update_query(
                 'Hotels', hotel_dict, where_clause_dict)
             return data_frame
         except AssertionError, error:
@@ -819,7 +819,7 @@ If check boolean parameter is enabled, it performs
         The Hotels table must exist. It deletes a tuple(s) from the Hotels
         table identified by attributes and values in the hotel_dict argument.
         The information gets deleted from the table by calling private helper
-        function __execute_delete_query() that generates DELETE query statement
+        function _execute_delete_query() that generates DELETE query statement
         and executes it. Once data is successfully deleted from the table, the
         helper function also tries to query this tuple and must return it as an
         empty Pandas DataFrame.
@@ -838,7 +838,7 @@ If check boolean parameter is enabled, it performs
         TODO:
         """
         try:
-            return self.__execute_delete_query('Hotels', hotel_dict)
+            return self._execute_delete_query('Hotels', hotel_dict)
         except maria_db.Error as error:
             raise error
 
@@ -850,7 +850,7 @@ If check boolean parameter is enabled, it performs
         The Rooms table must exist. It adds new room information into Rooms
         table with all corresponding information specified in the dictionary of
         attributes and values. The information gets added into the table by
-        calling private helper function __execute_insert_query() that generates
+        calling private helper function _execute_insert_query() that generates
         INSERT query statement and executes it. Once data is successfully
         stored in the table, it queries this tuple by calling helper function
         get_data_frame(), which returns it as Pandas DataFrame.
@@ -895,7 +895,7 @@ If check boolean parameter is enabled, it performs
                     'Exception: Maximum occupancy of the room must be ' \
                     'between 1 and 9 inclusive.\n'
             # Execute insert query
-            self.__execute_insert_query(room_dict, 'Rooms')
+            self._execute_insert_query(room_dict, 'Rooms')
             # Query for this inserted tuple and return it as Pandas DataFrame
             data_frame = self.get_data_frame(
                 '*', 'Rooms', 'hotel_id={} AND room_number = {}'.format(
@@ -913,7 +913,7 @@ If check boolean parameter is enabled, it performs
         The Rooms table must exist. It updates the Rooms table with attributes
         and values specified in the room_dict argument. The information gets
         updated in the table by calling private helper function
-        __execute_update_query() that generates UPDATE query statement and
+        _execute_update_query() that generates UPDATE query statement and
         executes it. Once data is successfully updated in the table, the helper
         function also queries this tuple and returns it as Pandas DataFrame.
         If check boolean parameter is enabled, it performs assertions ensuring
@@ -947,7 +947,7 @@ If check boolean parameter is enabled, it performs
                         'updated.\n'.format(attribute)
             # Execute update query
             # Also queries for updated tuple and returns it as Pandas DataFrame
-            data_frame = self.__execute_update_query(
+            data_frame = self._execute_update_query(
                 'Rooms', room_dict, where_clause_dict)
             return data_frame
         except AssertionError, error:
@@ -962,7 +962,7 @@ If check boolean parameter is enabled, it performs
         The Rooms table must exist. It deletes a tuple(s) from the Rooms table
         identified by attributes and values in the room_dict argument. The
         information gets deleted from the table by calling private helper
-        function __execute_delete_query() that generates DELETE query statement
+        function _execute_delete_query() that generates DELETE query statement
         and executes it. Once data is successfully deleted from the table, the
         helper function also tries to query this tuple and must return it as an
         empty Pandas DataFrame.
@@ -981,7 +981,7 @@ If check boolean parameter is enabled, it performs
         TODO:
         """
         try:
-            return self.__execute_delete_query('Rooms', room_dict)
+            return self._execute_delete_query('Rooms', room_dict)
         except maria_db.Error as error:
             raise error
 
@@ -993,7 +993,7 @@ If check boolean parameter is enabled, it performs
         The Staff table must exist. It adds new staff member information into
         Staff table with all corresponding information specified in the
         dictionary of attributes and values. The information gets added into
-        the table by calling private helper function __execute_insert_query()
+        the table by calling private helper function _execute_insert_query()
         that generates INSERT query statement and executes it. Once data is
         successfully stored in the table, it queries this tuple by calling
         helper function get_data_frame(), which returns it as Pandas DataFrame.
@@ -1076,7 +1076,7 @@ If check boolean parameter is enabled, it performs
                         'staff member is assigned to as dedicated staff must ' \
                         'be specified.\n'
             # Execute insert query
-            self.__execute_insert_query(staff_dict, 'Staff')
+            self._execute_insert_query(staff_dict, 'Staff')
             staff_id = self.cursor.lastrowid
             # If staff gets assigned to a room, add it into Serves table
             if 'assigned_hotel_id' in staff_dict and \
@@ -1084,7 +1084,7 @@ If check boolean parameter is enabled, it performs
                     staff_dict['assigned_hotel_id'] is not None and \
                     staff_dict['assigned_room_number'] is not None:
                 # Assign staff to a room
-                self.__assign_staff_to_room(staff_dict['assigned_hotel_id'],
+                self._assign_staff_to_room(staff_dict['assigned_hotel_id'],
                                             staff_dict['assigned_room_number'],
                                             staff_id=staff_id,
                                             reservation_id=None)
@@ -1104,23 +1104,23 @@ If check boolean parameter is enabled, it performs
         The Staff table must exist. It updates the Staff table with attributes
         and values specified in the room_dict argument. The information gets
         updated in the table by calling private helper function
-        __execute_update_query() that generates UPDATE query statement and
+        _execute_update_query() that generates UPDATE query statement and
         executes it. Once data is successfully updated in the table, the helper
         function also queries this tuple and returns it as Pandas DataFrame.
         If staff member gets assigned to a room through this update by the
         upper layer (UI layer), it does not specify reservation_id argument.
-        Therefore, it calls private helper function __assign_staff_to_room(),
+        Therefore, it calls private helper function _assign_staff_to_room(),
         which determines reservation ID based on hotel_id, room_number,
         check-in and check-out times, which inserts a tuple into Serves table
         with appropriate staff ID and reservation ID.
         If staff member gets assigned by internal private caller functions
-        __assign_staff_to_room(), reservation ID must be specified.
+        _assign_staff_to_room(), reservation ID must be specified.
         Therefore, this function calls helper function add_serves(), which
         inserts a tuple into Serves table with appropriate staff ID and
         reservation ID. The sequence of calls with specified arguments for this
         situation must be as following:
         -> add_reservation OR update_reservation() ->
-        -> __assign_staff_to_room(reservation_id) ->
+        -> _assign_staff_to_room(reservation_id) ->
         -> update_staff(staff_id, reservation_id) ->
         -> add_serves(staff_id, reservation_id)
         If check boolean parameter is enabled, it performs assertions ensuring
@@ -1138,7 +1138,7 @@ If check boolean parameter is enabled, it performs
             :param reservation_id: ID of reservation associated with hotel ID
             and room number to which staff gets assigned. It is only specified
             when caller is internal private helper function
-            __assign_staff_to_room(). It is None, if the call is made by the
+            _assign_staff_to_room(). It is None, if the call is made by the
             upper layer.
 
         Returns:
@@ -1164,8 +1164,8 @@ If check boolean parameter is enabled, it performs
                     where_clause_dict['id']:
                 staff_tuples = [where_clause_dict['id']]
             else:
-                self.__execute_simple_select_query('id', 'Staff',
-                                                   where_clause_dict)
+                self._execute_simple_select_query('id', 'Staff',
+                                                  where_clause_dict)
                 staff_tuples = self.cursor.fetchall()
             # If staff gets assigned to a room, add it into Serves table
             if staff_tuples is not None and 'assigned_hotel_id' in staff_dict \
@@ -1177,13 +1177,13 @@ If check boolean parameter is enabled, it performs
                         self.add_serves({'staff_id': staff[0],
                                          'reservation_id': reservation_id})
                     else:
-                        self.__assign_staff_to_room(
+                        self._assign_staff_to_room(
                             staff_dict['assigned_hotel_id'],
                             staff_dict['assigned_room_number'],
                             staff_id=staff[0], reservation_id=reservation_id)
             # Execute update query
             # Also queries for updated tuple and returns it as Pandas DataFrame
-            data_frame = self.__execute_update_query(
+            data_frame = self._execute_update_query(
                 'Staff', staff_dict, where_clause_dict)
             return data_frame
         except AssertionError, error:
@@ -1198,7 +1198,7 @@ If check boolean parameter is enabled, it performs
         The Staff table must exist. It deletes a tuple(s) from the Staff table
         identified by attributes and values in the room_dict argument. The
         information gets deleted from the table by calling private helper
-        function __execute_delete_query() that generates DELETE query statement
+        function _execute_delete_query() that generates DELETE query statement
         and executes it. Once data is successfully deleted from the table, the
         helper function also tries to query this tuple and must return it as an
         empty Pandas DataFrame.
@@ -1217,7 +1217,7 @@ If check boolean parameter is enabled, it performs
         TODO:
         """
         try:
-            return self.__execute_delete_query('Staff', staff_dict)
+            return self._execute_delete_query('Staff', staff_dict)
         except maria_db.Error as error:
             raise error
 
@@ -1229,7 +1229,7 @@ If check boolean parameter is enabled, it performs
         The Customers table must exist. It adds new customer information into
         Customers table with all corresponding information specified in the
         dictionary of attributes and values. The information gets added into
-        the table by calling private helper function __execute_insert_query()
+        the table by calling private helper function _execute_insert_query()
         that generates INSERT query statement and executes it. Once data is
         successfully stored in the table, it queries this tuple by calling
         helper function get_data_frame(), which returns it as Pandas DataFrame.
@@ -1297,7 +1297,7 @@ If check boolean parameter is enabled, it performs
                     'Exception: Social Security Number must be specified and ' \
                     'must follow the NNN-NN-NNNN format.\n'
             # Execute insert query
-            self.__execute_insert_query(customer_dict, 'Customers')
+            self._execute_insert_query(customer_dict, 'Customers')
             # Query for this inserted tuple and return it as Pandas DataFrame
             data_frame = self.get_data_frame(
                 '*', 'Customers', 'id={}'.format(self.cursor.lastrowid))
@@ -1314,7 +1314,7 @@ If check boolean parameter is enabled, it performs
         The Customers table must exist. It updates the Customers table with
         attributes and values specified in the customer_dict argument. The
         information gets updated in the table by calling private helper
-        function __execute_update_query() that generates UPDATE query statement
+        function _execute_update_query() that generates UPDATE query statement
         and executes it. Once data is successfully updated in the table, the
         helper function also queries this tuple and returns it as Pandas
         DataFrame.
@@ -1352,7 +1352,7 @@ If check boolean parameter is enabled, it performs
                             'to be updated.\n'.format(attribute)
             # Execute update query
             # Also queries for updated tuple and returns it as Pandas DataFrame
-            data_frame = self.__execute_update_query(
+            data_frame = self._execute_update_query(
                 'Customers', customer_dict, where_clause_dict)
             return data_frame
         except AssertionError, error:
@@ -1367,7 +1367,7 @@ If check boolean parameter is enabled, it performs
         The Customers table must exist. It deletes a tuple(s) from the
         Customers table identified by attributes and values in the room_dict
         argument. The information gets deleted from the table by calling
-        private helper function __execute_delete_query() that generates DELETE
+        private helper function _execute_delete_query() that generates DELETE
         query statement and executes it. Once data is successfully deleted from
         the table, the helper function also tries to query this tuple and must
         return it as an empty Pandas DataFrame.
@@ -1386,7 +1386,7 @@ If check boolean parameter is enabled, it performs
         TODO:
         """
         try:
-            return self.__execute_delete_query('Customers', customer_dict)
+            return self._execute_delete_query('Customers', customer_dict)
         except maria_db.Error as error:
             raise error
 
@@ -1399,7 +1399,7 @@ If check boolean parameter is enabled, it performs
         information into Reservations table with all corresponding information
         specified in the dictionary of attributes and values. The information
         gets added into the table by calling private helper function
-        __execute_insert_query() that generates INSERT query statement and
+        _execute_insert_query() that generates INSERT query statement and
         executes it. Once data is successfully stored in the table, it queries
         this tuple by calling helper function get_data_frame(), which returns
         it as Pandas DataFrame.
@@ -1410,7 +1410,7 @@ If check boolean parameter is enabled, it performs
         reservation ID.
         If Customer as well immediately checks-out as he/she checks-in (very
         unlikely but possible) after this reservation is created, it calls
-        private helper function __check_out(), which frees all dedicated staff
+        private helper function _check_out(), which frees all dedicated staff
         that is assigned to this reservation (since this is new reservation, it
         must not have any staff assigned to it) and inserts new transaction of
         type 'x-night(s) Reservation Room Charge' into the Transactions table.
@@ -1490,7 +1490,7 @@ If check boolean parameter is enabled, it performs
                         'specified and must follow the DATETIME format: ' \
                         'YYYY-MM-DD HH:MM:SS.\n'
             # Execute insert query
-            self.__execute_insert_query(reservation_dict, 'Reservations')
+            self._execute_insert_query(reservation_dict, 'Reservations')
             reservation_id = self.cursor.lastrowid
             # If check-in, do all check-in logic: i) Check whether this
             # reservation is Presidential suite ii) Assign one Catering Staff
@@ -1498,7 +1498,7 @@ If check boolean parameter is enabled, it performs
             if 'check_in_time' in reservation_dict and \
                     reservation_dict['check_in_time'] and \
                     'check_out_time' not in reservation_dict:
-                self.__assign_staff_to_room(reservation_dict['hotel_id'],
+                self._assign_staff_to_room(reservation_dict['hotel_id'],
                                             reservation_dict['room_number'],
                                             staff_id=None,
                                             reservation_id=reservation_id)
@@ -1507,7 +1507,7 @@ If check boolean parameter is enabled, it performs
             # ii) Add new Room Charge transaction into Transactions table
             if 'check_out_time' in reservation_dict and \
                     reservation_dict['check_out_time']:
-                self.__check_out(reservation_id,
+                self._check_out(reservation_id,
                                  reservation_dict['check_out_time'])
             # Query for inserted tuple and return it as Pandas DataFrame
             data_frame = self.get_data_frame('*', 'Reservations',
@@ -1525,7 +1525,7 @@ If check boolean parameter is enabled, it performs
         The Reservations table must exist. It updates the Customers table with
         attributes and values specified in the reservation_dict argument. The
         information gets updated in the table by calling private helper
-        function __execute_update_query() that generates UPDATE query statement
+        function _execute_update_query() that generates UPDATE query statement
         and executes it. Once data is successfully updated in the table, the
         helper function also queries this tuple and returns it as Pandas
         DataFrame.
@@ -1537,7 +1537,7 @@ If check boolean parameter is enabled, it performs
         Serves table with appropriate staff ID and reservation ID.
         If this update registers check-out time, for all appropriate
         reservations identified by where_clause_dict attribute values, it calls
-        private helper function __check_out(), which frees all dedicated staff
+        private helper function _check_out(), which frees all dedicated staff
         that is assigned to a reservation and inserts new transaction of type
         'x-night(s) Reservation Room Charge' into the Transactions table.
         If check boolean parameter is enabled, it performs assertions ensuring
@@ -1573,7 +1573,7 @@ If check boolean parameter is enabled, it performs
                             'Exception: Attribute \'{}\' must be specified ' \
                             'to be updated.\n'.format(attribute)
             # Determine Reservation tuple(s)
-            self.__execute_simple_select_query(
+            self._execute_simple_select_query(
                 'id, check_out_time, hotel_id, room_number', 'Reservations',
                 where_clause_dict)
             reservation_tuples = self.cursor.fetchall()
@@ -1588,7 +1588,7 @@ If check boolean parameter is enabled, it performs
                 for reservation in reservation_tuples:
                     # Check if check-out has never been done previously
                     if not reservation[1] or reservation[1] == 'NULL':
-                        self.__assign_staff_to_room(
+                        self._assign_staff_to_room(
                             reservation[2], reservation[3], staff_id=None,
                             reservation_id=reservation[0])
             # If check-out, do all check-out logic: i) Free dedicated staff,
@@ -1599,11 +1599,11 @@ If check boolean parameter is enabled, it performs
                 for reservation in reservation_tuples:
                     # Check if check-out has never been done previously
                     if not reservation[1] or reservation[1] == 'NULL':
-                        self.__check_out(reservation[0],
+                        self._check_out(reservation[0],
                                          reservation_dict['check_out_time'])
             # Execute update query
             # Also queries for updated tuple and returns it as Pandas DataFrame
-            data_frame = self.__execute_update_query(
+            data_frame = self._execute_update_query(
                 'Reservations', reservation_dict, where_clause_dict)
             return data_frame
         except AssertionError, error:
@@ -1618,7 +1618,7 @@ If check boolean parameter is enabled, it performs
         The Reservations table must exist. It deletes a tuple(s) from the
         Reservations table identified by attributes and values in the room_dict
         argument. The information gets deleted from the table by calling
-        private helper function __execute_delete_query() that generates DELETE
+        private helper function _execute_delete_query() that generates DELETE
         query statement and executes it. Once data is successfully deleted from
         the table, the helper function also tries to query this tuple and must
         return it as an empty Pandas DataFrame.
@@ -1637,7 +1637,7 @@ If check boolean parameter is enabled, it performs
         TODO:
         """
         try:
-            return self.__execute_delete_query('Reservations', reservation_dict)
+            return self._execute_delete_query('Reservations', reservation_dict)
         except maria_db.Error as error:
             raise error
 
@@ -1650,7 +1650,7 @@ If check boolean parameter is enabled, it performs
         information within one reservation into Transactions table with all
         corresponding information specified in the dictionary of attributes and
         values. The information gets added into the table by calling private
-        helper function __execute_insert_query() that generates INSERT
+        helper function _execute_insert_query() that generates INSERT
         query statement and executes it. Once data is successfully stored in
         the table, it queries this tuple by calling helper function
         get_data_frame(), which returns it as Pandas DataFrame.
@@ -1700,7 +1700,7 @@ If check boolean parameter is enabled, it performs
                     'Exception: Date of the transaction must follow the DATE ' \
                     'format: YYYY-MM-DD.\n'
             # Execute insert query
-            self.__execute_insert_query(transaction_dict, 'Transactions')
+            self._execute_insert_query(transaction_dict, 'Transactions')
             # Query for this inserted tuple and return it as Pandas DataFrame
             data_frame = self.get_data_frame(
                 '*', 'Transactions', 'id={}'.format(self.cursor.lastrowid))
@@ -1717,7 +1717,7 @@ If check boolean parameter is enabled, it performs
         The Transactions table must exist. It updates the Transactions table
         with attributes and values specified in the transaction_dict argument.
         The information gets updated in the table by calling private helper
-        function __execute_update_query() that generates UPDATE query statement
+        function _execute_update_query() that generates UPDATE query statement
         and executes it. Once data is successfully updated in the table, the
         helper function also queries this tuple and returns it as Pandas
         DataFrame.
@@ -1753,7 +1753,7 @@ If check boolean parameter is enabled, it performs
                         'updated.\n'.format(attribute)
             # Execute update query
             # Also queries for updated tuple and returns it as Pandas DataFrame
-            data_frame = self.__execute_update_query(
+            data_frame = self._execute_update_query(
                 'Rooms', transaction_dict, where_clause_dict)
             return data_frame
         except AssertionError, error:
@@ -1768,7 +1768,7 @@ If check boolean parameter is enabled, it performs
         The Transactions table must exist. It deletes a tuple(s) from the
         Transactions table identified by attributes and values in the room_dict
         argument. The information gets deleted from the table by calling
-        private helper function __execute_delete_query() that generates DELETE
+        private helper function _execute_delete_query() that generates DELETE
         query statement and executes it. Once data is successfully deleted from
         the table, the helper function also tries to query this tuple and must
         return it as an empty Pandas DataFrame.
@@ -1787,7 +1787,7 @@ If check boolean parameter is enabled, it performs
         TODO:
         """
         try:
-            return self.__execute_delete_query('Reservations', transaction_dict)
+            return self._execute_delete_query('Reservations', transaction_dict)
         except maria_db.Error as error:
             raise error
 
@@ -1798,7 +1798,7 @@ If check boolean parameter is enabled, it performs
 
         The Serves table must exist. It adds new tuple of the staff-reservation
         interaction (mapping) into Serves table. The new tuple is added by
-        calling private helper function __execute_insert_query() that generates
+        calling private helper function _execute_insert_query() that generates
         INSERT query statement and executes it, only when any staff member
         serves a reservation. Once data is successfully stored in the table,
         it queries this tuple by calling helper function get_data_frame(),
@@ -1831,7 +1831,7 @@ If check boolean parameter is enabled, it performs
         """
         try:
             # Execute insert query
-            self.__execute_insert_query(serves_dict, 'Serves')
+            self._execute_insert_query(serves_dict, 'Serves')
             # Query for this inserted tuple and return it as Pandas DataFrame
             data_frame = self.get_data_frame(
                 '*', 'Serves', 'staff_id={} AND reservation_id={}'.format(
@@ -1847,7 +1847,7 @@ If check boolean parameter is enabled, it performs
         The Serves table must exist. It updates the Serves table with
         attributes and values specified in the serves_dict argument. The
         information gets updated in the table by calling private helper
-        function __execute_update_query() that generates UPDATE query statement
+        function _execute_update_query() that generates UPDATE query statement
         and executes it. Once data is successfully updated in the table, the
         helper function also queries this tuple and returns it as Pandas
         DataFrame.
@@ -1877,7 +1877,7 @@ If check boolean parameter is enabled, it performs
         try:
             # Execute update query
             # Also queries for updated tuple and returns it as Pandas DataFrame
-            data_frame = self.__execute_update_query(
+            data_frame = self._execute_update_query(
                 'Rooms', serves_dict, where_clause_dict)
             return data_frame
         except maria_db.Error as error:
@@ -1890,7 +1890,7 @@ If check boolean parameter is enabled, it performs
         The Serves table must exist. It deletes a tuple(s) from theServes table
         identified by attributes and values in the room_dict argument. The
         information gets deleted from the table by calling private helper
-        function __execute_delete_query() that generates DELETE query statement
+        function _execute_delete_query() that generates DELETE query statement
         and executes it. Once data is successfully deleted from the table, the
         helper function also tries to query this tuple and must return it as an
         empty Pandas DataFrame.
@@ -1909,6 +1909,6 @@ If check boolean parameter is enabled, it performs
         TODO:
         """
         try:
-            return self.__execute_delete_query('Serves', serves_dict)
+            return self._execute_delete_query('Serves', serves_dict)
         except maria_db.Error as error:
             raise error

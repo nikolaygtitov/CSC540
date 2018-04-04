@@ -3,7 +3,7 @@ import unittest
 import mysql.connector as mariadb
 import pandas as pd
 
-from Project.transaction import sql_transaction
+from Project.util import sql_transaction
 
 
 class SQLUnitTestBase(unittest.TestCase):
