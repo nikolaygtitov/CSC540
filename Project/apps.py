@@ -128,68 +128,9 @@ class Apps(object):
         self.cursor = maria_db_connection.cursor()
         self.check = check
 
-    def __check_out(self, reservation_id, check_out_time):
-        """
-        Performs the check-out logic operations on Staff and Transaction tables.
-
-        This is private function of the class and not intended to be referenced
-        by upper layers. It is referenced by two local caller functions
-        i) add_reservation() - Within new reservation a check-out time
-        follows immediately after check-in. It is very unlikely,
-        but possible. This reservation must not have dedicated staff assigned.
-        ii) update_reservation() - Customer checks-out.
-        For a given reservation ID and check-out time, it does the following:
-        1) Frees all dedicated staff that is assigned to the reservation by
-        calling helper function update_staff()
-        2) Inserts new transaction of type 'x-night(s) Reservation Room Charge'
-        into the Transactions table by calling helper function add_transaction()
-
-        Parameters:
-            :param reservation_id: Reservation ID for reservation identified in
-            the caller functions add_reservation() or update_reservation() by
-            where_clause_dict attribute values
-            :param check_out_time: Check-out time of the reservation. It must
-            follow the DATETIME format YYYY-MM-DD HH:MM:SS. Used for
-            transaction date.
-
-        Returns:
-            :return:
-
-        TODO: Testing
-        """
-        # Determine all staff assigned to this reservation
-        self.execute_simple_select_query('staff_id', 'Serves',
-                                         {'reservation_id': reservation_id})
-        staff_tuples = self.cursor.fetchall()
-        if staff_tuples is not None:
-            for staff_id in staff_tuples:
-                # Free all assigned staff by setting assigned hotel and
-                # assigned room to NULL
-                self.update_staff({'assigned_hotel_id': None,
-                                   'assigned_room_number': None},
-                                  {'id': staff_id})
-        # Add Room Charge transaction into Transactions table
-        # Determine amount needs to be charged for the reservation
-        self.execute_simple_select_query(
-            'rate * DATEDIFF(end_date, start_date)',
-            'Rooms NATURAL JOIN Reservations',
-            {'id': reservation_id})
-        amount = self.cursor.fetchall()
-        # Determine number of nights customer reserved
-        self.execute_simple_select_query('DATEDIFF(end_date, start_date)',
-                                         'Reservations',
-                                         {'id': reservation_id})
-        number_nights = self.cursor.fetchall()
-        if amount is not None and number_nights is not None:
-            self.add_transaction(
-                {'amount': amount[0][0],
-                 'type': '{}-night(s) Room Reservation Charge'.format(
-                     number_nights[0][0]),
-                 'date': check_out_time,
-                 'reservation_id': reservation_id})
-
     def get_data_frame(self, attributes, table_name, where_clause=None):
-        """Generates Pandas DataFrame with desired tuple(s)/row(s) in a table.
+        """
+        Generates Pandas DataFrame with desired tuple(s)/row(s) in a table.
 
         For a given table name and WHERE clause, it does the following:
         1) Generates SELECT query for desired attributes specified by the
@@ -222,12 +163,14 @@ class Apps(object):
         data_frame = pd.read_sql(select_query, con=self.maria_db_connection)
         return data_frame
 
-    def execute_simple_select_query(self, attributes, table_name,
-                                    where_clause_dict):
+    def __execute_simple_select_query(self, attributes, table_name,
+                                      where_clause_dict):
         """
         Generates and executes SELECT query in python format with basic WHERE
         clause having only AND key words.
 
+        This is private function of the class and not intended to be referenced
+        by upper layers. It is referenced only by internal caller functions.
         For a given attributes, table name, over which SELECT query is
         executed, and dictionary of attributes and values for corresponding
         WHERE clause, specified in the arguments respectively, it does the
@@ -260,12 +203,14 @@ class Apps(object):
             attributes, table_name, where_attr_format)
         self.cursor.execute(select_query, where_clause_dict.values())
 
-    def execute_select_query(self, attributes, table_name, where_clause=None,
-                             where_values_list=None):
+    def __execute_select_query(self, attributes, table_name, where_clause=None,
+                               where_values_list=None):
         """
         Generates and executes SELECT query in python format with complicated
         WHERE clause.
 
+        This is private function of the class and not intended to be referenced
+        by upper layers. It is referenced only by internal caller functions.
         For a given attributes, table name, WHERE clause format, and list of
         values used for WHERE clause, over which SELECT query is executed, it
         does the following:
@@ -296,10 +241,12 @@ class Apps(object):
             # Execute select query with complicated WHERE clause
             self.cursor.execute(select_query, where_values_list)
 
-    def execute_insert_query(self, dictionary, table_name):
+    def __execute_insert_query(self, dictionary, table_name):
         """
         Generates and executes INSERT query in python format.
 
+        This is private function of the class and not intended to be referenced
+        by upper layers. It is referenced only by internal caller functions.
         For a given dictionary of attributes and values to be stored in a
         particular table, specified as an dictionary argument, it does the
         following:
@@ -326,10 +273,12 @@ class Apps(object):
         # Execute insert query
         self.cursor.execute(insert_query, dictionary.values())
 
-    def execute_update_query(self, table_name, dictionary, where_clause_dict):
+    def __execute_update_query(self, table_name, dictionary, where_clause_dict):
         """
         Generates and executes UPDATE query in python format.
 
+        This is private function of the class and not intended to be referenced
+        by upper layers. It is referenced only by internal caller functions.
         For a given dictionary of attributes and values to be updated in a
         particular table, specified as an dictionary argument and table_name
         respectively, it does the following:
@@ -361,33 +310,30 @@ class Apps(object):
         set_attr_format = ', '.join([attr + '=%s' for attr in
                                      dictionary.iterkeys()])
         set_attr_args = dictionary.values()
-
         # Get all attributes for WHERE clause
         where_attr_format = ' AND '.join([attr + '=%s' for attr in
                                           where_clause_dict.iterkeys()])
         where_attr_args = where_clause_dict.values()
-
         # Construct update query statement
         update_query = "UPDATE {} SET {} WHERE {}".format(
             table_name, set_attr_format, where_attr_format)
-
         # Execute update query
         self.cursor.execute(update_query, set_attr_args + where_attr_args)
-
         # Generate WHERE clause for SELECT query
         if 'id' in dictionary:
             where_clause = set_attr_format % tuple(dictionary)
         else:
             where_clause = where_attr_format % tuple(where_attr_args)
-
         # Query for this updated tuple and return it as Pandas DataFrame
         data_frame = self.get_data_frame('*', table_name, where_clause)
         return data_frame
 
-    def execute_delete_query(self, table_name, dictionary):
+    def __execute_delete_query(self, table_name, dictionary):
         """
         Generates and executes DELETE query in python format.
 
+        This is private function of the class and not intended to be referenced
+        by upper layers. It is referenced only by internal caller functions.
         For a given dictionary of attributes and values, specified as an
         dictionary argument, that must identify a tuple(s) in a particular
         table, it does the following:
@@ -418,38 +364,96 @@ class Apps(object):
                                               dictionary.iterkeys()])
         where_attr_select = ' AND '.join(
             [attr + '=' + value for attr, value in dictionary.iteritems()])
-
         # Generate delete query statement
         delete_query = "DELETE FROM {} WHERE {}".format(
             table_name, where_attr_delete_format)
-
         # Execute delete query
         self.cursor.execute(delete_query, dictionary.values())
-
         # Query this deleted tuple and return it as empty Pandas DataFrame
         data_frame = self.get_data_frame('*', table_name, where_attr_select)
         return data_frame
 
-    def assign_staff_to_room(self, hotel_id, room_number, staff_id=None,
-                             reservation_id=None):
+    def __check_out(self, reservation_id, check_out_time):
+        """
+        Performs the check-out logic operations on Staff and Transaction tables.
+
+        This is private function of the class and not intended to be referenced
+        by upper layers. It is referenced by two internal caller functions
+        i) add_reservation() - Within new reservation a check-out time
+        follows immediately after check-in. It is very unlikely,
+        but possible. This reservation must not have dedicated staff assigned.
+        ii) update_reservation() - Customer checks-out.
+        For a given reservation ID and check-out time, it does the following:
+        1) Frees all dedicated staff that is assigned to the reservation by
+        calling helper function update_staff()
+        2) Inserts new transaction of type 'x-night(s) Reservation Room Charge'
+        into the Transactions table by calling helper function add_transaction()
+
+        Parameters:
+            :param reservation_id: Reservation ID for reservation identified in
+            the caller functions add_reservation() or update_reservation() by
+            where_clause_dict attribute values
+            :param check_out_time: Check-out time of the reservation. It must
+            follow the DATETIME format YYYY-MM-DD HH:MM:SS. Used for
+            transaction date.
+
+        Returns:
+            :return:
+
+        TODO: Testing
+        """
+        # Determine all staff assigned to this reservation
+        self.__execute_simple_select_query('staff_id', 'Serves',
+                                           {'reservation_id': reservation_id})
+        staff_tuples = self.cursor.fetchall()
+        if staff_tuples is not None:
+            for staff_id in staff_tuples:
+                # Free all assigned staff by setting assigned hotel and
+                # assigned room to NULL
+                self.update_staff({'assigned_hotel_id': None,
+                                   'assigned_room_number': None},
+                                  {'id': staff_id})
+        # Add Room Charge transaction into Transactions table
+        # Determine amount needs to be charged for the reservation
+        self.__execute_simple_select_query(
+            'rate * DATEDIFF(end_date, start_date)',
+            'Rooms NATURAL JOIN Reservations',
+            {'id': reservation_id})
+        amount = self.cursor.fetchall()
+        # Determine number of nights customer reserved
+        self.__execute_simple_select_query('DATEDIFF(end_date, start_date)',
+                                           'Reservations',
+                                           {'id': reservation_id})
+        number_nights = self.cursor.fetchall()
+        if amount is not None and number_nights is not None:
+            self.add_transaction(
+                {'amount': amount[0][0],
+                 'type': '{}-night(s) Room Reservation Charge'.format(
+                     number_nights[0][0]),
+                 'date': check_out_time,
+                 'reservation_id': reservation_id})
+
+    def __assign_staff_to_room(self, hotel_id, room_number, staff_id=None,
+                               reservation_id=None):
         """
         Assigns staff member to a room by adding it into Serves table.
 
-        Request to assign staff to a room may come from four different internal
-        functions and upper layer (directly from UI):
+        This is private function of the class and not intended to be referenced
+        by upper layers. Request to assign staff to a room may come from four
+        different internal caller functions:
         i) add_staff() - Staff is immediately assigned to a room once is added
         ii) update_staff() - Staff is assigned to a room as an update
         iii) add_reservation() - Customer checks-in immediately when
         reservation is created and this reservation is for Presidential Suite
         iv) update_reservation() - Customer checks-in and this reservation is
         for Presidential Suite
-        v) UI request - User wants to assign staff to a room using this API.
-        Alternative API would be update_staff() and specify assigned_hotel_id
-        and assigned room_number.
+
         If request comes from Staff functions, for a given hotel ID, room
         number, and staff ID, it does the following:
         1) Determines reservation ID
-        2) Inserts staff ID and reservation ID into Serves table by calling
+        2) Verifies that there is only one reservation for a given hotel ID and
+        room number
+        3) Inserts staff ID and reservation ID into Serves table by calling
         helper function add_serves() with appropriate dictionary of attributes
         and values
         If request comes from Reservation functions, for a given hotel ID, room
@@ -462,10 +466,6 @@ class Apps(object):
         If neither staff ID nor reservation ID cannot be found, nothing gets
         inserted into Serves table, but transaction must still succeed, unless
         there are some cursor errors.
-        If request comes from UI, all of the arguments must be specified. In
-        this case, it calls helper function update_staff(), which sets assigned
-        hotel and room number for this staff member and does callback to insert
-        new tuple into the add_serves().
 
         Parameters:
             :param hotel_id: ID of a hotel is needed for identifying unique
@@ -484,104 +484,81 @@ class Apps(object):
         Returns:
             :return:
 
-        Exceptions:
-            :raise: Assertion Error or MySQL Connector Error exceptions
-
         TODO: Testing
         """
-        try:
-            if staff_id and reservation_id is None:
-                # Staff is assigned from add_staff() or update_staff() functions
-                # Determine Reservation ID
-                where_clause = "hotel_id=%s AND room_number=%s AND " \
-                               "check_in_time IS NOT NULL AND " \
-                               "TRIM(check_in_time)<>'' AND " \
-                               "(check_out_time IS NULL OR " \
-                               "TRIM(check_out_time)='')"
-                self.execute_select_query('id', 'Reservations', where_clause,
-                                          [hotel_id, room_number])
-                reservation_tuples = self.cursor.fetchall()
-                if reservation_tuples is not None and \
-                        len(reservation_tuples) == 1:
-                    self.add_serves(
-                        {'staff_id': staff_id,
-                         'reservation_id': reservation_tuples[0][0]})
-            if reservation_id and staff_id is None:
-                # Staff is assigned from add_reservation() or
-                # update_reservation() functions.
-                # Check whether Reservation is Presidential Suite
-                self.execute_simple_select_query('category', 'Rooms',
-                                                 {'hotel_id': hotel_id,
-                                                  'room_number': room_number})
-                room_tuple = self.cursor.fetchall()
-                if room_tuple is not None:
-                    room_category = room_tuple[0][0].split()
-                    if 'presidential' in room_category.lower():
-                        # This is Presidential Suite
-                        # Verify that this reservation is still active
-                        self.execute_simple_select_query('check_out_time',
-                                                         'Reservations',
-                                                         {'id': reservation_id})
-                        reservation_tuple = self.cursor.fetchall()
-                        if reservation_tuple is None or \
-                                not reservation_tuple[0][0] or \
-                                reservation_tuple[0][0] == 'NULL':
-                            # It needs to assign one available Catering staff
-                            # and one Room Service as dedicated staff.
-                            # Determine their Staff ID
-                            where_clause = "works_for_hotel_id=%s AND " \
-                                           "title LIKE '%{}%'  AND " \
-                                           "(assigned_hotel_id IS NULL OR " \
-                                           "assigned_hotel_id='') AND " \
-                                           "(assigned_room_number IS NULL OR " \
-                                           "assigned_room_number='')"
-                            self.execute_select_query(
-                                'id', 'Staff',
-                                where_clause=where_clause.format('Catering'),
-                                where_values_list=[hotel_id])
-                            staff_tuples = self.cursor.fetchall()
-                            if staff_tuples is not None and staff_tuples[0][0]:
-                                self.add_serves(
-                                    {'staff_id': staff_tuples[0][0],
-                                     'reservation_id': reservation_id})
-                            self.execute_select_query(
-                                'id', 'Staff',
-                                where_clause=where_clause.format(
-                                    'Room Service'),
-                                where_values_list=[hotel_id])
-                            staff_tuples = self.cursor.fetchall()
-                            if staff_tuples is not None and staff_tuples[0][0]:
-                                self.add_serves(
-                                    {'staff_id': staff_tuples[0][0],
-                                     'reservation_id': reservation_id})
-            if staff_id and reservation_id:
-                # This request comes from UI
-                # Verify that this reservation is still active
-                self.execute_simple_select_query('check_out_time',
-                                                 'Reservations',
-                                                 {'id': reservation_id})
-                reservation_tuple = self.cursor.fetchall()
-                assert reservation_tuple is None or \
-                    not reservation_tuple[0][0] or \
-                    reservation_tuple[0][0] == 'NULL', \
-                    'Cannot assign staff to a room whose customer already ' \
-                    'check-out. Room is not occupied by this reservation ' \
-                    'id \'{}\' any longer'.format(reservation_id)
-                # Determine hotel ID and room number based on the reservation ID
-                self.execute_simple_select_query('hotel_id, room_number',
-                                                 'Reservations',
-                                                 {'id': reservation_id})
-                reservation_tuple = self.cursor.fetchall()
-                if reservation_tuple is not None and reservation_tuple[0][0]:
-                    # Call helper function that does a callback here
-                    self.update_staff(
-                        {'assigned_hotel_id': reservation_tuple[0][0],
-                         'assigned_room_number': reservation_tuple[0][1]},
-                        {'id': staff_id})
-        except AssertionError, error:
-            raise error
-        except maria_db.Error as error:
-            raise error
+        if staff_id is not None and reservation_id is None:
+            # Staff is assigned from add_staff() or update_staff() functions
+            # Determine Reservation ID
+            where_clause = "hotel_id=%s AND room_number=%s AND " \
+                           "check_in_time IS NOT NULL AND " \
+                           "TRIM(check_in_time)<>'' AND " \
+                           "(check_out_time IS NULL OR TRIM(check_out_time)='')"
+            self.__execute_select_query('id', 'Reservations', where_clause,
+                                        [hotel_id, room_number])
+            reservation_tuples = self.cursor.fetchall()
+            assert len(reservation_tuples) == 1, \
+                'Cannot assign staff to a room \'{}\' in hotel \'{}\' for ' \
+                'which customer either did not check-in or already ' \
+                'checked-out.\n'.format(room_number, hotel_id) \
+                if len(reservation_tuples) == 0 else \
+                'Found multiple active reservations for room \'{}\' in hotel ' \
+                '\'{}\' with a checked-in customer. Cannot assign staff to ' \
+                'multiple room simultaneously.\n'
+            if reservation_tuples is not None:
+                self.add_serves({'staff_id': staff_id,
+                                 'reservation_id': reservation_tuples[0][0]})
+        if reservation_id is not None and staff_id is None:
+            # Staff is assigned from add_reservation() or
+            # update_reservation() functions
+            # Check whether Reservation is Presidential Suite
+            self.__execute_simple_select_query('category', 'Rooms',
+                                               {'hotel_id': hotel_id,
+                                                'room_number': room_number})
+            room_tuple = self.cursor.fetchall()
+            if room_tuple is not None:
+                room_category = room_tuple[0][0].split()
+                if 'presidential' in room_category.lower():
+                    # This is Presidential Suite
+                    # Verify that this reservation is still active
+                    self.__execute_simple_select_query(
+                        'check_out_time', 'Reservations',
+                        {'id': reservation_id})
+                    reservation_tuple = self.cursor.fetchall()
+                    if reservation_tuple is None or \
+                            not reservation_tuple[0][0] or \
+                            reservation_tuple[0][0] == 'NULL':
+                        # It needs to assign one available Catering staff
+                        # and one Room Service as dedicated staff.
+                        # Determine their Staff ID
+                        where_clause = "works_for_hotel_id=%s AND " \
+                                       "title LIKE '%{}%'  AND " \
+                                       "(assigned_hotel_id IS NULL OR " \
+                                       "assigned_hotel_id='') AND " \
+                                       "(assigned_room_number IS NULL OR " \
+                                       "assigned_room_number='')"
+                        self.__execute_select_query(
+                            'id', 'Staff',
+                            where_clause=where_clause.format('Catering'),
+                            where_values_list=[hotel_id])
+                        staff_tuples = self.cursor.fetchall()
+                        if staff_tuples is not None and staff_tuples[0][0]:
+                            self.update_staff(
+                                {'assigned_hotel_id': hotel_id,
+                                 'assigned_room_number': room_number},
+                                {'id': staff_tuples[0][0]},
+                                reservation_id=reservation_id)
+                        self.__execute_select_query(
+                            'id', 'Staff',
+                            where_clause=where_clause.format(
+                                'Room Service'),
+                            where_values_list=[hotel_id])
+                        staff_tuples = self.cursor.fetchall()
+                        if staff_tuples is not None and staff_tuples[0][0]:
+                            self.update_staff(
+                                {'assigned_hotel_id': hotel_id,
+                                 'assigned_room_number': room_number},
+                                {'id': staff_tuples[0][0]},
+                                reservation_id=reservation_id)
 
     # Implementation of the program applications for the ZipToCityState table
     def add_zip(self, zip_dict):
@@ -590,13 +567,13 @@ class Apps(object):
 
         The ZipToCityState table must exist. It adds new ZIP code with
         corresponding city and state into ZipToCityState table by calling
-        helper function execute_insert_query() that generates INSERT query
-        statement and executes it. Once data is successfully stored in the
-        table, it quires this tuple by calling helper function
-        get_data_frame(), which returns it as Pandas DataFrame. If check
-        boolean parameter is enabled, it performs assertions ensuring that data
-        to be added obeys MySQL constraints that are ignored by current MySQL
-        MariaDB version.
+        private helper function __execute_insert_query() that generates INSERT
+        query statement and executes it. Once data is successfully stored in
+        the table, it queries this tuple by calling helper function
+        get_data_frame(), which returns it as Pandas DataFrame.
+        If check boolean parameter is enabled, it performs assertions ensuring
+        that data to be added obeys MySQL constraints that are ignored by
+        current MySQL MariaDB version.
 
         Parameters:
             :param zip_dict: Dictionary of zip, state, and city attributes and
@@ -611,7 +588,7 @@ class Apps(object):
             :return: Pandas DataFrame (two-dimensional size-mutable,
             heterogeneous tabular data structure with labeled axes) retrieved
             from the helper function get_data_frame(), which contains a
-            tuple(s) with successfully stored data in the ZipToCityState table
+            tuple with successfully stored data in the ZipToCityState table
 
         Exceptions:
             :raise: Assertion Error or MySQL Connector Error exceptions
@@ -630,7 +607,7 @@ class Apps(object):
                     'Exception: State must be specified and must be exactly ' \
                     'two characters.\n'
             # Execute insert query
-            self.execute_insert_query(zip_dict, 'ZipToCityState')
+            self.__execute_insert_query(zip_dict, 'ZipToCityState')
             # Query for this inserted tuple and return it as Pandas DataFrame
             data_frame = self.get_data_frame('*', 'ZipToCityState',
                                              'zip={}'.format(zip_dict['zip']))
@@ -646,11 +623,12 @@ class Apps(object):
 
         The ZipToCityState table must exist. It updates the ZipToCityState
         table with attributes and values specified in the zip_dict argument.
-        The information gets updated in the table by calling helper function
-        execute_update_query() that generates UPDATE query statement and
-        executes it. Once data is successfully updated in the table, the helper
-        function also quires this tuple and returns it as Pandas DataFrame. If
-        check boolean parameter is enabled, it performs assertions ensuring
+        The information gets updated in the table by calling private helper
+        function __execute_update_query() that generates UPDATE query statement
+        and executes it. Once data is successfully updated in the table, the
+        helper function also queries this tuple and returns it as Pandas
+        DataFrame.
+        If check boolean parameter is enabled, it performs assertions ensuring
         that data to be updated obeys MySQL constraints that are ignored by
         current MySQL MariaDB version.
 
@@ -664,9 +642,9 @@ class Apps(object):
             attributes and corresponding values.
 
         Returns:
-            :return: Pandas DataFrame (two-dimensional size-mutable,
+            :return: Pandas DataFrame(s) (two-dimensional size-mutable,
             heterogeneous tabular data structure with labeled axes) containing
-            a tuple of successfully update tuple in the ZipToCityState table
+            a tuple(s) of successfully updated data in the ZipToCityState table
 
         Exceptions:
             :raise: Assertion Error or MySQL Connector Error exceptions
@@ -682,7 +660,7 @@ class Apps(object):
                         'updated.\n'.format(attribute)
             # Execute update query
             # Also queries for updated tuple and returns it as Pandas DataFrame
-            data_frame = self.execute_update_query(
+            data_frame = self.__execute_update_query(
                 'ZipToCityState', zip_dict, where_clause_dict)
             return data_frame
         except AssertionError, error:
@@ -697,10 +675,10 @@ class Apps(object):
         The ZipToCityState table must exist. It deletes a tuple(s) from the
         ZipToCityState table identified by attributes and values in the
         zip_dict argument. The information gets deleted from the table by
-        calling helper function execute_delete_query() that generates DELETE
-        query statement and executes it. Once data is successfully deleted from
-        the table, the helper function also tries to query this tuple and must
-        return it as an empty Pandas DataFrame.
+        calling private helper function __execute_delete_query() that generates
+        DELETE query statement and executes it. Once data is successfully
+        deleted from the table, the helper function also tries to query this
+        tuple and must return it as an empty Pandas DataFrame.
 
         Parameters:
             :param zip_dict: Dictionary of attributes and values that identify
@@ -716,7 +694,7 @@ class Apps(object):
         TODO:
         """
         try:
-            return self.execute_delete_query('ZipToCityState', zip_dict)
+            return self.__execute_delete_query('ZipToCityState', zip_dict)
         except maria_db.Error as error:
             raise error
 
@@ -728,13 +706,13 @@ class Apps(object):
         The Hotels table must exist. It adds new hotel information into Hotels
         table with all corresponding information specified in the dictionary of
         attributes and values. The information gets added into the table by
-        calling helper function execute_insert_query() that generates INSERT
-        query statement and executes it. Once data is successfully stored in
-        the table, it quires this tuple by calling helper function
-        get_data_frame(), which returns it as Pandas DataFrame. If check
-        boolean parameter is enabled, it performs assertions ensuring that data
-        to be added obeys MySQL constraints that are ignored by current MySQL
-        MariaDB version.
+        calling private helper function __execute_insert_query() that generates
+        INSERT query statement and executes it. Once data is successfully
+        stored in the table, it queries this tuple by calling helper function
+        get_data_frame(), which returns it as Pandas DataFrame.
+        If check boolean parameter is enabled, it performs assertions ensuring
+        that data to be added obeys MySQL constraints that are ignored by
+        current MySQL MariaDB version.
 
         Parameters:
             :param hotel_dict: Dictionary of hotel attributes and values to be
@@ -751,8 +729,8 @@ class Apps(object):
         Returns:
             :return: Pandas DataFrame (two-dimensional size-mutable,
             heterogeneous tabular data structure with labeled axes) retrieved
-            from the helper function get_data_frame(), which contains a
-            tuple(s) with successfully stored data in the Hotels table
+            from the helper function get_data_frame(), which contains a tuple
+            with successfully stored data in the Hotels table
 
         Exceptions:
             :raise: Assertion Error or MySQL Connector Error exceptions
@@ -773,7 +751,7 @@ class Apps(object):
                     'Exception: Phone number of the hotel must be specified ' \
                     'and must be non-empty.\n'
             # Execute insert query
-            self.execute_insert_query(hotel_dict, 'Hotels')
+            self.__execute_insert_query(hotel_dict, 'Hotels')
             # Query for this inserted tuple and return it as Pandas DataFrame
             data_frame = self.get_data_frame(
                 '*', 'Hotels', 'id={}'.format(self.cursor.lastrowid))
@@ -789,13 +767,14 @@ class Apps(object):
 
         The Hotels table must exist. It updates the Hotels table with
         attributes and values specified in the hotel_dict argument. The
-        information gets updated in the table by calling helper function
-        execute_update_query() that generates UPDATE query statement and
-        executes it. Once data is successfully updated in the table, the helper
-        function also quires this tuple and returns it as Pandas DataFrame. If
-        check boolean parameter is enabled, it performs assertions ensuring
-        that data to be updated obeys MySQL constraints that are ignored by
-        current MySQL MariaDB version.
+        information gets updated in the table by calling private helper
+        function __execute_update_query() that generates UPDATE query statement
+        and executes it. Once data is successfully updated in the table, the
+        helper function also queries this tuple and returns it as Pandas
+        DataFrame. 
+If check boolean parameter is enabled, it performs
+        assertions ensuring that data to be updated obeys MySQL constraints
+        that are ignored by current MySQL MariaDB version.
 
         Parameters:
             :param hotel_dict: Dictionary of attributes and values to be
@@ -807,9 +786,9 @@ class Apps(object):
             attributes and corresponding values.
 
         Returns:
-            :return: Pandas DataFrame (two-dimensional size-mutable,
+            :return: Pandas DataFrame(s) (two-dimensional size-mutable,
             heterogeneous tabular data structure with labeled axes) containing
-            a tuple of successfully update tuple in the Hotels table
+            a tuple(s) of successfully updated data in the Hotels table
 
         Exceptions:
             :raise: Assertion Error or MySQL Connector Error exceptions
@@ -825,7 +804,7 @@ class Apps(object):
                         'updated.\n'.format(attribute)
             # Execute update query
             # Also queries for updated tuple and returns it as Pandas DataFrame
-            data_frame = self.execute_update_query(
+            data_frame = self.__execute_update_query(
                 'Hotels', hotel_dict, where_clause_dict)
             return data_frame
         except AssertionError, error:
@@ -839,9 +818,9 @@ class Apps(object):
 
         The Hotels table must exist. It deletes a tuple(s) from the Hotels
         table identified by attributes and values in the hotel_dict argument.
-        The information gets deleted from the table by calling helper function
-        execute_delete_query() that generates DELETE query statement and
-        executes it. Once data is successfully deleted from the table, the
+        The information gets deleted from the table by calling private helper
+        function __execute_delete_query() that generates DELETE query statement
+        and executes it. Once data is successfully deleted from the table, the
         helper function also tries to query this tuple and must return it as an
         empty Pandas DataFrame.
 
@@ -859,7 +838,7 @@ class Apps(object):
         TODO:
         """
         try:
-            return self.execute_delete_query('Hotels', hotel_dict)
+            return self.__execute_delete_query('Hotels', hotel_dict)
         except maria_db.Error as error:
             raise error
 
@@ -871,13 +850,13 @@ class Apps(object):
         The Rooms table must exist. It adds new room information into Rooms
         table with all corresponding information specified in the dictionary of
         attributes and values. The information gets added into the table by
-        calling helper function execute_insert_query() that generates INSERT
-        query statement and executes it. Once data is successfully stored in
-        the table, it quires this tuple by calling helper function
-        get_data_frame(), which returns it as Pandas DataFrame. If check
-        boolean parameter is enabled, it performs assertions ensuring that data
-        to be added obeys MySQL constraints that are ignored by current MySQL
-        MariaDB version.
+        calling private helper function __execute_insert_query() that generates
+        INSERT query statement and executes it. Once data is successfully
+        stored in the table, it queries this tuple by calling helper function
+        get_data_frame(), which returns it as Pandas DataFrame.
+        If check boolean parameter is enabled, it performs assertions ensuring
+        that data to be added obeys MySQL constraints that are ignored by
+        current MySQL MariaDB version.
 
         Parameters:
             :param room_dict: Dictionary of room attributes and values to be
@@ -894,8 +873,8 @@ class Apps(object):
         Returns:
             :return: Pandas DataFrame (two-dimensional size-mutable,
             heterogeneous tabular data structure with labeled axes) retrieved
-            from the helper function get_data_frame(), which contains a
-            tuple(s) with successfully stored data in the Rooms table
+            from the helper function get_data_frame(), which contains a tuple
+            with successfully stored data in the Rooms table
 
         Exceptions:
             :raise: Assertion Error or MySQL Connector Error exceptions
@@ -916,7 +895,7 @@ class Apps(object):
                     'Exception: Maximum occupancy of the room must be ' \
                     'between 1 and 9 inclusive.\n'
             # Execute insert query
-            self.execute_insert_query(room_dict, 'Rooms')
+            self.__execute_insert_query(room_dict, 'Rooms')
             # Query for this inserted tuple and return it as Pandas DataFrame
             data_frame = self.get_data_frame(
                 '*', 'Rooms', 'hotel_id={} AND room_number = {}'.format(
@@ -933,12 +912,13 @@ class Apps(object):
 
         The Rooms table must exist. It updates the Rooms table with attributes
         and values specified in the room_dict argument. The information gets
-        updated in the table by calling helper function execute_update_query()
-        that generates UPDATE query statement and executes it. Once data is
-        successfully updated in the table, the helper function also quires this
-        tuple and returns it as Pandas DataFrame. If check boolean parameter is
-        enabled, it performs assertions ensuring that data to be updated obeys
-        MySQL constraints that are ignored by current MySQL MariaDB version.
+        updated in the table by calling private helper function
+        __execute_update_query() that generates UPDATE query statement and
+        executes it. Once data is successfully updated in the table, the helper
+        function also queries this tuple and returns it as Pandas DataFrame.
+        If check boolean parameter is enabled, it performs assertions ensuring
+        that data to be updated obeys MySQL constraints that are ignored by
+        current MySQL MariaDB version.
 
         Parameters:
             :param room_dict: Dictionary of attributes and values to be updated
@@ -949,9 +929,9 @@ class Apps(object):
             attributes and corresponding values.
 
         Returns:
-            :return: Pandas DataFrame (two-dimensional size-mutable,
+            :return: Pandas DataFrame(s) (two-dimensional size-mutable,
             heterogeneous tabular data structure with labeled axes) containing
-            a tuple of successfully update tuple in the Rooms table
+            a tuple(s) of successfully updated data in the Rooms table
 
         Exceptions:
             :raise: Assertion Error or MySQL Connector Error exceptions
@@ -967,7 +947,7 @@ class Apps(object):
                         'updated.\n'.format(attribute)
             # Execute update query
             # Also queries for updated tuple and returns it as Pandas DataFrame
-            data_frame = self.execute_update_query(
+            data_frame = self.__execute_update_query(
                 'Rooms', room_dict, where_clause_dict)
             return data_frame
         except AssertionError, error:
@@ -981,9 +961,9 @@ class Apps(object):
 
         The Rooms table must exist. It deletes a tuple(s) from the Rooms table
         identified by attributes and values in the room_dict argument. The
-        information gets deleted from the table by calling helper function
-        execute_delete_query() that generates DELETE query statement and
-        executes it. Once data is successfully deleted from the table, the
+        information gets deleted from the table by calling private helper
+        function __execute_delete_query() that generates DELETE query statement
+        and executes it. Once data is successfully deleted from the table, the
         helper function also tries to query this tuple and must return it as an
         empty Pandas DataFrame.
 
@@ -1001,7 +981,7 @@ class Apps(object):
         TODO:
         """
         try:
-            return self.execute_delete_query('Rooms', room_dict)
+            return self.__execute_delete_query('Rooms', room_dict)
         except maria_db.Error as error:
             raise error
 
@@ -1013,9 +993,9 @@ class Apps(object):
         The Staff table must exist. It adds new staff member information into
         Staff table with all corresponding information specified in the
         dictionary of attributes and values. The information gets added into
-        the table by calling helper function execute_insert_query() that
-        generates INSERT query statement and executes it. Once data is
-        successfully stored in the table, it quires this tuple by calling
+        the table by calling private helper function __execute_insert_query()
+        that generates INSERT query statement and executes it. Once data is
+        successfully stored in the table, it queries this tuple by calling
         helper function get_data_frame(), which returns it as Pandas DataFrame.
         If staff member immediately gets assigned to a room, it calls helper
         function assign_staff_to_room(), which determines reservation ID, and
@@ -1054,8 +1034,8 @@ class Apps(object):
         Returns:
             :return: Pandas DataFrame (two-dimensional size-mutable,
             heterogeneous tabular data structure with labeled axes) retrieved
-            from the helper function get_data_frame(), which contains a
-            tuple(s) with successfully stored data in the Staff table
+            from the helper function get_data_frame(), which contains a tuple 
+            with successfully stored data in the Staff table
 
         Exceptions:
             :raise: Assertion Error or MySQL Connector Error exceptions
@@ -1096,18 +1076,18 @@ class Apps(object):
                         'staff member is assigned to as dedicated staff must ' \
                         'be specified.\n'
             # Execute insert query
-            self.execute_insert_query(staff_dict, 'Staff')
+            self.__execute_insert_query(staff_dict, 'Staff')
             staff_id = self.cursor.lastrowid
             # If staff gets assigned to a room, add it into Serves table
             if 'assigned_hotel_id' in staff_dict and \
                     'assigned_room_number' in staff_dict and \
-                    staff_dict['assigned_hotel_id'] and \
-                    staff_dict['assigned_room_number']:
+                    staff_dict['assigned_hotel_id'] is not None and \
+                    staff_dict['assigned_room_number'] is not None:
                 # Assign staff to a room
-                self.assign_staff_to_room(staff_dict['assigned_hotel_id'],
-                                          staff_dict['assigned_room_number'],
-                                          staff_id=staff_id,
-                                          reservation_id=None)
+                self.__assign_staff_to_room(staff_dict['assigned_hotel_id'],
+                                            staff_dict['assigned_room_number'],
+                                            staff_id=staff_id,
+                                            reservation_id=None)
             # Query for inserted Staff tuple and return it as Pandas DataFrame
             data_frame = self.get_data_frame('*', 'Staff',
                                              'id={}'.format(staff_id))
@@ -1117,20 +1097,32 @@ class Apps(object):
         except maria_db.Error as error:
             raise error
 
-    def update_staff(self, staff_dict, where_clause_dict):
+    def update_staff(self, staff_dict, where_clause_dict, reservation_id=None):
         """
         Updates a tuple in the Staff table.
 
         The Staff table must exist. It updates the Staff table with attributes
         and values specified in the room_dict argument. The information gets
-        updated in the table by calling helper function execute_update_query()
-        that generates UPDATE query statement and executes it. Once data is
-        successfully updated in the table, the helper function also quires this
-        tuple and returns it as Pandas DataFrame.
-        If staff member gets assigned to a room through this update, it calls
-        helper function assign_staff_to_room(), which determines reservation
-        ID, and inserts a tuple into Serves table with appropriate staff ID and
-        reservation ID.
+        updated in the table by calling private helper function
+        __execute_update_query() that generates UPDATE query statement and
+        executes it. Once data is successfully updated in the table, the helper
+        function also queries this tuple and returns it as Pandas DataFrame.
+        If staff member gets assigned to a room through this update by the
+        upper layer (UI layer), it does not specify reservation_id argument.
+        Therefore, it calls private helper function __assign_staff_to_room(),
+        which determines reservation ID based on hotel_id, room_number,
+        check-in and check-out times, which inserts a tuple into Serves table
+        with appropriate staff ID and reservation ID.
+        If staff member gets assigned by internal private caller functions
+        __assign_staff_to_room(), reservation ID must be specified.
+        Therefore, this function calls helper function add_serves(), which
+        inserts a tuple into Serves table with appropriate staff ID and
+        reservation ID. The sequence of calls with specified arguments for this
+        situation must be as following:
+        -> add_reservation OR update_reservation() ->
+        -> __assign_staff_to_room(reservation_id) ->
+        -> update_staff(staff_id, reservation_id) ->
+        -> add_serves(staff_id, reservation_id)
         If check boolean parameter is enabled, it performs assertions ensuring
         that data to be updated obeys MySQL constraints that are ignored by
         current MySQL MariaDB version.
@@ -1143,11 +1135,16 @@ class Apps(object):
             :param where_clause_dict: Dictionary of attributes and values used
             for WHERE clause in the UPDATE query. It may contain one or more
             attributes and corresponding values.
+            :param reservation_id: ID of reservation associated with hotel ID
+            and room number to which staff gets assigned. It is only specified
+            when caller is internal private helper function
+            __assign_staff_to_room(). It is None, if the call is made by the
+            upper layer.
 
         Returns:
             :return: Pandas DataFrame (two-dimensional size-mutable,
             heterogeneous tabular data structure with labeled axes) containing
-            a tuple of successfully update tuple in the Staff table
+            a tuple(s) of successfully updated data in the Staff table
 
         Exceptions:
             :raise: Assertion Error or MySQL Connector Error exceptions
@@ -1167,22 +1164,26 @@ class Apps(object):
                     where_clause_dict['id']:
                 staff_tuples = [where_clause_dict['id']]
             else:
-                self.execute_simple_select_query('id', 'Staff',
-                                                 where_clause_dict)
+                self.__execute_simple_select_query('id', 'Staff',
+                                                   where_clause_dict)
                 staff_tuples = self.cursor.fetchall()
             # If staff gets assigned to a room, add it into Serves table
             if staff_tuples is not None and 'assigned_hotel_id' in staff_dict \
                     and 'assigned_room_number' in staff_dict and \
-                    staff_dict['assigned_hotel_id'] and \
-                    staff_dict['assigned_room_number']:
+                    staff_dict['assigned_hotel_id'] is not None and \
+                    staff_dict['assigned_room_number'] is not None:
                 for staff in staff_tuples:
-                    self.assign_staff_to_room(
-                        staff_dict['assigned_hotel_id'],
-                        staff_dict['assigned_room_number'],
-                        staff_id=staff[0], reservation_id=None)
+                    if reservation_id is not None:
+                        self.add_serves({'staff_id': staff[0],
+                                         'reservation_id': reservation_id})
+                    else:
+                        self.__assign_staff_to_room(
+                            staff_dict['assigned_hotel_id'],
+                            staff_dict['assigned_room_number'],
+                            staff_id=staff[0], reservation_id=reservation_id)
             # Execute update query
             # Also queries for updated tuple and returns it as Pandas DataFrame
-            data_frame = self.execute_update_query(
+            data_frame = self.__execute_update_query(
                 'Staff', staff_dict, where_clause_dict)
             return data_frame
         except AssertionError, error:
@@ -1196,9 +1197,9 @@ class Apps(object):
 
         The Staff table must exist. It deletes a tuple(s) from the Staff table
         identified by attributes and values in the room_dict argument. The
-        information gets deleted from the table by calling helper function
-        execute_delete_query() that generates DELETE query statement and
-        executes it. Once data is successfully deleted from the table, the
+        information gets deleted from the table by calling private helper
+        function __execute_delete_query() that generates DELETE query statement
+        and executes it. Once data is successfully deleted from the table, the
         helper function also tries to query this tuple and must return it as an
         empty Pandas DataFrame.
 
@@ -1216,7 +1217,7 @@ class Apps(object):
         TODO:
         """
         try:
-            return self.execute_delete_query('Staff', staff_dict)
+            return self.__execute_delete_query('Staff', staff_dict)
         except maria_db.Error as error:
             raise error
 
@@ -1228,9 +1229,9 @@ class Apps(object):
         The Customers table must exist. It adds new customer information into
         Customers table with all corresponding information specified in the
         dictionary of attributes and values. The information gets added into
-        the table by calling helper function execute_insert_query() that
-        generates INSERT query statement and executes it. Once data is
-        successfully stored in the table, it quires this tuple by calling
+        the table by calling private helper function __execute_insert_query()
+        that generates INSERT query statement and executes it. Once data is
+        successfully stored in the table, it queries this tuple by calling
         helper function get_data_frame(), which returns it as Pandas DataFrame.
         If check boolean parameter is enabled, it performs assertions ensuring
         that data to be added obeys MySQL constraints that are ignored by
@@ -1264,8 +1265,8 @@ class Apps(object):
         Returns:
             :return: Pandas DataFrame (two-dimensional size-mutable,
             heterogeneous tabular data structure with labeled axes) retrieved
-            from the helper function get_data_frame(), which contains a
-            tuple(s) with successfully stored data in the Customers table
+            from the helper function get_data_frame(), which contains a tuple
+            with successfully stored data in the Customers table
 
         Exceptions:
             :raise: Assertion Error or MySQL Connector Error exceptions
@@ -1296,7 +1297,7 @@ class Apps(object):
                     'Exception: Social Security Number must be specified and ' \
                     'must follow the NNN-NN-NNNN format.\n'
             # Execute insert query
-            self.execute_insert_query(customer_dict, 'Customers')
+            self.__execute_insert_query(customer_dict, 'Customers')
             # Query for this inserted tuple and return it as Pandas DataFrame
             data_frame = self.get_data_frame(
                 '*', 'Customers', 'id={}'.format(self.cursor.lastrowid))
@@ -1312,11 +1313,12 @@ class Apps(object):
 
         The Customers table must exist. It updates the Customers table with
         attributes and values specified in the customer_dict argument. The
-        information gets updated in the table by calling helper function
-        execute_update_query() that generates UPDATE query statement and
-        executes it. Once data is successfully updated in the table, the helper
-        function also quires this tuple and returns it as Pandas DataFrame. If
-        check boolean parameter is enabled, it performs assertions ensuring
+        information gets updated in the table by calling private helper
+        function __execute_update_query() that generates UPDATE query statement
+        and executes it. Once data is successfully updated in the table, the
+        helper function also queries this tuple and returns it as Pandas
+        DataFrame.
+        If check boolean parameter is enabled, it performs assertions ensuring
         that data to be updated obeys MySQL constraints that are ignored by
         current MySQL MariaDB version.
 
@@ -1330,9 +1332,9 @@ class Apps(object):
             attributes and corresponding values.
 
         Returns:
-            :return: Pandas DataFrame (two-dimensional size-mutable,
+            :return: Pandas DataFrame(s) (two-dimensional size-mutable,
             heterogeneous tabular data structure with labeled axes) containing
-            a tuple of successfully update tuple in the Customers table
+            a tuple(s) of successfully updated data in the Customers table
 
         Exceptions:
             :raise: Assertion Error or MySQL Connector Error exceptions
@@ -1350,7 +1352,7 @@ class Apps(object):
                             'to be updated.\n'.format(attribute)
             # Execute update query
             # Also queries for updated tuple and returns it as Pandas DataFrame
-            data_frame = self.execute_update_query(
+            data_frame = self.__execute_update_query(
                 'Customers', customer_dict, where_clause_dict)
             return data_frame
         except AssertionError, error:
@@ -1364,11 +1366,11 @@ class Apps(object):
 
         The Customers table must exist. It deletes a tuple(s) from the
         Customers table identified by attributes and values in the room_dict
-        argument. The information gets deleted from the table by calling helper
-        function execute_delete_query() that generates DELETE query statement
-        and executes it. Once data is successfully deleted from the table, the
-        helper function also tries to query this tuple and must return it as an
-        empty Pandas DataFrame.
+        argument. The information gets deleted from the table by calling
+        private helper function __execute_delete_query() that generates DELETE
+        query statement and executes it. Once data is successfully deleted from
+        the table, the helper function also tries to query this tuple and must
+        return it as an empty Pandas DataFrame.
 
         Parameters:
             :param customer_dict: Dictionary of attributes and values that
@@ -1384,7 +1386,7 @@ class Apps(object):
         TODO:
         """
         try:
-            return self.execute_delete_query('Customers', customer_dict)
+            return self.__execute_delete_query('Customers', customer_dict)
         except maria_db.Error as error:
             raise error
 
@@ -1396,9 +1398,9 @@ class Apps(object):
         The Reservations table must exist. It adds newly created reservation
         information into Reservations table with all corresponding information
         specified in the dictionary of attributes and values. The information
-        gets added into the table by calling helper function
-        execute_insert_query() that generates INSERT query statement and
-        executes it. Once data is successfully stored in the table, it quires
+        gets added into the table by calling private helper function
+        __execute_insert_query() that generates INSERT query statement and
+        executes it. Once data is successfully stored in the table, it queries
         this tuple by calling helper function get_data_frame(), which returns
         it as Pandas DataFrame.
         If Customer checks-in immediately after this reservation is created, it
@@ -1441,8 +1443,8 @@ class Apps(object):
         Returns:
             :return: Pandas DataFrame (two-dimensional size-mutable,
             heterogeneous tabular data structure with labeled axes) retrieved
-            from the helper function get_data_frame(), which contains a
-            tuple(s) with successfully stored data in the Reservations table
+            from the helper function get_data_frame(), which contains a tuple 
+            with successfully stored data in the Reservations table
 
         Exceptions:
             :raise: Assertion Error or MySQL Connector Error exceptions
@@ -1488,7 +1490,7 @@ class Apps(object):
                         'specified and must follow the DATETIME format: ' \
                         'YYYY-MM-DD HH:MM:SS.\n'
             # Execute insert query
-            self.execute_insert_query(reservation_dict, 'Reservations')
+            self.__execute_insert_query(reservation_dict, 'Reservations')
             reservation_id = self.cursor.lastrowid
             # If check-in, do all check-in logic: i) Check whether this
             # reservation is Presidential suite ii) Assign one Catering Staff
@@ -1496,10 +1498,10 @@ class Apps(object):
             if 'check_in_time' in reservation_dict and \
                     reservation_dict['check_in_time'] and \
                     'check_out_time' not in reservation_dict:
-                self.assign_staff_to_room(reservation_dict['hotel_id'],
-                                          reservation_dict['room_number'],
-                                          staff_id=None,
-                                          reservation_id=reservation_id)
+                self.__assign_staff_to_room(reservation_dict['hotel_id'],
+                                            reservation_dict['room_number'],
+                                            staff_id=None,
+                                            reservation_id=reservation_id)
             # If check-out, do all check-out logic: i) Free dedicated staff
             # (should not be any dedicated staff since this is new reservation)
             # ii) Add new Room Charge transaction into Transactions table
@@ -1522,10 +1524,11 @@ class Apps(object):
 
         The Reservations table must exist. It updates the Customers table with
         attributes and values specified in the reservation_dict argument. The
-        information gets updated in the table by calling helper function
-        execute_update_query() that generates UPDATE query statement and
-        executes it. Once data is successfully updated in the table, the helper
-        function also quires this tuple and returns it as Pandas DataFrame.
+        information gets updated in the table by calling private helper
+        function __execute_update_query() that generates UPDATE query statement
+        and executes it. Once data is successfully updated in the table, the
+        helper function also queries this tuple and returns it as Pandas
+        DataFrame.
         If update registers check-in time (but check-out times is still not
         registered), for all appropriate reservations identified by
         where_clause_dict attribute values it calls helper function
@@ -1551,9 +1554,9 @@ class Apps(object):
             attributes and corresponding values.
 
         Returns:
-            :return: Pandas DataFrame (two-dimensional size-mutable,
+            :return: Pandas DataFrame(s) (two-dimensional size-mutable,
             heterogeneous tabular data structure with labeled axes) containing
-            a tuple of successfully update tuple in the Reservations table
+            a tuple(s) of successfully updated data in the Reservations table
 
         Exceptions:
             :raise: Assertion Error or MySQL Connector Error exceptions
@@ -1570,7 +1573,7 @@ class Apps(object):
                             'Exception: Attribute \'{}\' must be specified ' \
                             'to be updated.\n'.format(attribute)
             # Determine Reservation tuple(s)
-            self.execute_simple_select_query(
+            self.__execute_simple_select_query(
                 'id, check_out_time, hotel_id, room_number', 'Reservations',
                 where_clause_dict)
             reservation_tuples = self.cursor.fetchall()
@@ -1585,10 +1588,9 @@ class Apps(object):
                 for reservation in reservation_tuples:
                     # Check if check-out has never been done previously
                     if not reservation[1] or reservation[1] == 'NULL':
-                        self.assign_staff_to_room(reservation[2],
-                                                  reservation[3],
-                                                  staff_id=None,
-                                                  reservation_id=reservation[0])
+                        self.__assign_staff_to_room(
+                            reservation[2], reservation[3], staff_id=None,
+                            reservation_id=reservation[0])
             # If check-out, do all check-out logic: i) Free dedicated staff,
             # ii) Add new Room Charge transaction into Transactions table
             if 'check_out_time' in reservation_dict and \
@@ -1601,7 +1603,7 @@ class Apps(object):
                                          reservation_dict['check_out_time'])
             # Execute update query
             # Also queries for updated tuple and returns it as Pandas DataFrame
-            data_frame = self.execute_update_query(
+            data_frame = self.__execute_update_query(
                 'Reservations', reservation_dict, where_clause_dict)
             return data_frame
         except AssertionError, error:
@@ -1615,11 +1617,11 @@ class Apps(object):
 
         The Reservations table must exist. It deletes a tuple(s) from the
         Reservations table identified by attributes and values in the room_dict
-        argument. The information gets deleted from the table by calling helper
-        function execute_delete_query() that generates DELETE query statement
-        and executes it. Once data is successfully deleted from the table, the
-        helper function also tries to query this tuple and must return it as an
-        empty Pandas DataFrame.
+        argument. The information gets deleted from the table by calling
+        private helper function __execute_delete_query() that generates DELETE
+        query statement and executes it. Once data is successfully deleted from
+        the table, the helper function also tries to query this tuple and must
+        return it as an empty Pandas DataFrame.
 
         Parameters:
             :param reservation_dict: Dictionary of attributes and values that
@@ -1635,7 +1637,7 @@ class Apps(object):
         TODO:
         """
         try:
-            return self.execute_delete_query('Reservations', reservation_dict)
+            return self.__execute_delete_query('Reservations', reservation_dict)
         except maria_db.Error as error:
             raise error
 
@@ -1647,13 +1649,14 @@ class Apps(object):
         The Transactions table must exist. It adds newly created transaction
         information within one reservation into Transactions table with all
         corresponding information specified in the dictionary of attributes and
-        values. The information gets added into the table by calling helper
-        function execute_insert_query() that generates INSERT query statement
-        and executes it. Once data is successfully stored in the table, it
-        quires this tuple by calling helper function get_data_frame(), which
-        returns it as Pandas DataFrame. If check boolean parameter is enabled,
-        it performs assertions ensuring that data to be added obeys MySQL
-        constraints that are ignored by current MySQL MariaDB version.
+        values. The information gets added into the table by calling private
+        helper function __execute_insert_query() that generates INSERT
+        query statement and executes it. Once data is successfully stored in
+        the table, it queries this tuple by calling helper function
+        get_data_frame(), which returns it as Pandas DataFrame.
+        If check boolean parameter is enabled, it performs assertions ensuring
+        that data to be added obeys MySQL constraints that are ignored by
+        current MySQL MariaDB version.
 
         Parameters:
             :param transaction_dict: Dictionary of transaction attributes and
@@ -1675,8 +1678,8 @@ class Apps(object):
         Returns:
             :return: Pandas DataFrame (two-dimensional size-mutable,
             heterogeneous tabular data structure with labeled axes) retrieved
-            from the helper function get_data_frame(), which contains a
-            tuple(s) with successfully stored data in the Transactions table
+            from the helper function get_data_frame(), which contains a tuple
+            with successfully stored data in the Transactions table
 
         Exceptions:
             :raise: Assertion Error or MySQL Connector Error exceptions
@@ -1697,7 +1700,7 @@ class Apps(object):
                     'Exception: Date of the transaction must follow the DATE ' \
                     'format: YYYY-MM-DD.\n'
             # Execute insert query
-            self.execute_insert_query(transaction_dict, 'Transactions')
+            self.__execute_insert_query(transaction_dict, 'Transactions')
             # Query for this inserted tuple and return it as Pandas DataFrame
             data_frame = self.get_data_frame(
                 '*', 'Transactions', 'id={}'.format(self.cursor.lastrowid))
@@ -1713,11 +1716,12 @@ class Apps(object):
 
         The Transactions table must exist. It updates the Transactions table
         with attributes and values specified in the transaction_dict argument.
-        The information gets updated in the table by calling helper function
-        execute_update_query() that generates UPDATE query statement and
-        executes it. Once data is successfully updated in the table, the helper
-        function also quires this tuple and returns it as Pandas DataFrame. If
-        check boolean parameter is enabled, it performs assertions ensuring
+        The information gets updated in the table by calling private helper
+        function __execute_update_query() that generates UPDATE query statement
+        and executes it. Once data is successfully updated in the table, the
+        helper function also queries this tuple and returns it as Pandas
+        DataFrame.
+        If check boolean parameter is enabled, it performs assertions ensuring
         that data to be updated obeys MySQL constraints that are ignored by
         current MySQL MariaDB version.
 
@@ -1731,9 +1735,9 @@ class Apps(object):
             attributes and corresponding values.
 
         Returns:
-            :return: Pandas DataFrame (two-dimensional size-mutable,
+            :return: Pandas DataFrame(s) (two-dimensional size-mutable,
             heterogeneous tabular data structure with labeled axes) containing
-            a tuple of successfully update tuple in the Transactions table
+            a tuple(s) of successfully updated data in the Transactions table
 
         Exceptions:
             :raise: Assertion Error or MySQL Connector Error exceptions
@@ -1749,7 +1753,7 @@ class Apps(object):
                         'updated.\n'.format(attribute)
             # Execute update query
             # Also queries for updated tuple and returns it as Pandas DataFrame
-            data_frame = self.execute_update_query(
+            data_frame = self.__execute_update_query(
                 'Rooms', transaction_dict, where_clause_dict)
             return data_frame
         except AssertionError, error:
@@ -1763,11 +1767,11 @@ class Apps(object):
 
         The Transactions table must exist. It deletes a tuple(s) from the
         Transactions table identified by attributes and values in the room_dict
-        argument. The information gets deleted from the table by calling helper
-        function execute_delete_query() that generates DELETE query statement
-        and executes it. Once data is successfully deleted from the table, the
-        helper function also tries to query this tuple and must return it as an
-        empty Pandas DataFrame.
+        argument. The information gets deleted from the table by calling
+        private helper function __execute_delete_query() that generates DELETE
+        query statement and executes it. Once data is successfully deleted from
+        the table, the helper function also tries to query this tuple and must
+        return it as an empty Pandas DataFrame.
 
         Parameters:
             :param transaction_dict: Dictionary of attributes and values that
@@ -1783,7 +1787,7 @@ class Apps(object):
         TODO:
         """
         try:
-            return self.execute_delete_query('Reservations', transaction_dict)
+            return self.__execute_delete_query('Reservations', transaction_dict)
         except maria_db.Error as error:
             raise error
 
@@ -1794,11 +1798,11 @@ class Apps(object):
 
         The Serves table must exist. It adds new tuple of the staff-reservation
         interaction (mapping) into Serves table. The new tuple is added by
-        calling helper function execute_insert_query() that generates INSERT
-        query statement and executes it, only when any staff member serves a
-        reservation. Once data is successfully stored in the table, it quires
-        this tuple by calling helper function get_data_frame(), which returns
-        it as Pandas DataFrame.
+        calling private helper function __execute_insert_query() that generates
+        INSERT query statement and executes it, only when any staff member
+        serves a reservation. Once data is successfully stored in the table,
+        it queries this tuple by calling helper function get_data_frame(),
+        which returns it as Pandas DataFrame.
         Staff member considered to be serving reservations if he/she is
         assigned to a room (reservation) as dedicated staff, creates
         reservation for a customer, prepares and delivers a meal, does dry
@@ -1817,8 +1821,8 @@ class Apps(object):
         Returns:
             :return: Pandas DataFrame (two-dimensional size-mutable,
             heterogeneous tabular data structure with labeled axes) retrieved
-            from the helper function get_data_frame(), which contains a
-            tuple(s) with successfully stored data in the Serves table
+            from the helper function get_data_frame(), which contains a tuple
+            with successfully stored data in the Serves table
 
         Exceptions:
             :raise: Assertion Error or MySQL Connector Error exceptions
@@ -1827,7 +1831,7 @@ class Apps(object):
         """
         try:
             # Execute insert query
-            self.execute_insert_query(serves_dict, 'Serves')
+            self.__execute_insert_query(serves_dict, 'Serves')
             # Query for this inserted tuple and return it as Pandas DataFrame
             data_frame = self.get_data_frame(
                 '*', 'Serves', 'staff_id={} AND reservation_id={}'.format(
@@ -1842,11 +1846,12 @@ class Apps(object):
 
         The Serves table must exist. It updates the Serves table with
         attributes and values specified in the serves_dict argument. The
-        information gets updated in the table by calling helper function
-        execute_update_query() that generates UPDATE query statement and
-        executes it. Once data is successfully updated in the table, the helper
-        function also quires this tuple and returns it as Pandas DataFrame. If
-        check boolean parameter is enabled, it performs assertions ensuring
+        information gets updated in the table by calling private helper
+        function __execute_update_query() that generates UPDATE query statement
+        and executes it. Once data is successfully updated in the table, the
+        helper function also queries this tuple and returns it as Pandas
+        DataFrame.
+        If check boolean parameter is enabled, it performs assertions ensuring
         that data to be updated obeys MySQL constraints that are ignored by
         current MySQL MariaDB version.
 
@@ -1860,9 +1865,9 @@ class Apps(object):
             attributes and corresponding values.
 
         Returns:
-            :return: Pandas DataFrame (two-dimensional size-mutable,
+            :return: Pandas DataFrame(s) (two-dimensional size-mutable,
             heterogeneous tabular data structure with labeled axes) containing
-            a tuple of successfully update tuple in the Serves table
+            a tuple(s) of successfully updated data in the Serves table
 
         Exceptions:
             :raise: Assertion Error or MySQL Connector Error exceptions
@@ -1872,7 +1877,7 @@ class Apps(object):
         try:
             # Execute update query
             # Also queries for updated tuple and returns it as Pandas DataFrame
-            data_frame = self.execute_update_query(
+            data_frame = self.__execute_update_query(
                 'Rooms', serves_dict, where_clause_dict)
             return data_frame
         except maria_db.Error as error:
@@ -1884,8 +1889,8 @@ class Apps(object):
 
         The Serves table must exist. It deletes a tuple(s) from theServes table
         identified by attributes and values in the room_dict argument. The
-        information gets deleted from the table by calling helper
-        function execute_delete_query() that generates DELETE query statement
+        information gets deleted from the table by calling private helper
+        function __execute_delete_query() that generates DELETE query statement
         and executes it. Once data is successfully deleted from the table, the
         helper function also tries to query this tuple and must return it as an
         empty Pandas DataFrame.
@@ -1904,6 +1909,6 @@ class Apps(object):
         TODO:
         """
         try:
-            return self.execute_delete_query('Serves', serves_dict)
+            return self.__execute_delete_query('Serves', serves_dict)
         except maria_db.Error as error:
             raise error
