@@ -128,6 +128,66 @@ class Apps(object):
         self.cursor = maria_db_connection.cursor()
         self.check = check
 
+    def __check_out(self, reservation_id, check_out_time):
+        """
+        Performs the check-out logic operations on Staff and Transaction tables.
+
+        This is private function of the class and not intended to be referenced
+        by upper layers. It is referenced by two local caller functions
+        i) add_reservation() - Within new reservation a check-out time
+        follows immediately after check-in. It is very unlikely,
+        but possible. This reservation must not have dedicated staff assigned.
+        ii) update_reservation() - Customer checks-out.
+        For a given reservation ID and check-out time, it does the following:
+        1) Frees all dedicated staff that is assigned to the reservation by
+        calling helper function update_staff()
+        2) Inserts new transaction of type 'x-night(s) Reservation Room Charge'
+        into the Transactions table by calling helper function add_transaction()
+
+        Parameters:
+            :param reservation_id: Reservation ID for reservation identified in
+            the caller functions add_reservation() or update_reservation() by
+            where_clause_dict attribute values
+            :param check_out_time: Check-out time of the reservation. It must
+            follow the DATETIME format YYYY-MM-DD HH:MM:SS. Used for
+            transaction date.
+
+        Returns:
+            :return:
+
+        TODO: Testing
+        """
+        # Determine all staff assigned to this reservation
+        self.execute_simple_select_query('staff_id', 'Serves',
+                                         {'reservation_id': reservation_id})
+        staff_tuples = self.cursor.fetchall()
+        if staff_tuples is not None:
+            for staff_id in staff_tuples:
+                # Free all assigned staff by setting assigned hotel and
+                # assigned room to NULL
+                self.update_staff({'assigned_hotel_id': None,
+                                   'assigned_room_number': None},
+                                  {'id': staff_id})
+        # Add Room Charge transaction into Transactions table
+        # Determine amount needs to be charged for the reservation
+        self.execute_simple_select_query(
+            'rate * DATEDIFF(end_date, start_date)',
+            'Rooms NATURAL JOIN Reservations',
+            {'id': reservation_id})
+        amount = self.cursor.fetchall()
+        # Determine number of nights customer reserved
+        self.execute_simple_select_query('DATEDIFF(end_date, start_date)',
+                                         'Reservations',
+                                         {'id': reservation_id})
+        number_nights = self.cursor.fetchall()
+        if amount is not None and number_nights is not None:
+            self.add_transaction(
+                {'amount': amount[0][0],
+                 'type': '{}-night(s) Room Reservation Charge'.format(
+                     number_nights[0][0]),
+                 'date': check_out_time,
+                 'reservation_id': reservation_id})
+
     def get_data_frame(self, attributes, table_name, where_clause=None):
         """Generates Pandas DataFrame with desired tuple(s)/row(s) in a table.
 
@@ -164,8 +224,9 @@ class Apps(object):
 
     def execute_simple_select_query(self, attributes, table_name,
                                     where_clause_dict):
-        """Generates and executes SELECT query in python format with basic
-        WHERE clause having only AND key words
+        """
+        Generates and executes SELECT query in python format with basic WHERE
+        clause having only AND key words.
 
         For a given attributes, table name, over which SELECT query is
         executed, and dictionary of attributes and values for corresponding
@@ -201,8 +262,9 @@ class Apps(object):
 
     def execute_select_query(self, attributes, table_name, where_clause=None,
                              where_values_list=None):
-        """Generates and executes SELECT query in python format with
-        complicated WHERE clause
+        """
+        Generates and executes SELECT query in python format with complicated
+        WHERE clause.
 
         For a given attributes, table name, WHERE clause format, and list of
         values used for WHERE clause, over which SELECT query is executed, it
@@ -235,7 +297,8 @@ class Apps(object):
             self.cursor.execute(select_query, where_values_list)
 
     def execute_insert_query(self, dictionary, table_name):
-        """Generates and executes INSERT query in python format.
+        """
+        Generates and executes INSERT query in python format.
 
         For a given dictionary of attributes and values to be stored in a
         particular table, specified as an dictionary argument, it does the
@@ -264,7 +327,8 @@ class Apps(object):
         self.cursor.execute(insert_query, dictionary.values())
 
     def execute_update_query(self, table_name, dictionary, where_clause_dict):
-        """Generates and executes UPDATE query in python format.
+        """
+        Generates and executes UPDATE query in python format.
 
         For a given dictionary of attributes and values to be updated in a
         particular table, specified as an dictionary argument and table_name
@@ -321,7 +385,8 @@ class Apps(object):
         return data_frame
 
     def execute_delete_query(self, table_name, dictionary):
-        """Generates and executes DELETE query in python format.
+        """
+        Generates and executes DELETE query in python format.
 
         For a given dictionary of attributes and values, specified as an
         dictionary argument, that must identify a tuple(s) in a particular
@@ -520,7 +585,8 @@ class Apps(object):
 
     # Implementation of the program applications for the ZipToCityState table
     def add_zip(self, zip_dict):
-        """Adds new tuple of ZIP code into ZipToCityState table.
+        """
+        Adds new tuple of ZIP code into ZipToCityState table.
 
         The ZipToCityState table must exist. It adds new ZIP code with
         corresponding city and state into ZipToCityState table by calling
@@ -575,7 +641,8 @@ class Apps(object):
             raise error
 
     def update_zip(self, zip_dict, where_clause_dict):
-        """Updates a tuple in the ZipToCityState table.
+        """
+        Updates a tuple in the ZipToCityState table.
 
         The ZipToCityState table must exist. It updates the ZipToCityState
         table with attributes and values specified in the zip_dict argument.
@@ -624,7 +691,8 @@ class Apps(object):
             raise error
 
     def delete_zip(self, zip_dict):
-        """Deletes a tuple(s) from ZipToCityState table.
+        """
+        Deletes a tuple(s) from ZipToCityState table.
 
         The ZipToCityState table must exist. It deletes a tuple(s) from the
         ZipToCityState table identified by attributes and values in the
@@ -654,7 +722,8 @@ class Apps(object):
 
     # Implementation of the program applications for the Hotels table
     def add_hotel(self, hotel_dict):
-        """Adds new tuple of hotel into Hotels table.
+        """
+        Adds new tuple of hotel into Hotels table.
 
         The Hotels table must exist. It adds new hotel information into Hotels
         table with all corresponding information specified in the dictionary of
@@ -715,7 +784,8 @@ class Apps(object):
             raise error
 
     def update_hotel(self, hotel_dict, where_clause_dict):
-        """Updates a tuple in the Hotels table.
+        """
+        Updates a tuple in the Hotels table.
 
         The Hotels table must exist. It updates the Hotels table with
         attributes and values specified in the hotel_dict argument. The
@@ -764,7 +834,8 @@ class Apps(object):
             raise error
 
     def delete_hotel(self, hotel_dict):
-        """Deletes a tuple(s) from Hotels table.
+        """
+        Deletes a tuple(s) from Hotels table.
 
         The Hotels table must exist. It deletes a tuple(s) from the Hotels
         table identified by attributes and values in the hotel_dict argument.
@@ -794,7 +865,8 @@ class Apps(object):
 
     # Implementation of the program applications for the Rooms table
     def add_room(self, room_dict):
-        """Adds new tuple of room into Rooms table.
+        """
+        Adds new tuple of room into Rooms table.
 
         The Rooms table must exist. It adds new room information into Rooms
         table with all corresponding information specified in the dictionary of
@@ -856,7 +928,8 @@ class Apps(object):
             raise error
 
     def update_room(self, room_dict, where_clause_dict):
-        """Updates a tuple in the Rooms table.
+        """
+        Updates a tuple in the Rooms table.
 
         The Rooms table must exist. It updates the Rooms table with attributes
         and values specified in the room_dict argument. The information gets
@@ -903,7 +976,8 @@ class Apps(object):
             raise error
 
     def delete_room(self, room_dict):
-        """Deletes a tuple(s) from Rooms table.
+        """
+        Deletes a tuple(s) from Rooms table.
 
         The Rooms table must exist. It deletes a tuple(s) from the Rooms table
         identified by attributes and values in the room_dict argument. The
@@ -933,7 +1007,8 @@ class Apps(object):
 
     # Implementation of the program applications for the Staff table
     def add_staff(self, staff_dict):
-        """Adds new tuple of staff member into Staff table.
+        """
+        Adds new tuple of staff member into Staff table.
 
         The Staff table must exist. It adds new staff member information into
         Staff table with all corresponding information specified in the
@@ -1043,7 +1118,8 @@ class Apps(object):
             raise error
 
     def update_staff(self, staff_dict, where_clause_dict):
-        """Updates a tuple in the Staff table.
+        """
+        Updates a tuple in the Staff table.
 
         The Staff table must exist. It updates the Staff table with attributes
         and values specified in the room_dict argument. The information gets
@@ -1115,7 +1191,8 @@ class Apps(object):
             raise error
 
     def delete_staff(self, staff_dict):
-        """Deletes a tuple(s) from Staff table.
+        """
+        Deletes a tuple(s) from Staff table.
 
         The Staff table must exist. It deletes a tuple(s) from the Staff table
         identified by attributes and values in the room_dict argument. The
@@ -1145,7 +1222,8 @@ class Apps(object):
 
     # Implementation of the program applications for the Customers table
     def add_customer(self, customer_dict):
-        """Adds new tuple of customer into Customers table.
+        """
+        Adds new tuple of customer into Customers table.
 
         The Customers table must exist. It adds new customer information into
         Customers table with all corresponding information specified in the
@@ -1229,7 +1307,8 @@ class Apps(object):
             raise error
 
     def update_customer(self, customer_dict, where_clause_dict):
-        """Updates a tuple in the Customers table.
+        """
+        Updates a tuple in the Customers table.
 
         The Customers table must exist. It updates the Customers table with
         attributes and values specified in the customer_dict argument. The
@@ -1280,7 +1359,8 @@ class Apps(object):
             raise error
 
     def delete_customer(self, customer_dict):
-        """Deletes a tuple(s) from Customers table.
+        """
+        Deletes a tuple(s) from Customers table.
 
         The Customers table must exist. It deletes a tuple(s) from the
         Customers table identified by attributes and values in the room_dict
@@ -1310,7 +1390,8 @@ class Apps(object):
 
     # Implementation of the program applications for the Reservations table
     def add_reservation(self, reservation_dict):
-        """Adds new tuple of reservation into Reservations table.
+        """
+        Adds new tuple of reservation into Reservations table.
 
         The Reservations table must exist. It adds newly created reservation
         information into Reservations table with all corresponding information
@@ -1325,6 +1406,12 @@ class Apps(object):
         this reservation is associate with Presidential Suite and if it is, it
         inserts a tuple into Serves table with appropriate staff ID and
         reservation ID.
+        If Customer as well immediately checks-out as he/she checks-in (very
+        unlikely but possible) after this reservation is created, it calls
+        private helper function __check_out(), which frees all dedicated staff
+        that is assigned to this reservation (since this is new reservation, it
+        must not have any staff assigned to it) and inserts new transaction of
+        type 'x-night(s) Reservation Room Charge' into the Transactions table.
         If check boolean parameter is enabled, it performs assertions ensuring
         that data to be added obeys MySQL constraints that are ignored by
         current MySQL MariaDB version.
@@ -1363,11 +1450,7 @@ class Apps(object):
         TODO: 1) Not sure if still need this: Need to determine the Staff ID
         who adds this reservation and ID of this newly created reservation.
         This function always needs to call add_serves(staff_id, reservation_id)
-        to add staff-reservation interaction. May be need to call
-        add_transaction() function to add this transaction for this reservation.
-        2) If reservation is presidential suite, then at the
-        check-in time automatically assign Catering Staff and Room Service
-        Staff for this reservation.
+        to add staff-reservation interaction.
         Testing
         """
         try:
@@ -1407,9 +1490,9 @@ class Apps(object):
             # Execute insert query
             self.execute_insert_query(reservation_dict, 'Reservations')
             reservation_id = self.cursor.lastrowid
-            # If Customer checks-in, check whether this reservation is
-            # Presidential suite and assign one Catering Staff and one Room
-            # Service Staff to this reservation
+            # If check-in, do all check-in logic: i) Check whether this
+            # reservation is Presidential suite ii) Assign one Catering Staff
+            # and one Room Service Staff to this reservation
             if 'check_in_time' in reservation_dict and \
                     reservation_dict['check_in_time'] and \
                     'check_out_time' not in reservation_dict:
@@ -1417,6 +1500,13 @@ class Apps(object):
                                           reservation_dict['room_number'],
                                           staff_id=None,
                                           reservation_id=reservation_id)
+            # If check-out, do all check-out logic: i) Free dedicated staff
+            # (should not be any dedicated staff since this is new reservation)
+            # ii) Add new Room Charge transaction into Transactions table
+            if 'check_out_time' in reservation_dict and \
+                    reservation_dict['check_out_time']:
+                self.__check_out(reservation_id,
+                                 reservation_dict['check_out_time'])
             # Query for inserted tuple and return it as Pandas DataFrame
             data_frame = self.get_data_frame('*', 'Reservations',
                                              'id={}'.format(reservation_id))
@@ -1427,7 +1517,8 @@ class Apps(object):
             raise error
 
     def update_reservation(self, reservation_dict, where_clause_dict):
-        """Updates a tuple in the Reservations table.
+        """
+        Updates a tuple in the Reservations table.
 
         The Reservations table must exist. It updates the Customers table with
         attributes and values specified in the reservation_dict argument. The
@@ -1435,13 +1526,17 @@ class Apps(object):
         execute_update_query() that generates UPDATE query statement and
         executes it. Once data is successfully updated in the table, the helper
         function also quires this tuple and returns it as Pandas DataFrame.
-        If update registers check-out time, it frees all of assigned staff of
-        this reservation by calling helper function delete_serves().
         If update registers check-in time (but check-out times is still not
-        registered), it calls helper function assign_staff_to_room(), which
-        determines whether this reservation is associate with Presidential
-        Suite and if it is, it inserts a tuple into Serves table with
-        appropriate staff ID and reservation ID.
+        registered), for all appropriate reservations identified by
+        where_clause_dict attribute values it calls helper function
+        assign_staff_to_room(), which determines whether this reservation is
+        associate with Presidential Suite and if it is, it inserts a tuple into
+        Serves table with appropriate staff ID and reservation ID.
+        If this update registers check-out time, for all appropriate
+        reservations identified by where_clause_dict attribute values, it calls
+        private helper function __check_out(), which frees all dedicated staff
+        that is assigned to a reservation and inserts new transaction of type
+        'x-night(s) Reservation Room Charge' into the Transactions table.
         If check boolean parameter is enabled, it performs assertions ensuring
         that data to be updated obeys MySQL constraints that are ignored by
         current MySQL MariaDB version.
@@ -1476,36 +1571,34 @@ class Apps(object):
                             'to be updated.\n'.format(attribute)
             # Determine Reservation tuple(s)
             self.execute_simple_select_query(
-                'id, hotel_id, room_number', 'Reservations', where_clause_dict)
+                'id, check_out_time, hotel_id, room_number', 'Reservations',
+                where_clause_dict)
             reservation_tuples = self.cursor.fetchall()
-            # If check-out, free all assigned staff of this reservation
+            # If check-in, do all check-in logic: i) Ensure that check-out
+            # has never been done previously, ii) check whether reservation is
+            # associated with Presidential suite, and iii) assign one Catering
+            # Staff and one Room Service Staff
+            if 'check_in_time' in reservation_dict and \
+                    reservation_dict['check_in_time'] and \
+                    'check_out_time' not in reservation_dict and \
+                    reservation_tuples is not None:
+                for reservation in reservation_tuples:
+                    # Check if check-out has never been done previously
+                    if not reservation[1] or reservation[1] == 'NULL':
+                        self.assign_staff_to_room(reservation[2],
+                                                  reservation[3],
+                                                  staff_id=None,
+                                                  reservation_id=reservation[0])
+            # If check-out, do all check-out logic: i) Free dedicated staff,
+            # ii) Add new Room Charge transaction into Transactions table
             if 'check_out_time' in reservation_dict and \
                     reservation_dict['check_out_time'] and \
                     reservation_tuples is not None:
                 for reservation in reservation_tuples:
-                    # Determine all staff assigned to this reservation
-                    self.execute_simple_select_query(
-                        'staff_id', 'Serves',
-                        {'reservation_id': reservation[0]})
-                    staff_tuples = self.cursor.fetchall()
-                    if staff_tuples is not None:
-                        for staff_id in staff_tuples:
-                            # Free all assigned staff by setting assigned hotel
-                            # and assigned room to NULL
-                            self.update_staff({'assigned_hotel_id': None,
-                                               'assigned_room_number': None},
-                                              {'id': staff_id})
-
-            # If Customer checks-in, check whether this reservation is
-            # Presidential suite and assign one Catering Staff and one Room
-            # Service Staff to this reservation
-            if 'check_in_time' in reservation_dict and \
-                    reservation_dict['check_in_time'] and \
-                    'check_out_time' not in reservation_dict:
-                for reservation in reservation_tuples:
-                    self.assign_staff_to_room(reservation[1], reservation[2],
-                                              staff_id=None,
-                                              reservation_id=reservation[0])
+                    # Check if check-out has never been done previously
+                    if not reservation[1] or reservation[1] == 'NULL':
+                        self.__check_out(reservation[0],
+                                         reservation_dict['check_out_time'])
             # Execute update query
             # Also queries for updated tuple and returns it as Pandas DataFrame
             data_frame = self.execute_update_query(
@@ -1517,7 +1610,8 @@ class Apps(object):
             raise error
 
     def delete_reservation(self, reservation_dict):
-        """Deletes a tuple(s) from Reservations table.
+        """
+        Deletes a tuple(s) from Reservations table.
 
         The Reservations table must exist. It deletes a tuple(s) from the
         Reservations table identified by attributes and values in the room_dict
@@ -1547,7 +1641,8 @@ class Apps(object):
 
     # Implementation of the program applications for the Reservations table
     def add_transaction(self, transaction_dict):
-        """Adds new tuple of transaction into Transactions table.
+        """
+        Adds new tuple of transaction into Transactions table.
 
         The Transactions table must exist. It adds newly created transaction
         information within one reservation into Transactions table with all
@@ -1613,7 +1708,8 @@ class Apps(object):
             raise error
 
     def update_transaction(self, transaction_dict, where_clause_dict):
-        """Updates a tuple in the Transactions table.
+        """
+        Updates a tuple in the Transactions table.
 
         The Transactions table must exist. It updates the Transactions table
         with attributes and values specified in the transaction_dict argument.
@@ -1662,7 +1758,8 @@ class Apps(object):
             raise error
 
     def delete_transaction(self, transaction_dict):
-        """Deletes a tuple(s) from Transactions table.
+        """
+        Deletes a tuple(s) from Transactions table.
 
         The Transactions table must exist. It deletes a tuple(s) from the
         Transactions table identified by attributes and values in the room_dict
@@ -1692,7 +1789,8 @@ class Apps(object):
 
     # Implementation of the program applications for the Serves table
     def add_serves(self, serves_dict):
-        """Adds new tuple of staff serves reservation into Serves table.
+        """
+        Adds new tuple of staff serves reservation into Serves table.
 
         The Serves table must exist. It adds new tuple of the staff-reservation
         interaction (mapping) into Serves table. The new tuple is added by
@@ -1739,7 +1837,8 @@ class Apps(object):
             raise error
 
     def update_serves(self, serves_dict, where_clause_dict):
-        """Updates a tuple in the Serves table.
+        """
+        Updates a tuple in the Serves table.
 
         The Serves table must exist. It updates the Serves table with
         attributes and values specified in the serves_dict argument. The
@@ -1780,7 +1879,8 @@ class Apps(object):
             raise error
 
     def delete_serves(self, serves_dict):
-        """Deletes a tuple(s) from Serves table.
+        """
+        Deletes a tuple(s) from Serves table.
 
         The Serves table must exist. It deletes a tuple(s) from theServes table
         identified by attributes and values in the room_dict argument. The
