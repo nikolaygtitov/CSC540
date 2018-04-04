@@ -49,6 +49,18 @@ class TestApps(SQLUnitTestBase):
         self.assertEqual(0, len(df.index))
         apps.cursor.close()
 
+    def test_report_occupancy_by_hotel(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        df = apps.report_occupancy_by_hotel('2017-01-16')
+        self.assertEqual(8, len(df.index))
+        self.assertEqual('Wolf Inn Miami Panthers', df['Hotel Name'].ix[5])
+        self.assertEqual(1, df['Rooms Occupied'].ix[5])
+        self.assertEqual(1, df['Total Rooms'].ix[5])
+        self.assertEqual(100.0, df['% Occupancy'].ix[5])
+        self._con.commit()
+        apps.cursor.close()
+
 
 
 if __name__ == '__main__':

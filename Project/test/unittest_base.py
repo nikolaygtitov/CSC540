@@ -175,3 +175,205 @@ class SQLUnitTestBase(unittest.TestCase):
         except:
             pass
         self._con.commit()
+
+    def _insert_test_data(self):
+        cursor = self._con.cursor()
+
+        # ZipToCityState
+        zip_data = [
+            ['27965', 'Raleigh', 'NC'],
+            ['27606', 'Raleigh', 'NC'],
+            ['10001', 'New York', 'NY'],
+            ['19141', 'Philadelphia', 'PA'],
+            ['02130', 'Boston', 'MA'],
+            ['33222', 'Miami', 'FL'],
+            ['90010', 'Los Angeles', 'CA'],
+            ['90050', 'Los Angeles', 'CA']
+        ]
+        for row in zip_data:
+            cursor.execute('INSERT INTO ZipToCityState(zip, city, state)'
+                           'VALUES(%s, %s, %s)', row)
+
+        # Hotels
+        hotel_data = [
+            ['Wolf Inn Raleigh Hurricanes',
+             '100 Glenwood Ave', '27965', '919-965-6743'],
+            ['Wolf Inn Raleigh Wolfpack', '875 Penny Rd',
+             '27606', '919-546-7439'],
+            ['Wolf Inn New York Rangers', '6004 8th Ave',
+             '10001', '929-877-0072'],
+            ['Wolf Inn Philadelphia Flyers',
+             '1234 N Broad St', '19141', '215-633-4374'],
+            ['Wolf Inn Boston Bruins', '7865 Morton St',
+             '02130', '617-683-1078'],
+            ['Wolf Inn Miami Panthers', '890 Orange St',
+             '33222', '305-627-291'],
+            ['Wolf Inn Los Angeles Kings', '640 Irolo St',
+             '90010', '323-920-3782'],
+            ['Wolf Inn Los Angeles Sharks',
+             '9000 Lincoln Ave', '90050', '213-628-8344']
+        ]
+        for row in hotel_data:
+            cursor.execute('INSERT INTO Hotels(name, street, zip, phone_number)'
+                           'VALUES(%s, %s, %s, %s)', row)
+
+        # Rooms
+        room_data = [
+            [1, 100, 'Economy', 2, 85.50],
+            [2, 200, 'Deluxe', 2, 160.00],
+            [3, 300, 'Executive Suite', 1, 450.60],
+            [4, 100, 'Economy', 2, 200.10],
+            [5, 200, 'Deluxe', 2, 350.40],
+            [6, 300, 'Executive Suite', 1, 600.00],
+            [7, 400, 'Presidential Suite', 1, 1200.00],
+            [8, 400, 'Presidential Suite', 1, 2000.00]
+        ]
+        for row in room_data:
+            cursor.execute("INSERT INTO "
+                           "Rooms(hotel_id, room_number, category, occupancy, rate)"
+                           "VALUES(%s, %s, %s, %s, %s)", row)
+
+        # Staff
+        staff_data = [
+            ['Joe S. Rogan', 'Manager', '1970-08-30', 'Management Department',
+             '919-398-1209', '2505 Avent Ferry Rd, Apt. A', '27606', 2],
+            ['Conor McGregor', 'Front Desk Representative', '1989-06-25',
+             'Front End', '213-738-9201', '830 Sunshine St', '90050', 8],
+            ['Luke Rockhold', 'Room Service Staff', '1984-09-05',
+             'Room Service Department', '323-832-8912', '7626 Banana Lane',
+             '90010', 7, 7, 400],
+            ['John Jones', 'Catering Staff', '1982-10-06', 'Deli Department',
+             '215-839-2508', '409 Stamp St, Apt. 213', '02130', 5, 5, 200],
+            ['Tony Ferguson', 'Billing Staff', '1986-12-31',
+             'Billing Department', '929-029-2789', '644 10th Ave, Apt. 12',
+             '10001', 3],
+            ['Brian Ortega', 'Repairman', '1970-08-30', 'Repairs Department',
+             '215-348-7853', '6409 Walnut St, Apt. 409', '19141', 4],
+            ['Robbie Lawler', 'Janitor', '1970-08-30', 'Cleaning Department',
+             '305-638-9832', '6559 Oyster Lane', '33222', 6],
+            ['Rory McDonald', 'Room Service Staff', '1980-02-15',
+             'Room Service Department', '919-383-2991',
+             '2300 Sugar Bush Rd, Apt. 52', '27965', 2, 2, 200]
+        ]
+        for row in staff_data:
+            if len(row) == 8:
+                cursor.execute("INSERT INTO "
+                               "Staff(name, title, date_of_birth, department, "
+                               "phone_number, street, zip, works_for_hotel_id)"
+                               "VALUES(%s, %s, %s, %s, %s, %s, %s, %s)", row)
+            else:
+                cursor.execute("INSERT INTO "
+                               "Staff(name, title, date_of_birth, department, "
+                               "phone_number, street, zip, works_for_hotel_id,"
+                               "assigned_hotel_id, assigned_room_number)"
+                               "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                               row)
+
+        # Customers
+        customer_data = [
+            ['George W. Bush', '1956-04-01', '+1(305)782-8720',
+             'georgewbush@gmail.com', '5463 Corn Ave, Apt.C', '33222',
+             '000-00-0001', '4616-7828-8992-6717 CVS:123', False],
+            ['Barack H. Obama', '1964-09-11', '+1(213)867-9302',
+             'barackhobama@gmail.com', '1200 Beverly Hills', '90050',
+             '000-00-0002', 'Routing:000237 Account:0209309030293', False],
+            ['William G. Clinton', '1953-11-27', '+1(929)873-8921',
+             'willianandmonica@gmail.com', '6050 12-th Ave', '10001',
+             '000-00-0003', '0001-3234-4323-7483', True],
+            ['Donald N. Trump', '1946-05-25', '+1(929)909-2893',
+             'donaldtrump@gmail.com', '3209 6-th St. Apt 29', '10001',
+             '000-00-0004', '0001-8392-3344-2384', True],
+            ['Dana White', '1973-08-15', '215-893-9018', 'danawhite@ufc.com',
+             '6723 Pecan St. Apt 65', '19141', '100-10-0001'],
+            ['Anderson Silva', '1978-07-23', '617-893-8932',
+             'anderson@yahoo.com', '78 Center Ave, Apt 80',
+             '02130', '100-10-0002'],
+            ['Stephen Thompson', '1987-23-09', '919-893-6622',
+             'tstephen@nokia.com', '839 Garner St, Apt 20',
+             '27965', '100-10-0003'],
+            ['Study Goodwin', '1995-01-01', '919-782-8211',
+             'spgoodwin@ncsu.edu', '63 Centennial Pkwy, Unit 54', '27606',
+             '100-10-0004']
+        ]
+        for row in customer_data:
+            if len(row) == 9:
+                cursor.execute("INSERT INTO "
+                               "Customers(name, date_of_birth, phone_number,"
+                               "email, street, zip, ssn, "
+                               "account_number, is_hotel_card)"
+                               "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                               row)
+            else:
+                cursor.execute("INSERT INTO "
+                               "Customers(name, date_of_birth, phone_number,"
+                               "email, street, zip, ssn)"
+                               "VALUES(%s, %s, %s, %s, %s, %s, %s)", row)
+
+        # Reservations
+        reservation_data = [
+            [2, '2015-03-30', '2015-04-05',
+             '2015-03-30 18:43:25', '2015-04-05 08:32:42', 1, 100, 2],
+            [1, '2016-05-25', '2016-05-28',
+             '2016-05-25 23:34:18', '2016-05-28 12:01:24', 3, 300, 1],
+            [2, '2016-08-10', '2016-08-15',
+             '2016-08-11 03:12:42', '2016-08-15 14:25:52', 2, 200, 6],
+            [1, '2017-01-15', '2017-01-22',
+             '2017-01-16 01:24:31', '2017-01-22 06:26:01', 6, 300, 7],
+            [2, '2017-11-27', '2017-12-01',
+             '2017-11-27 21:31:15', '2017-12-05 09:11:07', 4, 100, 5],
+            [2, '2018-01-07', '2018-01-12',
+             '2018-01-07 16:32:27', '2018-01-12 07:51:29', 5, 200, 8],
+            [1, '2018-01-16', '2018-01-20',
+             '2018-01-17 04:45:00', '2018-01-20 11:52:19', 7, 400, 3],
+            [1, '2018-02-25', '2018-02-26',
+             '2018-02-25 03:41:21', '2018-02-26 13:12:55', 8, 400, 4]
+        ]
+
+        for row in reservation_data:
+            cursor.execute("INSERT INTO "
+                           "Reservations(number_of_guests, "
+                           "start_date, end_date,"
+                           "check_in_time, check_out_time, "
+                           "hotel_id, room_number, customer_id)"
+                           "VALUES(%s, %s, %s, %s, %s, %s, %s, %s)", row)
+
+        # Transactions
+        transaction_data = [
+            [8893.37, '4-nights room reservation', '2018-01-20 11:52:19', 8],
+            [567.90, '6-nights room reservation', '2015-04-05 08:32:42', 1],
+            [485.68, 'Special Dinner: Filet Mignon', '2018-01-18 19:32:23', 7],
+            [23.89, 'International phone calls', '2015-04-03 21:46:12', 1],
+            [210.20, 'Dry Cleaning', '2018-01-11 17:36:07', 6],
+            [30.00, 'Utilization of gym special equipment',
+             '2017-12-05 09:54:11', 5],
+            [83.00,
+             'Room Service: Extra towels, and other bathroom accessories',
+             '2018-02-26 06:34:23', 8],
+            [12.00, 'Special Request: Preferred room', '2017-01-16 01:24:31', 4]
+
+        ]
+
+        for row in transaction_data:
+            cursor.execute("INSERT INTO "
+                           "Transactions(amount, type, date, reservation_id)"
+                           "VALUES(%s, %s, %s, %s)", row)
+
+        # Serves
+        serves_data = [
+            [1, 3],
+            [2, 8],
+            [3, 8],
+            [4, 4],
+            [5, 1],
+            [6, 5],
+            [7, 7],
+            [8, 6]
+        ]
+
+        for row in serves_data:
+            cursor.execute("INSERT INTO "
+                           "Serves(staff_id, reservation_id)"
+                           "VALUES(%s, %s)", row)
+
+        cursor.close()
+        self._con.commit()

@@ -1912,3 +1912,30 @@ If check boolean parameter is enabled, it performs
             return self._execute_delete_query('Serves', serves_dict)
         except maria_db.Error as error:
             raise error
+
+    def report_occupancy_by_hotel(self, query_date):
+        """
+        TODO - Comment
+        Parameters:
+        :param query_date:
+        Returns:
+        :return:
+        """
+        query = ("SELECT name as 'Hotel Name',"
+                 "       count(number_of_guests) AS 'Rooms Occupied',"
+                 "       count(room_number) AS 'Total Rooms',"
+                 "       (count(number_of_guests) / count(room_number) * 100)"
+                 "           AS '% Occupancy'"
+                 "FROM (SELECT name, room_number, hotel_id, occupancy"
+                 "      FROM Rooms JOIN Hotels ON Rooms.hotel_id = Hotels.id)"
+                 "      AS HotelRooms NATURAL LEFT JOIN"
+                 "      ((SELECT * from Reservations"
+                 "        WHERE (datediff(start_date, %s) <= 0 AND"
+                 "               datediff(end_date, %s) > 0)) AS"
+                 "               CurrentRes)"
+                 "GROUP BY hotel_id")
+
+        df = pd.read_sql(query,
+                         con=self.maria_db_connection,
+                         params=[query_date] * 2)
+        return df
