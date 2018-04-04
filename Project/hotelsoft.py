@@ -4,7 +4,8 @@ import os
 from tabulate import tabulate
 import mysql.connector as maria_db
 from apihelper import APIHelper
-from util import sql_transaction
+from util import print_error
+
 
 ################################################################################
 # Template for Menus
@@ -135,7 +136,7 @@ class HotelSoft(object):
             last_menu))
 
     def get_inputs(self, query, last_menu):
-        try:
+        with print_error():
             print(query.title)
             if len(query.arg_list) > 0:
                 if query.type == 'insert':
@@ -179,14 +180,6 @@ class HotelSoft(object):
             print tabulate(result, headers=result.columns.values.tolist(),
                            tablefmt='psql')
             print '\n'
-        except AssertionError, error:
-            print '\n'
-            print error
-            print '\n'
-        except maria_db.Error as error:
-            print '\n'
-            print error
-            print '\n'
         self.get_choice(last_menu)
 
     def show_menu(self, menu):
@@ -215,7 +208,7 @@ class HotelSoft(object):
 ################################################################################
 def main():
     ###############################################################
-    # Update database details with correct settings               # 
+    # Update database details with correct settings               #
     db = maria_db.connect(host='127.0.0.1',  #
                           user='pscott',  #
                           password='FK8bb"IAlgnYGT8;G!/gy|SQ~',  #
