@@ -28,7 +28,7 @@ class APIHelper(object):
 
     # Helper interfaces
     def call_select(self, where_dict, table_name ):
-        where_string = ' AND '.join([key + '=' + value for key,value in
+        where_string = ' AND '.join([key + ('="%s"' % value) for key,value in
                                           where_dict.items()])
         return self.apps.get_data_frame('*', table_name, where_string)
 
