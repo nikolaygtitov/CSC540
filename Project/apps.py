@@ -78,6 +78,7 @@ scp project.py unity_id@remote.eos.ncsu.edu:/afs/unity.ncsu.edu/users/u/unity_id
 import mysql.connector as maria_db
 import pandas as pd
 from datetime import datetime
+from queries import *
 
 
 # This is the Apps class that contains all program applications (APIs)
@@ -2075,3 +2076,118 @@ class Apps(object):
             return self._execute_delete_query('Serves', serves_dict)
         except maria_db.Error as error:
             raise error
+
+    def report_occupancy_by_hotel(self, query_date):
+        """
+        TODO - Comment
+        Parameters:
+        :param query_date:
+        Returns:
+        :return:
+        """
+
+        df = pd.read_sql(REPORT_OCCUPANCY_BY_HOTEL,
+                         con=self.maria_db_connection,
+                         params=[query_date] * 2)
+        return df
+
+    def report_occupancy_by_room_type(self, query_date):
+        """
+        TODO - Comment
+        Parameters:
+        :param query_date:
+        Returns:
+        :return:
+        """
+
+        df = pd.read_sql(REPORT_OCCUPANCY_BY_ROOM_TYPE,
+                         con=self.maria_db_connection,
+                         params=[query_date] * 2)
+        return df
+
+    def report_occupancy_by_city(self, query_date):
+        """
+        TODO - Comment
+        Parameters:
+        :param query_date:
+        Returns:
+        :return:
+        """
+
+        df = pd.read_sql(REPORT_OCCUPANCY_BY_CITY,
+                         con=self.maria_db_connection,
+                         params=[query_date] * 2)
+        return df
+
+    def report_occupancy_by_date_range(self, query_start, query_end):
+        """
+        TODO - Comment
+        Parameters:
+        :param query_date:
+        Returns:
+        :return:
+        """
+
+        df = pd.read_sql(REPORT_OCCUPANCY_BY_DATE_RANGE,
+                         con=self.maria_db_connection,
+                         params=[query_end,
+                                 query_start,
+                                 query_end,
+                                 query_start])
+        return df
+
+    def report_staff_by_role(self, hotel_id):
+        """
+        TODO - Comment
+        Parameters:
+        :param query_date:
+        Returns:
+        :return:
+        """
+
+        df = pd.read_sql(REPORT_STAFF_BY_ROLE,
+                         con=self.maria_db_connection,
+                         params=[hotel_id])
+        return df
+
+    def report_customer_interactions(self, reservation_id):
+        """
+        TODO - Comment
+        Parameters:
+        :param query_date:
+        Returns:
+        :return:
+        """
+
+        df = pd.read_sql(REPORT_CUSTOMER_INTERACTIONS,
+                         con=self.maria_db_connection,
+                         params=[reservation_id])
+        return df
+
+    def report_revenue_single_hotel(self, start_date, end_date, hotel):
+        """
+        TODO - Comment
+        Parameters:
+        :param query_date:
+        Returns:
+        :return:
+        """
+
+        df = pd.read_sql(REPORT_REVENUE_SINGLE_HOTEL,
+                         con=self.maria_db_connection,
+                         params=[start_date, end_date, hotel])
+        return df
+
+    def report_revenue_all_hotels(self, start_date, end_date):
+        """
+        TODO - Comment
+        Parameters:
+        :param query_date:
+        Returns:
+        :return:
+        """
+
+        df = pd.read_sql(REPORT_REVENUE_ALL_HOTELS,
+                         con=self.maria_db_connection,
+                         params=[start_date, end_date])
+        return df
