@@ -215,10 +215,14 @@ class APIHelper(object):
         return 'Error - not yet implemented'
 
     def call_occupancy_hotel(self, param_dict):
-        return 'Error - not yet implemented'
+        query_dict = param_dict['set']
+
+        return self.apps.report_occupancy_by_hotel(query_dict['query_date'])
 
     def call_occupancy_roomtype(self, param_dict):
-        return 'Error - not yet implemented'
+        query_dict = param_dict['set']
+
+        return self.apps.report_occupancy_by_room_type(query_dict['query_date'])
 
     def call_occupancy_city(self, param_dict):
         return 'Error - not yet implemented'

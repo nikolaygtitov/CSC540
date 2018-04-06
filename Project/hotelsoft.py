@@ -187,8 +187,8 @@ class HotelSoft(object):
                         print('Please try again')
 
             # Insert and update queries build a "set" dictionary
-            if query.type == 'insert' or query.type == 'update':
-                if query.type == 'insert':
+            if query.type == 'insert' or query.type == 'update' or query.type == 'query':
+                if query.type == 'insert' or query.type == 'query':
                     print('Enter the following fields:')
                 elif query.type == 'update':
                     print('\nEnter the new values for the fields you wish to update (set):')
@@ -431,17 +431,17 @@ def main():
               lambda *args: wolf_inn.helper.call_generate_bill(*args)))
     wolf_inn.add_query(
         Query('occ_hotel',
-              None,
+              'query',
               None,
               'OCCUPANCY BY HOTEL',
-              [],
+              ['query_date'],
               lambda *args: wolf_inn.helper.call_occupancy_hotel(*args)))
     wolf_inn.add_query(
         Query('occ_room',
-              None,
+              'query',
               None,
               'OCCUPANCY BY ROOM TYPE',
-              [],
+              ['query_date'],
               lambda *args: wolf_inn.helper.call_occupancy_roomtype(*args)))
     wolf_inn.add_query(
         Query('occ_city',
