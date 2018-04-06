@@ -78,8 +78,8 @@ class Query(object):
 # - Menus continue to loop until exit is selected
 ################################################################################
 class HotelSoft(object):
-    def __init__(self, hotel_name, db):
-        self.helper = APIHelper(db)
+    def __init__(self, hotel_name, db, check=False):
+        self.helper = APIHelper(db, check)
         self.hotel_name = hotel_name
         self.menu_list = []
         self.query_list = []
@@ -249,6 +249,11 @@ class HotelSoft(object):
 # Build the hotel software and runs the program
 ################################################################################
 def main():
+    # Parse command line args
+    check = False
+    if len(sys.argv) == 2 and sys.argv[1] == '-c':
+        check = True
+
     ###############################################################
     # Update database details with correct settings               #
     db = maria_db.connect(host='127.0.0.1',  #
@@ -257,7 +262,8 @@ def main():
                           database='wolfinn')  #
     ###############################################################
 
-    wolf_inn = HotelSoft('WOLF INN RALEIGH', db)
+
+    wolf_inn = HotelSoft('WOLF INN RALEIGH', db, check)
 
     # Add queries with lambda functions to be called when they are selected
     wolf_inn.add_query(
@@ -688,9 +694,16 @@ def main():
     wolf_inn.get_menu('reports').add(
         MenuOption('Back to main menu', wolf_inn.show_menu('main')))
 
+
+
+
+
     # Run the program
     wolf_inn.show_title_screen()
     wolf_inn.start('main')
+
+
+
 
 
 if __name__ == "__main__":

@@ -22,15 +22,16 @@ class ArgList(object):
 # - Edit this file to control interactions between UI and Apps
 ################################################################################
 class APIHelper(object):
-    def __init__(self, db):
-        self.apps = Apps(db)
+    def __init__(self, db, check=False):
+        self.apps = Apps(db, check)
         self.db = db
 
     # Helper interfaces
     def call_select(self, where_dict, table_name ):
-        where_string = ' AND '.join([key + ('="%s"' % value) for key,value in
-                                          where_dict.items()])
+        #where_string = ' AND '.join([attr + '=%s' for attr in where_dict.iterkeys()])
+        where_string = ' AND '.join([key + ('="%s"' % value) for key,value in where_dict.items()])
         return self.apps.get_data_frame('*', table_name, where_string)
+
 
     def zip_is_present(self, zip):
         result = self.apps.get_data_frame('*', 'ZipToCityState', ('zip=%s' % zip))
