@@ -56,11 +56,13 @@ GROUP BY city, state
 #     - query_start: The date for which to start the query
 #     - query_end: The date for which to end the query
 #     - query_start: The date for which to start the query
+#     - query_end: The date for which to end the query
+#     - query_start: The date for which to start the query
 REPORT_OCCUPANCY_BY_DATE_RANGE = """
-SELECT (SELECT SUM(GREATEST(0, DATEDIFF(LEAST(@query_end, end_date), 
-GREATEST(@query_start, start_date)))) 
+SELECT (SELECT SUM(GREATEST(0, DATEDIFF(LEAST(%s, end_date), 
+GREATEST(%s, start_date)))) 
 FROM Reservations) AS 'Actual Bookings', (SELECT COUNT(hotel_id) * 
-DATEDIFF(@query_end, @query_start) FROM Rooms) AS 'Total Possible Bookings', 
+DATEDIFF(%s, %s) FROM Rooms) AS 'Total Possible Bookings', 
 ((SELECT SUM(GREATEST(0, LEAST(%s, end_date) - GREATEST(%s, start_date))) 
 FROM Reservations) / (SELECT COUNT(hotel_id) * DATEDIFF(%s, %s) FROM Rooms)) * 
 100 AS '% Occupancy'

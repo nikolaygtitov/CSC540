@@ -2427,9 +2427,7 @@ class Apps(object):
         df = pd.read_sql(REPORT_OCCUPANCY_BY_DATE_RANGE,
                          con=self.maria_db_connection,
                          params=[query_end,
-                                 query_start,
-                                 query_end,
-                                 query_start])
+                                 query_start] * 4)
         return df
 
     def report_staff_by_role(self, hotel_id):

@@ -91,9 +91,9 @@ class TestApps(SQLUnitTestBase):
         df = apps.report_occupancy_by_date_range('2015-01-01', '2017-12-31')
         print df
         self.assertEqual(1, len(df.index))
-        self.assertEqual(1, df['Actual Bookings'].ix[0])
-        self.assertEqual(1, df['Total Possible Bookings'].ix[0])
-        self.assertEqual(1, df['% Occupancy'].ix[0])
+        self.assertEqual(25.0, df['Actual Bookings'].ix[0])
+        self.assertEqual(8760, df['Total Possible Bookings'].ix[0])
+        self.assertEqual(1.8721, df['% Occupancy'].ix[0])
         self._con.commit()
         apps.cursor.close()
 
