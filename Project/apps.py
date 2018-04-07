@@ -654,6 +654,9 @@ class Apps(object):
         try:
             if self.check:
                 # Perform validation
+                assert zip_dict, \
+                    'Exception: Cannot add tuple into the table. Required ' \
+                    'attributes are not specified.\n'
                 assert 'zip' in zip_dict and len(zip_dict['zip']) >= 5, \
                     'Exception: ZIP code must be specified and must be at ' \
                     'least 5 digits.\n'
@@ -710,6 +713,13 @@ class Apps(object):
         try:
             # Perform validation on updating attributes
             if self.check:
+                assert zip_dict, \
+                    'Exception: Cannot update tuple(s) in the table. ' \
+                    'Attributes to be updated are not specified.\n'
+                assert where_clause_dict, \
+                    'Exception: Cannot update tuple(s) in the table. Tuple(s) \
+                    to be updated cannot be identified. Identification ' \
+                    'attributes are not specified.\n'
                 for attribute, value in zip_dict.items():
                     assert value, \
                         'Exception: Attribute \'{}\' must be specified to be ' \
@@ -735,6 +745,9 @@ class Apps(object):
         DELETE query statement and executes it. Once data is successfully
         deleted from the table, the helper function also tries to query this
         tuple and must return it as an empty Pandas DataFrame.
+        If check boolean parameter is enabled, it performs assertions ensuring
+        that a tuple(s) to be deleted from the ZipToCityState table are
+        identified.
 
         Parameters:
             :param zip_dict: Dictionary of attributes and values that identify
@@ -750,6 +763,10 @@ class Apps(object):
         TODO:
         """
         try:
+            if self.check:
+                assert zip_dict, \
+                    'Exception: Cannot identify tuple(s) to be deleted from ' \
+                    'the table.\n'
             return self._execute_delete_query('ZipToCityState', zip_dict)
         except maria_db.Error as error:
             raise error
@@ -796,6 +813,9 @@ class Apps(object):
         try:
             if self.check:
                 # Perform validation
+                assert hotel_dict, \
+                    'Exception: Cannot add tuple into the table. Required ' \
+                    'attributes are not specified.\n'
                 assert 'name' in hotel_dict and hotel_dict['name'], \
                     'Exception: Name of the hotel must be specified and must ' \
                     'be non-empty.\n'
@@ -854,6 +874,13 @@ class Apps(object):
         try:
             # Perform validation on updating attributes
             if self.check:
+                assert hotel_dict, \
+                    'Exception: Cannot update tuple(s) in the table. ' \
+                    'Attributes to be updated are not specified.\n'
+                assert where_clause_dict, \
+                    'Exception: Cannot update tuple(s) in the table. Tuple(s) \
+                    to be updated cannot be identified. Identification ' \
+                    'attributes are not specified.\n'
                 for attribute, value in hotel_dict.items():
                     assert value, \
                         'Exception: Attribute \'{}\' must be specified to be ' \
@@ -883,6 +910,8 @@ class Apps(object):
         and executes it. Once data is successfully deleted from the table, the
         helper function also tries to query this tuple and must return it as an
         empty Pandas DataFrame.
+        If check boolean parameter is enabled, it performs assertions ensuring
+        that a tuple(s) to be deleted from the Hotels table are identified.
 
         Parameters:
             :param hotel_dict: Dictionary of attributes and values that
@@ -898,6 +927,10 @@ class Apps(object):
         TODO:
         """
         try:
+            if self.check:
+                assert hotel_dict, \
+                    'Exception: Cannot identify tuple(s) to be deleted from ' \
+                    'the table.\n'
             return self._execute_delete_query('Hotels', hotel_dict)
         except maria_db.Error as error:
             raise error
@@ -944,6 +977,9 @@ class Apps(object):
         try:
             if self.check:
                 # Perform validation
+                assert room_dict, \
+                    'Exception: Cannot add tuple into the table. Required ' \
+                    'attributes are not specified.\n'
                 assert 'room_number' in room_dict, \
                     'Exception: Room number must be specified and must be ' \
                     'positive integer.\n'
@@ -1001,6 +1037,13 @@ class Apps(object):
         try:
             # Perform validation on updating attributes
             if self.check:
+                assert room_dict, \
+                    'Exception: Cannot update tuple(s) in the table. ' \
+                    'Attributes to be updated are not specified.\n'
+                assert where_clause_dict, \
+                    'Exception: Cannot update tuple(s) in the table. Tuple(s) \
+                    to be updated cannot be identified. Identification ' \
+                    'attributes are not specified.\n'
                 for attribute, value in room_dict.items():
                     assert value, \
                         'Exception: Attribute \'{}\' must be specified to be ' \
@@ -1034,6 +1077,8 @@ class Apps(object):
         and executes it. Once data is successfully deleted from the table, the
         helper function also tries to query this tuple and must return it as an
         empty Pandas DataFrame.
+        If check boolean parameter is enabled, it performs assertions ensuring
+        that a tuple(s) to be deleted from the Rooms table are identified.
 
         Parameters:
             :param room_dict: Dictionary of attributes and values that
@@ -1049,6 +1094,10 @@ class Apps(object):
         TODO:
         """
         try:
+            if self.check:
+                assert room_dict, \
+                    'Exception: Cannot identify tuple(s) to be deleted from ' \
+                    'the table.\n'
             return self._execute_delete_query('Rooms', room_dict)
         except maria_db.Error as error:
             raise error
@@ -1116,6 +1165,9 @@ class Apps(object):
         """
         try:
             if self.check:
+                assert staff_dict, \
+                    'Exception: Cannot add tuple into the table. Required ' \
+                    'attributes are not specified.\n'
                 assert 'name' in staff_dict and staff_dict['name'], \
                     'Exception: Name of the staff member must be specified ' \
                     'and must be non-empty.\n'
@@ -1236,6 +1288,13 @@ class Apps(object):
         try:
             # Perform validation on updating attributes
             if self.check:
+                assert staff_dict, \
+                    'Exception: Cannot update tuple(s) in the table. ' \
+                    'Attributes to be updated are not specified.\n'
+                assert where_clause_dict, \
+                    'Exception: Cannot update tuple(s) in the table. Tuple(s) \
+                    to be updated cannot be identified. Identification ' \
+                    'attributes are not specified.\n'
                 for attribute, value in staff_dict.items():
                     if attribute != 'assigned_hotel_id' or \
                             attribute != 'assigned_room_number':
@@ -1321,6 +1380,8 @@ class Apps(object):
         and executes it. Once data is successfully deleted from the table, the
         helper function also tries to query this tuple and must return it as an
         empty Pandas DataFrame.
+        If check boolean parameter is enabled, it performs assertions ensuring
+        that a tuple(s) to be deleted from the Staff table are identified.
 
         Parameters:
             :param staff_dict: Dictionary of attributes and values that
@@ -1336,6 +1397,10 @@ class Apps(object):
         TODO:
         """
         try:
+            if self.check:
+                assert staff_dict, \
+                    'Exception: Cannot identify tuple(s) to be deleted from ' \
+                    'the table.\n'
             return self._execute_delete_query('Staff', staff_dict)
         except maria_db.Error as error:
             raise error
@@ -1394,6 +1459,9 @@ class Apps(object):
         """
         try:
             if self.check:
+                assert customer_dict, \
+                    'Exception: Cannot add tuple into the table. Required ' \
+                    'attributes are not specified.\n'
                 assert 'name' in customer_dict and customer_dict['name'], \
                     'Exception: Name of the customer must be specified and ' \
                     'must be non-empty.\n'
@@ -1463,6 +1531,13 @@ class Apps(object):
         try:
             # Perform validation on updating attributes
             if self.check:
+                assert customer_dict, \
+                    'Exception: Cannot update tuple(s) in the table. ' \
+                    'Attributes to be updated are not specified.\n'
+                assert where_clause_dict, \
+                    'Exception: Cannot update tuple(s) in the table. Tuple(s) \
+                    to be updated cannot be identified. Identification ' \
+                    'attributes are not specified.\n'
                 for attribute, value in customer_dict.items():
                     if attribute != 'account_number' or \
                             attribute != 'is_hotel_card':
@@ -1494,6 +1569,8 @@ class Apps(object):
         query statement and executes it. Once data is successfully deleted from
         the table, the helper function also tries to query this tuple and must
         return it as an empty Pandas DataFrame.
+        If check boolean parameter is enabled, it performs assertions ensuring
+        that a tuple(s) to be deleted from the Customers table are identified.
 
         Parameters:
             :param customer_dict: Dictionary of attributes and values that
@@ -1509,6 +1586,10 @@ class Apps(object):
         TODO:
         """
         try:
+            if self.check:
+                assert customer_dict, \
+                    'Exception: Cannot identify tuple(s) to be deleted from ' \
+                    'the table.\n'
             return self._execute_delete_query('Customers', customer_dict)
         except maria_db.Error as error:
             raise error
@@ -1580,6 +1661,9 @@ class Apps(object):
         """
         try:
             if self.check:
+                assert reservation_dict, \
+                    'Exception: Cannot add tuple into the table. Required ' \
+                    'attributes are not specified.\n'
                 assert 'number_of_guests' in reservation_dict and \
                        0 < reservation_dict['number_of_guests'] < 10, \
                     'Exception: Number of guests must be specified and must ' \
@@ -1701,6 +1785,13 @@ class Apps(object):
         try:
             # Perform validation on updating attributes
             if self.check:
+                assert reservation_dict, \
+                    'Exception: Cannot update tuple(s) in the table. ' \
+                    'Attributes to be updated are not specified.\n'
+                assert where_clause_dict, \
+                    'Exception: Cannot update tuple(s) in the table. Tuple(s) \
+                    to be updated cannot be identified. Identification ' \
+                    'attributes are not specified.\n'
                 for attribute, value in reservation_dict.items():
                     if attribute != 'check_in_time' or \
                             attribute != 'check_out_time':
@@ -1781,6 +1872,9 @@ class Apps(object):
         query statement and executes it. Once data is successfully deleted from
         the table, the helper function also tries to query this tuple and must
         return it as an empty Pandas DataFrame.
+        If check boolean parameter is enabled, it performs assertions ensuring
+        that a tuple(s) to be deleted from the Reservations table are
+        identified.
 
         Parameters:
             :param reservation_dict: Dictionary of attributes and values that
@@ -1796,6 +1890,10 @@ class Apps(object):
         TODO:
         """
         try:
+            if self.check:
+                assert reservation_dict, \
+                    'Exception: Cannot identify tuple(s) to be deleted from ' \
+                    'the table.\n'
             return self._execute_delete_query('Reservations', reservation_dict)
         except maria_db.Error as error:
             raise error
@@ -1847,6 +1945,9 @@ class Apps(object):
         """
         try:
             if self.check:
+                assert transaction_dict, \
+                    'Exception: Cannot add tuple into the table. Required ' \
+                    'attributes are not specified.\n'
                 assert 'amount' in transaction_dict, \
                     'Exception: Amount of the transaction must be specified ' \
                     'in US dollars.\n'
@@ -1906,6 +2007,13 @@ class Apps(object):
         try:
             # Perform validation on updating attributes
             if self.check:
+                assert transaction_dict, \
+                    'Exception: Cannot update tuple(s) in the table. ' \
+                    'Attributes to be updated are not specified.\n'
+                assert where_clause_dict, \
+                    'Exception: Cannot update tuple(s) in the table. Tuple(s) \
+                    to be updated cannot be identified. Identification ' \
+                    'attributes are not specified.\n'
                 for attribute, value in transaction_dict.items():
                     assert value, \
                         'Exception: Attribute \'{}\' must be specified to be ' \
@@ -1918,7 +2026,8 @@ class Apps(object):
             # Execute update query
             # Also queries for updated tuple and returns it as Pandas DataFrame
             data_frame = self._execute_update_query(
-                select_attr, 'Transactions', transaction_dict, where_clause_dict)
+                select_attr, 'Transactions', transaction_dict,
+                where_clause_dict)
             return data_frame
         except AssertionError, error:
             raise error
@@ -1936,6 +2045,9 @@ class Apps(object):
         query statement and executes it. Once data is successfully deleted from
         the table, the helper function also tries to query this tuple and must
         return it as an empty Pandas DataFrame.
+        If check boolean parameter is enabled, it performs assertions ensuring
+        that a tuple(s) to be deleted from the Transactions table are
+        identified.
 
         Parameters:
             :param transaction_dict: Dictionary of attributes and values that
@@ -1951,6 +2063,10 @@ class Apps(object):
         TODO:
         """
         try:
+            if self.check:
+                assert transaction_dict, \
+                    'Exception: Cannot identify tuple(s) to be deleted from ' \
+                    'the table.\n'
             return self._execute_delete_query('Reservations', transaction_dict)
         except maria_db.Error as error:
             raise error
@@ -1994,6 +2110,10 @@ class Apps(object):
         TODO:
         """
         try:
+            if self.check:
+                assert serves_dict, \
+                    'Exception: Cannot add tuple into the table. Required ' \
+                    'attributes are not specified.\n'
             # Execute insert query
             self._execute_insert_query(serves_dict, 'Serves')
             # Query for this inserted tuple and return it as Pandas DataFrame
@@ -2001,6 +2121,8 @@ class Apps(object):
                 '*', 'Serves', 'staff_id={} AND reservation_id={}'.format(
                     serves_dict['staff_id'], serves_dict['reservation_id']))
             return data_frame
+        except AssertionError, error:
+            raise error
         except maria_db.Error as error:
             raise error
 
@@ -2039,11 +2161,21 @@ class Apps(object):
         TODO:
         """
         try:
+            if self.check:
+                assert serves_dict, \
+                    'Exception: Cannot update tuple(s) in the table. ' \
+                    'Attributes to be updated are not specified.\n'
+                assert where_clause_dict, \
+                    'Exception: Cannot update tuple(s) in the table. Tuple(s) \
+                    to be updated cannot be identified. Identification ' \
+                    'attributes are not specified.\n'
             # Execute update query
             # Also queries for updated tuple and returns it as Pandas DataFrame
             data_frame = self._execute_update_query(
                 '*', 'Rooms', serves_dict, where_clause_dict)
             return data_frame
+        except AssertionError, error:
+            raise error
         except maria_db.Error as error:
             raise error
 
@@ -2058,6 +2190,8 @@ class Apps(object):
         and executes it. Once data is successfully deleted from the table, the
         helper function also tries to query this tuple and must return it as an
         empty Pandas DataFrame.
+        If check boolean parameter is enabled, it performs assertions ensuring
+        that a tuple(s) to be deleted from the Serves table are identified.
 
         Parameters:
             :param serves_dict: Dictionary of attributes and values that
@@ -2073,17 +2207,24 @@ class Apps(object):
         TODO:
         """
         try:
+            if self.check:
+                assert serves_dict, \
+                    'Exception: Cannot identify tuple(s) to be deleted from ' \
+                    'the table.\n'
             return self._execute_delete_query('Serves', serves_dict)
         except maria_db.Error as error:
             raise error
 
+    # Reports apps implementation starts here.
     def report_occupancy_by_hotel(self, query_date):
         """
         TODO - Comment
+
         Parameters:
-        :param query_date:
+            :param query_date:
+
         Returns:
-        :return:
+            :return:
         """
 
         df = pd.read_sql(REPORT_OCCUPANCY_BY_HOTEL,
@@ -2094,10 +2235,12 @@ class Apps(object):
     def report_occupancy_by_room_type(self, query_date):
         """
         TODO - Comment
+
         Parameters:
-        :param query_date:
+            :param query_date:
+
         Returns:
-        :return:
+            :return:
         """
 
         df = pd.read_sql(REPORT_OCCUPANCY_BY_ROOM_TYPE,
@@ -2108,10 +2251,12 @@ class Apps(object):
     def report_occupancy_by_city(self, query_date):
         """
         TODO - Comment
+
         Parameters:
-        :param query_date:
+            :param query_date:
+
         Returns:
-        :return:
+            :return:
         """
 
         df = pd.read_sql(REPORT_OCCUPANCY_BY_CITY,
@@ -2122,10 +2267,13 @@ class Apps(object):
     def report_occupancy_by_date_range(self, query_start, query_end):
         """
         TODO - Comment
+
         Parameters:
-        :param query_date:
+            :param query_start:
+            :param query_end:
+
         Returns:
-        :return:
+            :return:
         """
 
         df = pd.read_sql(REPORT_OCCUPANCY_BY_DATE_RANGE,
@@ -2139,10 +2287,12 @@ class Apps(object):
     def report_staff_by_role(self, hotel_id):
         """
         TODO - Comment
+
         Parameters:
-        :param query_date:
+            :param hotel_id:
+
         Returns:
-        :return:
+            :return:
         """
 
         df = pd.read_sql(REPORT_STAFF_BY_ROLE,
@@ -2153,10 +2303,12 @@ class Apps(object):
     def report_customer_interactions(self, reservation_id):
         """
         TODO - Comment
+
         Parameters:
-        :param query_date:
+            :param reservation_id:
+
         Returns:
-        :return:
+            :return:
         """
 
         df = pd.read_sql(REPORT_CUSTOMER_INTERACTIONS,
@@ -2164,27 +2316,34 @@ class Apps(object):
                          params=[reservation_id])
         return df
 
-    def report_revenue_single_hotel(self, start_date, end_date, hotel):
+    def report_revenue_single_hotel(self, start_date, end_date, hotel_id):
         """
         TODO - Comment
+
         Parameters:
-        :param query_date:
+            :param start_date:
+            :param end_date:
+            :param hotel_id:
+
         Returns:
-        :return:
+            :return:
         """
 
         df = pd.read_sql(REPORT_REVENUE_SINGLE_HOTEL,
                          con=self.maria_db_connection,
-                         params=[start_date, end_date, hotel])
+                         params=[start_date, end_date, hotel_id])
         return df
 
     def report_revenue_all_hotels(self, start_date, end_date):
         """
         TODO - Comment
+
         Parameters:
-        :param query_date:
+            :param start_date:
+            :param end_date:
+
         Returns:
-        :return:
+            :return:
         """
 
         df = pd.read_sql(REPORT_REVENUE_ALL_HOTELS,
