@@ -45,7 +45,7 @@ class TestApps(SQLUnitTestBase):
         self.assertEqual(1, len(df.index))
         df = apps.delete_zip({'zip': '27511'})
         self.assertEqual(0, len(df.index))
-        df = apps._execute_select_query('*', 'ZipToCityState')
+        df = apps.get_data_frame('*', 'ZipToCityState')
         self.assertEqual(0, len(df.index))
         apps.cursor.close()
 
