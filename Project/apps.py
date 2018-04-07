@@ -2282,36 +2282,21 @@ class Apps(object):
                     'to check availability of a Room(s).\n'
                 assert 'start_date' in dictionary and \
                        dictionary['start_date'], \
-                    'Exception: Start Date must be specified. Please enter ' \
-                    'proper start date.\n'
-                assert 'end_date' in dictionary and dictionary['end_date'], \
-                    'Exception: End Date must be specified. Please enter ' \
-                    'proper end date.\n'
+                    'Exception: Invalid Start Date. Please specify valid ' \
+                    'start date.\n'
+                assert 'end_date' in dictionary and dictionary['end_date'] \
+                       and len(dictionary['end_date']) == 10, \
+                    'Exception: Invalid End Date. Please specify valid end ' \
+                    'date.\n'
             # Start and end dates needed only for nested WHERE clause
             start_date = dictionary['start_date']
             end_date = dictionary['end_date']
             del dictionary['start_date']
             del dictionary['end_date']
             # Generate the entire SELECT query
-            # Resulted attributes and values displayed in DataFrame
-            attributes = \
-                "id AS 'Hotel ID', name AS 'Hotel Name', street AS 'Street', " \
-                "city AS 'City', state AS 'State', Hotels.zip AS 'ZIP', " \
-                "phone_number AS 'Phone', room_number AS 'Room Number', " \
-                "category AS 'Category', occupancy AS 'Occupancy', " \
-                "rate AS 'Rate'"
-            table_name = \
-                'ZipToCityState JOIN Hotels ON ZipToCityState.zip = ' \
-                'Hotels.zip JOIN Rooms ON Rooms.hotel_id = Hotels.id'
-            # Nested WHERE clause for Reservations table
-            nested_where_clause = \
-                "room_number NOT IN (SELECT room_number FROM Reservations " \
-                "WHERE ((('{}' BETWEEN start_date AND end_date) OR (" \
-                "'{}' between start_date AND end_date) OR " \
-                "(start_date between '{}' AND '{}') OR " \
-                "(end_date between '{}' AND '{}'))".format(
-                    start_date, end_date, start_date, end_date, start_date,
-                    end_date)
+            nested_where_clause = ROOM_AVAILABILITY_NESTED_WHERE_CLAUSE.format(
+                start_date, end_date, start_date, end_date, start_date,
+                end_date)
             # Generate final WHERE clause
             if 'hotel_id' in dictionary:
                 nested_where_clause = nested_where_clause + \
@@ -2325,14 +2310,60 @@ class Apps(object):
             where_clause = where_clause % tuple(dictionary.values())
             # SELECT statement is ready. Get Pandas DataFrame and return it.
             data_frame = self.get_data_frame(
-                attributes, table_name, where_clause=where_clause)
+                ROOM_AVAILABILITY_COLUMN_NAMES,
+                ROOM_AVAILABILITY_TABLE_STATEMENT, where_clause=where_clause)
             return data_frame
         except AssertionError, error:
             raise error
         except maria_db.Error as error:
             raise error
 
-    # Reports apps implementation starts here.
+    def generate_bill(self, reservation_id):
+        """
+        Generates a bill of total amount due and itemized charges per specific
+        reservation.
+
+        For a given reservation ID, specified as an argument, this function
+        does the following:
+        1) Constructs total amount due Pandas DataFrame with three columns:
+        | Cost | Discount | Total Amount Due
+        2) Constructs a list of itemized charges as Pandas DataFrame with four
+        columns: | Transaction ID | Amount | Description | Date
+        3) Concatenates two Pandas DataFrames and returns it to the caller
+        function
+
+        Parameters:
+            :param reservation_id: Reservation ID for which total amount due is
+            calculated applying discount and a list of itemized charges is
+            calculated (does not include discount). The same ID is used for
+            two different queries.
+
+        Returns:
+            :return: Concatenated Pandas DataFrames (two-dimensional
+            size-mutable, heterogeneous tabular data structure with labeled
+            axes) retrieved from pandas.read_sql() function for two queries:
+                - GENERATE_BILL_TOTAL_AMOUNT_DUE: generates a bill for total
+                amount
+                - GENERATE_BILL_ITEMIZED_CHARGES: generates a bill for itemized
+                charges
+        """
+        if self.check:
+            # Perform validation
+            assert reservation_id is not None, \
+                'Exception: Invalid Reservation ID. Please specify valid ' \
+                'Reservation ID.\n'
+        # Construct total amount due Pandas DataFrame
+        total_due_df = pd.read_sql(GENERATE_BILL_TOTAL_AMOUNT_DUE,
+                                   con=self.maria_db_connection,
+                                   params=reservation_id)
+        # Construct list of itemized charges as Pandas DataFrame
+        itemized_df = pd.read_sql(GENERATE_BILL_ITEMIZED_CHARGES,
+                                  con=self.maria_db_connection,
+                                  params=reservation_id)
+        # Return two concatenated Pandas DataFrames
+        return pd.concat((total_due_df, itemized_df), axis=1)
+
+    # Reports apps implemented below.
     def report_occupancy_by_hotel(self, query_date):
         """
         TODO - Comment
