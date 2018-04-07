@@ -711,8 +711,8 @@ class Apps(object):
         TODO:
         """
         try:
-            # Perform validation on updating attributes
             if self.check:
+                # Perform validation
                 assert zip_dict, \
                     'Exception: Cannot update tuple(s) in the table. ' \
                     'Attributes to be updated are not specified.\n'
@@ -764,6 +764,7 @@ class Apps(object):
         """
         try:
             if self.check:
+                # Perform validation
                 assert zip_dict, \
                     'Exception: Cannot identify tuple(s) to be deleted from ' \
                     'the table.\n'
@@ -872,8 +873,8 @@ class Apps(object):
         TODO:
         """
         try:
-            # Perform validation on updating attributes
             if self.check:
+                # Perform validation
                 assert hotel_dict, \
                     'Exception: Cannot update tuple(s) in the table. ' \
                     'Attributes to be updated are not specified.\n'
@@ -928,6 +929,7 @@ class Apps(object):
         """
         try:
             if self.check:
+                # Perform validation
                 assert hotel_dict, \
                     'Exception: Cannot identify tuple(s) to be deleted from ' \
                     'the table.\n'
@@ -1035,8 +1037,8 @@ class Apps(object):
         TODO:
         """
         try:
-            # Perform validation on updating attributes
             if self.check:
+                # Perform validation
                 assert room_dict, \
                     'Exception: Cannot update tuple(s) in the table. ' \
                     'Attributes to be updated are not specified.\n'
@@ -1095,6 +1097,7 @@ class Apps(object):
         """
         try:
             if self.check:
+                # Perform validation
                 assert room_dict, \
                     'Exception: Cannot identify tuple(s) to be deleted from ' \
                     'the table.\n'
@@ -1165,6 +1168,7 @@ class Apps(object):
         """
         try:
             if self.check:
+                # Perform validation
                 assert staff_dict, \
                     'Exception: Cannot add tuple into the table. Required ' \
                     'attributes are not specified.\n'
@@ -1286,8 +1290,8 @@ class Apps(object):
         TODO: Testing
         """
         try:
-            # Perform validation on updating attributes
             if self.check:
+                # Perform validation
                 assert staff_dict, \
                     'Exception: Cannot update tuple(s) in the table. ' \
                     'Attributes to be updated are not specified.\n'
@@ -1398,6 +1402,7 @@ class Apps(object):
         """
         try:
             if self.check:
+                # Perform validation
                 assert staff_dict, \
                     'Exception: Cannot identify tuple(s) to be deleted from ' \
                     'the table.\n'
@@ -1459,6 +1464,7 @@ class Apps(object):
         """
         try:
             if self.check:
+                # Perform validation
                 assert customer_dict, \
                     'Exception: Cannot add tuple into the table. Required ' \
                     'attributes are not specified.\n'
@@ -1529,8 +1535,8 @@ class Apps(object):
         TODO:
         """
         try:
-            # Perform validation on updating attributes
             if self.check:
+                # Perform validation
                 assert customer_dict, \
                     'Exception: Cannot update tuple(s) in the table. ' \
                     'Attributes to be updated are not specified.\n'
@@ -1587,6 +1593,7 @@ class Apps(object):
         """
         try:
             if self.check:
+                # Perform validation
                 assert customer_dict, \
                     'Exception: Cannot identify tuple(s) to be deleted from ' \
                     'the table.\n'
@@ -1661,6 +1668,7 @@ class Apps(object):
         """
         try:
             if self.check:
+                # Perform validation
                 assert reservation_dict, \
                     'Exception: Cannot add tuple into the table. Required ' \
                     'attributes are not specified.\n'
@@ -1783,8 +1791,8 @@ class Apps(object):
         TODO: Testing
         """
         try:
-            # Perform validation on updating attributes
             if self.check:
+                # Perform validation
                 assert reservation_dict, \
                     'Exception: Cannot update tuple(s) in the table. ' \
                     'Attributes to be updated are not specified.\n'
@@ -1891,6 +1899,7 @@ class Apps(object):
         """
         try:
             if self.check:
+                # Perform validation
                 assert reservation_dict, \
                     'Exception: Cannot identify tuple(s) to be deleted from ' \
                     'the table.\n'
@@ -1945,6 +1954,7 @@ class Apps(object):
         """
         try:
             if self.check:
+                # Perform validation
                 assert transaction_dict, \
                     'Exception: Cannot add tuple into the table. Required ' \
                     'attributes are not specified.\n'
@@ -2005,8 +2015,8 @@ class Apps(object):
         TODO:
         """
         try:
-            # Perform validation on updating attributes
             if self.check:
+                # Perform validation
                 assert transaction_dict, \
                     'Exception: Cannot update tuple(s) in the table. ' \
                     'Attributes to be updated are not specified.\n'
@@ -2064,6 +2074,7 @@ class Apps(object):
         """
         try:
             if self.check:
+                # Perform validation
                 assert transaction_dict, \
                     'Exception: Cannot identify tuple(s) to be deleted from ' \
                     'the table.\n'
@@ -2111,6 +2122,7 @@ class Apps(object):
         """
         try:
             if self.check:
+                # Perform validation
                 assert serves_dict, \
                     'Exception: Cannot add tuple into the table. Required ' \
                     'attributes are not specified.\n'
@@ -2162,6 +2174,7 @@ class Apps(object):
         """
         try:
             if self.check:
+                # Perform validation
                 assert serves_dict, \
                     'Exception: Cannot update tuple(s) in the table. ' \
                     'Attributes to be updated are not specified.\n'
@@ -2208,10 +2221,114 @@ class Apps(object):
         """
         try:
             if self.check:
+                # Perform validation
                 assert serves_dict, \
                     'Exception: Cannot identify tuple(s) to be deleted from ' \
                     'the table.\n'
             return self._execute_delete_query('Serves', serves_dict)
+        except maria_db.Error as error:
+            raise error
+
+    def room_availability(self, dictionary):
+        """
+        Checks room(s) availability based on the given criteria (filters).
+
+        For a given set of attributes and values specified in the argument
+        dictionary, which are used as filters and must include mandatory items
+        for start and end dates, this function does the following:
+        1) Generates a string of attributes names displayed in Pandas DataFrame
+        2) Generates a table statement followed by FROM in a query
+        3) Generates nested WHERE clause which is used in Reservations table to
+        query for specific dates
+        4) Generate complete where clause with attributes and values specified
+        in the dictionary argument
+        5) Gets Pandas DataFrame for available room(s) by calling internal
+        helper function get_data_frame() with arguments generated in this
+        function
+
+        Parameters:
+            :param dictionary: Dictionary of attributes and values used as
+            filtering options to identify available rooms. The content of the
+            dictionary depends on the attributes and values received from UI
+            and may include the following:
+                - start_date: Start date
+                - end_date: End date
+                - hotel_id: ID of the specific Hotel. Room(s) availability are
+                checked only within a particular hotel identified by this ID
+                - name: Name of a hotel. Room(s) availability are checked only
+                within a hotel(s) identified by this name
+                - street: Desired street as additional filter for a hotel/room
+                - city: Desired city as additional filter for a hotel/room
+                - state: Desired state as additional filter for a hotel/room
+                - zip: Desired ZIP code as additional filter for a hotel/room
+                - category: Desired category of a room as additional filter
+                (e.g. Economy, Deluxe, and etc.)
+                - occupancy: Desired occupancy of a room as additional filter
+                - rate: Desired rate as additional filter for a hotel/room
+
+        Returns:
+            :return: Pandas DataFrame(s) (two-dimensional size-mutable,
+            heterogeneous tabular data structure with labeled axes) containing
+            a tuple(s) of all available room based on the given criteria. This
+            Pandas DataFrame contains the following columns:
+                - Hotel ID | Hotel Name | Street | City | State | ZIP | Phone |
+                  Room Number | Category | Occupancy | Rate
+        """
+        try:
+            if self.check:
+                # Perform validation
+                assert len(dictionary) > 1, \
+                    'Exception: Both Start and End Dates must be specified ' \
+                    'to check availability of a Room(s).\n'
+                assert 'start_date' in dictionary and \
+                       dictionary['start_date'], \
+                    'Exception: Start Date must be specified. Please enter ' \
+                    'proper start date.\n'
+                assert 'end_date' in dictionary and dictionary['end_date'], \
+                    'Exception: End Date must be specified. Please enter ' \
+                    'proper end date.\n'
+            # Start and end dates needed only for nested WHERE clause
+            start_date = dictionary['start_date']
+            end_date = dictionary['end_date']
+            del dictionary['start_date']
+            del dictionary['end_date']
+            # Generate the entire SELECT query
+            # Resulted attributes and values displayed in DataFrame
+            attributes = \
+                "id AS 'Hotel ID', name AS 'Hotel Name', street AS 'Street', " \
+                "city AS 'City', state AS 'State', Hotels.zip AS 'ZIP', " \
+                "phone_number AS 'Phone', room_number AS 'Room Number', " \
+                "category AS 'Category', occupancy AS 'Occupancy', " \
+                "rate AS 'Rate'"
+            table_name = \
+                'ZipToCityState JOIN Hotels ON ZipToCityState.zip = ' \
+                'Hotels.zip JOIN Rooms ON Rooms.hotel_id = Hotels.id'
+            # Nested WHERE clause for Reservations table
+            nested_where_clause = \
+                "room_number NOT IN (SELECT room_number FROM Reservations " \
+                "WHERE ((('{}' BETWEEN start_date AND end_date) OR (" \
+                "'{}' between start_date AND end_date) OR " \
+                "(start_date between '{}' AND '{}') OR " \
+                "(end_date between '{}' AND '{}'))".format(
+                    start_date, end_date, start_date, end_date, start_date,
+                    end_date)
+            # Generate final WHERE clause
+            if 'hotel_id' in dictionary:
+                nested_where_clause = nested_where_clause + \
+                               ' AND hotel_id = {} ))'.format(
+                                   dictionary['hotel_id'])
+            else:
+                nested_where_clause = nested_where_clause + '))'
+            where_clause = ' AND '.join(
+                [attr + '=%s ' for attr in dictionary.iterkeys()])
+            where_clause = where_clause + nested_where_clause
+            where_clause = where_clause % tuple(dictionary.values())
+            # SELECT statement is ready. Get Pandas DataFrame and return it.
+            data_frame = self.get_data_frame(
+                attributes, table_name, where_clause=where_clause)
+            return data_frame
+        except AssertionError, error:
+            raise error
         except maria_db.Error as error:
             raise error
 
