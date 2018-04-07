@@ -1,5 +1,6 @@
 from apps import Apps
 import pandas as pd
+from util import sql_transaction
 
 
 class ArgList(object):
@@ -43,36 +44,41 @@ class APIHelper(object):
     def call_add_hotel(self, param_dict):
         set_dict = param_dict['set']
 
-        # If a city and state is present, insert the new zip
-        if 'zip' in set_dict and 'city' in set_dict and 'state' in set_dict:
-            zip_dict = {k: set_dict[k] for k in ('city', 'state', 'zip') if k in set_dict}
-            result = self.apps.add_zip(zip_dict)
-            if not isinstance(result, pd.DataFrame):
-                return result
+        with sql_transaction(self.db):
+            # If a city and state is present, insert the new zip
+            if 'zip' in set_dict and 'city' in set_dict and 'state' in set_dict:
+                zip_dict = {k: set_dict[k] for k in ('city', 'state', 'zip') if k in set_dict}
+                result = self.apps.add_zip(zip_dict)
+                # TODO: Check if the following code is needed - I don't think so.
+                #       This interferes with the transaction. Also check all other instances
+                # if not isinstance(result, pd.DataFrame):
+                #     return result
 
-        # Insert the hotel
-        hotel_dict = {k: set_dict[k] for k in ArgList.hotel if k in set_dict}
-        return self.apps.add_hotel(hotel_dict)
+            # Insert the hotel
+            hotel_dict = {k: set_dict[k] for k in ArgList.hotel if k in set_dict}
+            return self.apps.add_hotel(hotel_dict)
 
     def call_update_hotel(self, param_dict):
         set_dict = param_dict['set']
         where_dict = param_dict['where']
 
-        # If a city and state is present, insert the new zip
-        if 'zip' in set_dict and 'city' in set_dict and 'state' in set_dict:
-            zip_dict = {k: set_dict[k] for k in ArgList.zip if k in set_dict}
-            result = self.apps.add_zip(zip_dict)
-            if not isinstance(result, pd.DataFrame):
-                return result
+        with sql_transaction(self.db):
+            # If a city and state is present, insert the new zip
+            if 'zip' in set_dict and 'city' in set_dict and 'state' in set_dict:
+                zip_dict = {k: set_dict[k] for k in ArgList.zip if k in set_dict}
+                result = self.apps.add_zip(zip_dict)
+                # if not isinstance(result, pd.DataFrame):
+                #     return result
 
-        # Update the hotel
-        hotel_dict = {k: set_dict[k] for k in ArgList.hotel if k in set_dict}
-        where_clause_dict = {k: where_dict[k] for k in ArgList.hotel if k in where_dict}
-        return self.apps.update_hotel(hotel_dict, where_clause_dict)
+            # Update the hotel
+            hotel_dict = {k: set_dict[k] for k in ArgList.hotel if k in set_dict}
+            where_clause_dict = {k: where_dict[k] for k in ArgList.hotel if k in where_dict}
+            return self.apps.update_hotel(hotel_dict, where_clause_dict)
 
     def call_delete_hotel(self, param_dict):
         where_dict = param_dict['where']
-        return self.apps.delete_hotel(where_dict)
+        with sql_transaction(self.db):
+            return self.apps.delete_hotel(where_dict)
 
     def call_add_room(self, param_dict):
         set_dict = param_dict['set']
