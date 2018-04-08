@@ -200,8 +200,11 @@ class Apps(object):
         where_attr_format = ' AND '.join([attr + '=%s' for attr in
                                           where_clause_dict.iterkeys()])
         # Generate select query statement and execute it
-        select_query = "SELECT {} FROM {} WHERE {}".format(
-            attributes, table_name, where_attr_format)
+        if where_clause_dict:
+            select_query = "SELECT {} FROM {} WHERE {}".format(
+                attributes, table_name, where_attr_format)
+        else:
+            select_query = "SELECT {} FROM {}".format(attributes, table_name)
         self.cursor.execute(select_query, where_clause_dict.values())
 
     def _execute_select_query(self, attributes, table_name, where_clause=None,
@@ -236,11 +239,15 @@ class Apps(object):
         TODO:
         """
         # Generate select query statement and execute it
-        if where_clause and where_values_list:
+        if where_clause is not None and where_values_list is not None:
             select_query = "SELECT {} FROM {} WHERE {}".format(
                 attributes, table_name, where_clause)
             # Execute select query with complicated WHERE clause
             self.cursor.execute(select_query, where_values_list)
+        else:
+            select_query = "SELECT {} FROM {}".format(attributes, table_name)
+            # Execute select query with complicated WHERE clause
+            self.cursor.execute(select_query)
 
     def _execute_insert_query(self, dictionary, table_name):
         """
