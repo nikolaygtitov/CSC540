@@ -221,7 +221,13 @@ class HotelSoft(object):
     @staticmethod
     def get_choice(menu):
         menu.printm()
-        choice = input('-> ')
+        try:
+            choice = int(raw_input('-> '))
+            if choice < 1 or choice > len(menu.options):
+                raise ValueError('Out of range')
+        except ValueError:
+            print('Invalid input')
+            return HotelSoft.get_choice(menu)
         menu.options[choice - 1].handler()
 
     def start(self, menu):
