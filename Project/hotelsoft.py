@@ -341,7 +341,14 @@ class HotelSoft(object):
 
             # Package up the set and where dictionaries and call api
             param_dict = {'set': set_dict, 'where': where_dict}
-            results = action.handler(param_dict, action.api_info)
+
+            results = None
+            if action.type == 'exec':
+                results = action.handler()
+            else:
+                results = action.handler(param_dict, action.api_info)
+
+
 
             print '\nMenuAction Successful ' + u"\u2713"
             if isinstance(results, list):
@@ -554,7 +561,7 @@ def main():
                    AppsParams.room_avail, wolf_inn.client.get_report_with_dict))
     wolf_inn.add_menu_action(
         MenuAction('exec_demo_load', 'LOAD DEMO DATA',
-                   None, lambda x, y: load_demo_data(db)))
+                   None, lambda: load_demo_data(db)))
     # Add main menus
     wolf_inn.add_menu(Menu('main', 'MAIN MENU'))
     wolf_inn.add_menu(Menu('info', 'INFORMATION PROCESSING'))
