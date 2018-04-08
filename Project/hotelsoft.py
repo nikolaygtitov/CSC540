@@ -546,7 +546,9 @@ def main():
     wolf_inn.add_menu_action(
         MenuAction('report_room_avail', 'ROOM AVAILABILITY',
                    AppsParams.room_avail, wolf_inn.client.get_report_with_dict))
-
+    wolf_inn.add_menu_action(
+        MenuAction('exec_demo_load', 'LOAD DEMO DATA',
+                   None, lambda: load_demo_data(db)))
     # Add main menus
     wolf_inn.add_menu(Menu('main', 'MAIN MENU'))
     wolf_inn.add_menu(Menu('info', 'INFORMATION PROCESSING'))
@@ -569,7 +571,8 @@ def main():
     wolf_inn.get_menu('main').add(
         MenuOption('Reports', wolf_inn.store_menu('reports')))
     wolf_inn.get_menu('main').add(
-        MenuOption('Load Test Data', lambda: load_demo_data(db)))
+        MenuOption('Load Test Data',
+                   wolf_inn.store_action('exec_demo_load', 'main')))
     wolf_inn.get_menu('main').add(MenuOption('Exit', wolf_inn.exit_program))
 
     # Add information management menu options
