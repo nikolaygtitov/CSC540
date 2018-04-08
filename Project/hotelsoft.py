@@ -39,6 +39,7 @@ from tabulate import tabulate
 import mysql.connector as maria_db
 from appsclient import *
 from util import print_error
+from demo_data import load_demo_data
 
 
 ################################################################################
@@ -418,13 +419,17 @@ def get_db():
             return get_db()
     else:
         try:
-            ###############################################################
-            # Default database settings                                   #
-            db = maria_db.connect(host='classdb2.csc.ncsu.edu',           #
-                                  user='ngtitov',                         #
-                                  password='001029047',                   #
-                                  database='ngtitov')                     #
-            ###############################################################
+            # ###############################################################
+            # # Default database settings                                   #
+            # db = maria_db.connect(host='classdb2.csc.ncsu.edu',           #
+            #                       user='ngtitov',                         #
+            #                       password='001029047',                   #
+            #                       database='ngtitov')                     #
+            # ###############################################################
+            db = maria_db.connect(host='classdb2.csc.ncsu.edu',
+                                  user='nfschnoo',
+                                  password='001027748',
+                                  database='nfschnoo')
             return db
         except maria_db.Error:
             print ('Unable to establish database connection')
@@ -563,6 +568,8 @@ def main():
         MenuOption('Billing', wolf_inn.store_menu('billing')))
     wolf_inn.get_menu('main').add(
         MenuOption('Reports', wolf_inn.store_menu('reports')))
+    wolf_inn.get_menu('main').add(
+        MenuOption('Load Test Data', lambda: load_demo_data(db)))
     wolf_inn.get_menu('main').add(MenuOption('Exit', wolf_inn.exit_program))
 
     # Add information management menu options

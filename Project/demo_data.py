@@ -160,7 +160,7 @@ def load_demo_data(db):
     _create_tables(db)
 
     cursor = db.cursor()
-
+    print "Loading Demo Data"
     # ZipToCityState
     zip_data = [
         ['27', 'Raleigh', 'NC'],
