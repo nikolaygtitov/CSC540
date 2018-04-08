@@ -180,7 +180,7 @@ class AppsClient(object):
         result = {
             'Generate_bill' : lambda x: self.apps.generate_bill(x[0]),
             'Occupancy_hotel': lambda x: self.apps.report_occupancy_by_hotel(x[0]),
-            'Occupancy_room': lambda x: self.apps.report_occupancy_by_room(x[0]),
+            'Occupancy_room': lambda x: self.apps.report_occupancy_by_room_type(x[0]),
             'Occupancy_city': lambda x: self.apps.report_occupancy_by_city(x[0]),
             'Occupancy_date': lambda x: self.apps.report_occupancy_by_date_range(x[0], x[1]),
             'List_staff': lambda x: self.apps.report_staff_by_role(x[0]),
