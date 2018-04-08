@@ -2306,7 +2306,8 @@ class Apps(object):
             else:
                 nested_where_clause = nested_where_clause + '))'
             where_clause = ' AND '.join(
-                [attr + '=%s ' for attr in dictionary.iterkeys()])
+                [attr + '=%s' for attr in dictionary.iterkeys()]) + ' AND ' \
+                if dictionary else ''
             where_clause = where_clause + nested_where_clause
             where_clause = where_clause % tuple(dictionary.values())
             # SELECT statement is ready. Get Pandas DataFrame and return it.
