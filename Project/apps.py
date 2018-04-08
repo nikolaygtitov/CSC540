@@ -2356,7 +2356,7 @@ class Apps(object):
         # Construct total amount due Pandas DataFrame
         total_due_df = pd.read_sql(GENERATE_BILL_TOTAL_AMOUNT_DUE,
                                    con=self.maria_db_connection,
-                                   params=reservation_id)
+                                   params=reservation_id * 2)
         # Construct list of itemized charges as Pandas DataFrame
         itemized_df = pd.read_sql(GENERATE_BILL_ITEMIZED_CHARGES,
                                   con=self.maria_db_connection,
