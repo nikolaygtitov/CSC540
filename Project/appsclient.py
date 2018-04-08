@@ -184,26 +184,28 @@ class AppsClient(object):
         set_dict = param_dict['set']
         arg_list = [set_dict[key] for key in api_info.attr_names]
 
-        result = {
-            'Generate_bill' : lambda x: self.apps.generate_bill(x[0]),
-            'Occupancy_hotel': lambda x: self.apps.report_occupancy_by_hotel(x[0]),
-            'Occupancy_room': lambda x: self.apps.report_occupancy_by_room_type(x[0]),
-            'Occupancy_city': lambda x: self.apps.report_occupancy_by_city(x[0]),
-            'Occupancy_date': lambda x: self.apps.report_occupancy_by_date_range(x[0], x[1]),
-            'List_staff': lambda x: self.apps.report_staff_by_role(x[0]),
-            'Customer_inter': lambda x: self.apps.report_customer_interactions(x[0]),
-            'Revenue_hotel': lambda x: self.apps.report_revenue_single_hotel(x[0], x[1], x[2]),
-            'Revenue_all': lambda x: self.apps.report_revenue_all_hotels(x[0], x[1])
-        }[api_info.report_name](arg_list)
+        with sql_transaction(self.db):
+            result = {
+                'Generate_bill' : lambda x: self.apps.generate_bill(x[0]),
+                'Occupancy_hotel': lambda x: self.apps.report_occupancy_by_hotel(x[0]),
+                'Occupancy_room': lambda x: self.apps.report_occupancy_by_room_type(x[0]),
+                'Occupancy_city': lambda x: self.apps.report_occupancy_by_city(x[0]),
+                'Occupancy_date': lambda x: self.apps.report_occupancy_by_date_range(x[0], x[1]),
+                'List_staff': lambda x: self.apps.report_staff_by_role(x[0]),
+                'Customer_inter': lambda x: self.apps.report_customer_interactions(x[0]),
+                'Revenue_hotel': lambda x: self.apps.report_revenue_single_hotel(x[0], x[1], x[2]),
+                'Revenue_all': lambda x: self.apps.report_revenue_all_hotels(x[0], x[1])
+            }[api_info.report_name](arg_list)
 
-        return result
+            return result
 
 
     def get_report_with_dict(self, param_dict, api_info):
         set_dict = param_dict['set']
         print set_dict
-        result = {
-            'Room_avail': lambda x: self.apps.room_availability(x)
-        }[api_info.report_name](set_dict)
+        with sql_transaction(self.db):
+            result = {
+                'Room_avail': lambda x: self.apps.room_availability(x)
+            }[api_info.report_name](set_dict)
 
-        return result
+            return result

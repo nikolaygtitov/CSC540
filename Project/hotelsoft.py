@@ -343,7 +343,6 @@ class HotelSoft(object):
             result = action.handler(param_dict, action.api_info)
 
             print '\nMenuAction Successful ' + u"\u2713"
-            self.db.commit()
             print tabulate(result, headers=result.columns.values.tolist(),
                            tablefmt='psql')
             print('\n')
