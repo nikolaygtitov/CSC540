@@ -548,7 +548,7 @@ def main():
                    AppsParams.room_avail, wolf_inn.client.get_report_with_dict))
     wolf_inn.add_menu_action(
         MenuAction('exec_demo_load', 'LOAD DEMO DATA',
-                   None, lambda: load_demo_data(db)))
+                   None, lambda x, y: load_demo_data(db)))
     # Add main menus
     wolf_inn.add_menu(Menu('main', 'MAIN MENU'))
     wolf_inn.add_menu(Menu('info', 'INFORMATION PROCESSING'))
