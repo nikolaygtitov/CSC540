@@ -1814,7 +1814,7 @@ class Apps(object):
                 select_attr = 'id, ' + select_attr
             # Determine all Reservation tuples
             self._execute_simple_select_query(
-                'id, check_out_time, hotel_id, room_number',
+                'id, check_in_time, check_out_time, hotel_id, room_number',
                 'Reservations', where_clause_dict)
             reservation_tuples = self.cursor.fetchall()
             # If check-in, do all check-in logic: i) Ensure that check-out
@@ -1827,10 +1827,12 @@ class Apps(object):
                     reservation_tuples is not None:
                 staff_df_result = None
                 for reservation in reservation_tuples:
-                    # Check if check-out has never been done previously
-                    if not reservation[1] or reservation[1] == 'NULL':
+                    # Check if neither check-in or check-out has never been
+                    # done previously
+                    if not reservation[1] or reservation[1] == 'NULL' and \
+                            not reservation[2] or reservation[2] == 'NULL':
                         staff_df = self._assign_staff_to_room(
-                            reservation[2], reservation[3], staff_id=None,
+                            reservation[3], reservation[4], staff_id=None,
                             reservation_id=reservation[0])
                         staff_df_result = staff_df.append(staff_df_result,
                                                           ignore_index=True)
@@ -1848,7 +1850,7 @@ class Apps(object):
                 df_result = None
                 for reservation in reservation_tuples:
                     # Check if check-out has never been done previously
-                    if not reservation[1] or reservation[1] == 'NULL':
+                    if not reservation[2] or reservation[2] == 'NULL':
                         staff_transact_df = self._check_out(
                             reservation[0], reservation_dict['check_out_time'])
                         df_result = staff_transact_df.append(df_result,
