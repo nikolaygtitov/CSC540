@@ -43,7 +43,8 @@ class AppsParams(object):
         'Customers',
         ['id', 'name', 'date_of_birth', 'phone_number', 'email', 'street', 'zip', 'ssn', 'account_number',
         'is_hotel_card'],
-        ['1', 'John Doe', '1992-04-04', '919-555-1212', 'john@email.com', '24354', '7145243' '0'],
+        ['1', 'John Doe', '1992-04-04', '919-555-1212', 'john@email.com', '100 Main Street', '24354',
+         '111-22-3333', '7145243', '0'],
         ['city', 'state'])
     reservations = CrudAttributes(
         'Reservations',

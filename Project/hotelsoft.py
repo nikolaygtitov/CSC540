@@ -177,6 +177,7 @@ class HotelSoft(object):
                     else:
                         print('\nNo result found for %s' % where_dict)
                         print('Please try again')
+                        where_dict = {}
 
             # Insert and update queries build a "set" dictionary
             if action.type == 'insert' or action.type == 'update' or action.type == 'report':
@@ -454,7 +455,7 @@ def main():
     # Add service menu options
     wolf_inn.get_menu('service').add(
         MenuOption('Add a service charge',
-                   wolf_inn.run_query('add_charge', 'service')))
+                   wolf_inn.run_query('insert_charge', 'service')))
     wolf_inn.get_menu('service').add(
         MenuOption('Update a service charge',
                    wolf_inn.run_query('update_charge', 'service')))
