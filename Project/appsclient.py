@@ -157,7 +157,7 @@ class AppsClient(object):
 
             return result
 
-    def delete(self, param_dict, arg_list, api_info):
+    def delete(self, param_dict, api_info):
         where_dict = param_dict['where']
 
         with sql_transaction(self.db):
