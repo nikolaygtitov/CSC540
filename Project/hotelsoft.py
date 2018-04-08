@@ -349,8 +349,9 @@ class HotelSoft(object):
                     print tabulate(result,
                                    headers=result.columns.values.tolist(),
                                    tablefmt='psql')
-            print tabulate(results, headers=results.columns.values.tolist(),
-                           tablefmt='psql')
+            else:
+                print tabulate(results, headers=results.columns.values.tolist(),
+                               tablefmt='psql')
             print('\n')
 
         # Run the next menu
