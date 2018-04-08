@@ -2363,7 +2363,8 @@ class Apps(object):
                                   con=self.maria_db_connection,
                                   params=reservation_id)
         # Return two concatenated Pandas DataFrames
-        return pd.concat((total_due_df, itemized_df), axis=1)
+        return [itemized_df, total_due_df]
+        # return pd.concat((total_due_df, itemized_df), axis=1)
 
     # Reports apps implemented below.
     def report_occupancy_by_hotel(self, query_date):

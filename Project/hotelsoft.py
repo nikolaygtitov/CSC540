@@ -341,10 +341,15 @@ class HotelSoft(object):
 
             # Package up the set and where dictionaries and call api
             param_dict = {'set': set_dict, 'where': where_dict}
-            result = action.handler(param_dict, action.api_info)
+            results = action.handler(param_dict, action.api_info)
 
             print '\nMenuAction Successful ' + u"\u2713"
-            print tabulate(result, headers=result.columns.values.tolist(),
+            if isinstance(results, list):
+                for result in results:
+                    print tabulate(result,
+                                   headers=result.columns.values.tolist(),
+                                   tablefmt='psql')
+            print tabulate(results, headers=results.columns.values.tolist(),
                            tablefmt='psql')
             print('\n')
 
