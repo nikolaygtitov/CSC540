@@ -106,14 +106,15 @@ class AppsClient(object):
 
     def insert(self, param_dict, api_info):
         set_dict = param_dict['set']
+        zip_result = None
 
         with sql_transaction(self.db):
             # If a city and state is present, insert the new zip
             if 'zip' in set_dict and 'city' in set_dict and 'state' in set_dict:
                 zip_dict = {k: set_dict[k] for k in ('city', 'state', 'zip') if k in set_dict}
-                result = self.apps.add_zip(zip_dict)
-                if not isinstance(result, pd.DataFrame):
-                    return result
+                zip_result = self.apps.add_zip(zip_dict)
+                if not isinstance(zip_result, pd.DataFrame):
+                    return zip_result
 
             # Remove extra arguments (city, state)
             item_dict = {k: set_dict[k] for k in api_info.attr_names if k in set_dict}
@@ -128,19 +129,22 @@ class AppsClient(object):
                 'Transactions': lambda x: self.apps.add_transaction(x)
             }[api_info.table_name](item_dict)
 
+            if zip_result is not None:
+                result = result.merge(zip_result, left_on='zip', right_on='zip', how='outer')
             return result
 
     def update(self, param_dict, api_info):
         set_dict = param_dict['set']
         where_dict = param_dict['where']
+        zip_result = None
 
         with sql_transaction(self.db):
             # If a city and state is present, insert the new zip
             if 'zip' in set_dict and 'city' in set_dict and 'state' in set_dict:
                 zip_dict = {k: set_dict[k] for k in ('city', 'state', 'zip') if k in set_dict}
-                result = self.apps.add_zip(zip_dict)
-                if not isinstance(result, pd.DataFrame):
-                    return result
+                zip_result = self.apps.add_zip(zip_dict)
+                if not isinstance(zip_result, pd.DataFrame):
+                    return zip_result
 
             # Remove extra arguments (city, state)
             item_dict = {k: set_dict[k] for k in api_info.attr_names if k in set_dict}
@@ -156,11 +160,13 @@ class AppsClient(object):
                 'Transactions': lambda x,y: self.apps.update_transaction(x,y)
             }[api_info.table_name](item_dict, where_clause_dict)
 
+            if zip_result is not None:
+                result = result.merge(zip_result, left_on='zip', right_on='zip', how='outer')
             return result
 
     def delete(self, param_dict, api_info):
         where_dict = param_dict['where']
-
+        print where_dict
         with sql_transaction(self.db):
             # select the correct API and submit
             result = {
