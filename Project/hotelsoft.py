@@ -243,6 +243,30 @@ class HotelSoft(object):
 # end of HotelSoft class
 
 
+def get_db():
+    try:
+        db_choice = int(raw_input('\nEnter database settings manually (1) or use default (2): '))
+        if db_choice < 1 or db_choice > 2:
+            raise ValueError('Out of range')
+    except ValueError:
+        print('Invalid input')
+        return get_db()
+    if db_choice == 1:
+        try:
+            host = raw_input('Enter hostname/ip for database: ')
+            user = raw_input('Enter username: ')
+            password = raw_input('Enter password: ')
+            database = raw_input('Enter database: ')
+            db = maria_db.connect(host=host, user=user, password=password, database=database)
+            return (True, db)
+        except maria_db.Error:
+            print ('Unable to establish database connection')
+            return get_db()
+    else:
+        return (False, None)
+
+
+
 ################################################################################
 # Build the hotel software and runs the program
 ################################################################################
@@ -252,14 +276,17 @@ def main():
     if len(sys.argv) == 2 and sys.argv[1] == '-c':
         check = True
 
-    ###############################################################
-    # Update database details with correct settings               #
-    db = maria_db.connect(host='127.0.0.1',  #
-                          user='pscott',  #
-                          password='FK8bb"IAlgnYGT8;G!/gy|SQ~',  #
-                          database='wolfinn')  #
-    ###############################################################
-
+    (found_new_db, new_db) = get_db()
+    if found_new_db:
+        db = new_db
+    else:
+        ###############################################################
+        # Default database settings                                   #
+        db = maria_db.connect(host='classdb2.csc.ncsu.edu',           #
+                              user='ngtitov',                         #
+                              password='001029047',                   #
+                              database='ngtitov')                     #
+        ###############################################################
 
     wolf_inn = HotelSoft('WOLF INN RALEIGH', db, check)
 
@@ -302,11 +329,11 @@ def main():
     wolf_inn.add_menu_action(
         MenuAction('delete_charge', 'DELETE A TRANSACTION', AppsParams.transactions, wolf_inn.client.delete))
     wolf_inn.add_menu_action(
-        MenuAction('check_in', 'CHECK IN A GUEST', None, wolf_inn.client.get_report))
+        MenuAction('update_check_in', 'CHECK IN A GUEST', AppsParams.reservations, wolf_inn.client.update))
     wolf_inn.add_menu_action(
-        MenuAction('check_out', 'CHECK OUT A GUEST', None, wolf_inn.client.get_report))
+        MenuAction('update_check_out', 'CHECK OUT A GUEST', AppsParams.reservations, wolf_inn.client.update))
     wolf_inn.add_menu_action(
-        MenuAction('assign_staff', 'ASSIGN STAFF TO A ROOM', None, wolf_inn.client.get_report))
+        MenuAction('update_assign_staff', 'ASSIGN STAFF TO A ROOM', AppsParams.staff, wolf_inn.client.update))
     wolf_inn.add_menu_action(
         MenuAction('report_gen_bill', 'GENERATE BILL', AppsParams.gen_bill, wolf_inn.client.get_report))
     wolf_inn.add_menu_action(
@@ -440,13 +467,13 @@ def main():
                    wolf_inn.run_query('delete_res', 'reservations')))
     wolf_inn.get_menu('reservations').add(
         MenuOption('Assign a room (check-in)',
-                   wolf_inn.run_query('check_in', 'reservations')))
+                   wolf_inn.run_query('update_check_in', 'reservations')))
     wolf_inn.get_menu('reservations').add(
         MenuOption('Release a room (check-out)',
-                   wolf_inn.run_query('check_out', 'reservations')))
+                   wolf_inn.run_query('update_check_out', 'reservations')))
     wolf_inn.get_menu('reservations').add(
         MenuOption('Assign staff to room',
-                   wolf_inn.run_query('assign_staff', 'reservations')))
+                   wolf_inn.run_query('update_assign_staff', 'reservations')))
     wolf_inn.get_menu('reservations').add(
         MenuOption('Return to previous menu', wolf_inn.show_menu('info')))
     wolf_inn.get_menu('reservations').add(
