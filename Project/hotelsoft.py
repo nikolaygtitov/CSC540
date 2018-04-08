@@ -341,11 +341,17 @@ class HotelSoft(object):
 
             # Package up the set and where dictionaries and call api
             param_dict = {'set': set_dict, 'where': where_dict}
-            result = action.handler(param_dict, action.api_info)
+            results = action.handler(param_dict, action.api_info)
 
             print '\nMenuAction Successful ' + u"\u2713"
-            print tabulate(result, headers=result.columns.values.tolist(),
-                           tablefmt='psql')
+            if isinstance(results, list):
+                for result in results:
+                    print tabulate(result,
+                                   headers=result.columns.values.tolist(),
+                                   tablefmt='psql')
+            else:
+                print tabulate(results, headers=results.columns.values.tolist(),
+                               tablefmt='psql')
             print('\n')
 
         # Run the next menu
@@ -509,10 +515,10 @@ def main():
                    AppsParams.transactions, wolf_inn.client.delete))
     wolf_inn.add_menu_action(
         MenuAction('update_check_in', 'CHECK IN A GUEST',
-                   AppsParams.reservations, wolf_inn.client.update))
+                   AppsParams.check_in, wolf_inn.client.update))
     wolf_inn.add_menu_action(
         MenuAction('update_check_out', 'CHECK OUT A GUEST',
-                   AppsParams.reservations, wolf_inn.client.update))
+                   AppsParams.check_out, wolf_inn.client.update))
     wolf_inn.add_menu_action(
         MenuAction('update_assign_staff', 'ASSIGN STAFF TO A ROOM',
                    AppsParams.staff, wolf_inn.client.update))
@@ -546,7 +552,9 @@ def main():
     wolf_inn.add_menu_action(
         MenuAction('report_room_avail', 'ROOM AVAILABILITY',
                    AppsParams.room_avail, wolf_inn.client.get_report_with_dict))
-
+    wolf_inn.add_menu_action(
+        MenuAction('exec_demo_load', 'LOAD DEMO DATA',
+                   None, lambda x, y: load_demo_data(db)))
     # Add main menus
     wolf_inn.add_menu(Menu('main', 'MAIN MENU'))
     wolf_inn.add_menu(Menu('info', 'INFORMATION PROCESSING'))
@@ -569,7 +577,8 @@ def main():
     wolf_inn.get_menu('main').add(
         MenuOption('Reports', wolf_inn.store_menu('reports')))
     wolf_inn.get_menu('main').add(
-        MenuOption('Load Test Data', lambda: load_demo_data(db)))
+        MenuOption('Load Test Data',
+                   wolf_inn.store_action('exec_demo_load', 'main')))
     wolf_inn.get_menu('main').add(MenuOption('Exit', wolf_inn.exit_program))
 
     # Add information management menu options
