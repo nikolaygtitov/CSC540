@@ -428,7 +428,7 @@ class Apps(object):
                 # assigned room to NULL
                 staff_df = self.update_staff(
                     {'assigned_hotel_id': None, 'assigned_room_number': None},
-                    {'id': staff_id})
+                    {'id': staff_id[0]})
                 staff_df_result = staff_df.append(staff_df_result,
                                                   ignore_index=True)
             if staff_df_result is not None:
@@ -1814,7 +1814,7 @@ class Apps(object):
                 select_attr = 'id, ' + select_attr
             # Determine all Reservation tuples
             self._execute_simple_select_query(
-                'id, check_out_time, hotel_id, ' 'room_number',
+                'id, check_out_time, hotel_id, room_number',
                 'Reservations', where_clause_dict)
             reservation_tuples = self.cursor.fetchall()
             # If check-in, do all check-in logic: i) Ensure that check-out
