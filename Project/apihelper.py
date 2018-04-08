@@ -2,6 +2,10 @@ from apps import Apps
 import pandas as pd
 from util import sql_transaction
 
+###############################
+OBSOLETE AND PRESENTLY UNUSED
+Keeping in repository for reference
+###############################
 
 class ArgList(object):
     zip = ['zip', 'city', 'state']
