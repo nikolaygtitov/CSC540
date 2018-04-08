@@ -368,8 +368,8 @@ class Apps(object):
 
         TODO:
         """
-        where_attr_delete_format = ', '.join([attr + '=%s' for attr in
-                                              dictionary.iterkeys()])
+        where_attr_delete_format = ' AND '.join([attr + '=%s' for attr in
+                                                dictionary.iterkeys()])
         where_attr_select = ' AND '.join(
             [attr + '=' + value for attr, value in dictionary.iteritems()])
         # Generate delete query statement
