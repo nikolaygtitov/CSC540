@@ -563,7 +563,8 @@ class Apps(object):
             room_tuple = self.cursor.fetchall()
             if room_tuple is not None:
                 room_category = room_tuple[0][0].split()
-                if 'presidential' in room_category.lower():
+                if 'presidential' in (category.lower() for category in
+                                      room_category):
                     # This is Presidential Suite
                     # Verify that this reservation is still active
                     self._execute_simple_select_query(
@@ -1327,7 +1328,7 @@ class Apps(object):
                     serves_df_result = None
                     for staff in staff_tuples:
                         serves_df = self.add_serves(
-                            {'staff_id': staff[0],
+                            {'staff_id': staff,
                              'reservation_id': reservation_id})
                         serves_df_result = serves_df.append(serves_df_result,
                                                             ignore_index=True)
