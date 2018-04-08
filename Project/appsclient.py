@@ -51,6 +51,14 @@ class AppsParams(object):
         ['id', 'number_of_guests', 'start_date', 'end_date', 'hotel_id', 'room_number', 'customer_id',
         'check_in_time', 'check_out_time'],
         ['1', '2', '2018-5-1', '2018-5-5', '1', '100', '1', '2018-5-1 2:00:00', '2018-5-5 10:00:00'])
+    check_in = CrudAttributes(
+        'Reservations',
+        ['id', 'check_in_time'],
+        ['reservation id', 'YYYY-MM-DD HH:MM:SS'])
+    check_out = CrudAttributes(
+        'Reservations',
+        ['id', 'check_out_time'],
+        ['reservation id', 'YYYY-MM-DD HH:MM:SS'])
     transactions = CrudAttributes(
         'Transactions',
         ['id', 'amount', 'type', 'date', 'reservation_id'],

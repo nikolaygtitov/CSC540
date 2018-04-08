@@ -515,10 +515,10 @@ def main():
                    AppsParams.transactions, wolf_inn.client.delete))
     wolf_inn.add_menu_action(
         MenuAction('update_check_in', 'CHECK IN A GUEST',
-                   AppsParams.reservations, wolf_inn.client.update))
+                   AppsParams.check_in, wolf_inn.client.update))
     wolf_inn.add_menu_action(
         MenuAction('update_check_out', 'CHECK OUT A GUEST',
-                   AppsParams.reservations, wolf_inn.client.update))
+                   AppsParams.check_out, wolf_inn.client.update))
     wolf_inn.add_menu_action(
         MenuAction('update_assign_staff', 'ASSIGN STAFF TO A ROOM',
                    AppsParams.staff, wolf_inn.client.update))
