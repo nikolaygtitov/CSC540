@@ -1362,7 +1362,7 @@ class Apps(object):
                         staff_df = self._assign_staff_to_room(
                             staff_dict['assigned_hotel_id'],
                             staff_dict['assigned_room_number'],
-                            staff_id=staff[0], reservation_id=reservation_id)
+                            staff_id=staff, reservation_id=reservation_id)
                         staff_df_result = staff_df.append(staff_df_result,
                                                           ignore_index=True)
                     # Execute update query
