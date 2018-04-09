@@ -200,8 +200,11 @@ class Apps(object):
         where_attr_format = ' AND '.join([attr + '=%s' for attr in
                                           where_clause_dict.iterkeys()])
         # Generate select query statement and execute it
-        select_query = "SELECT {} FROM {} WHERE {}".format(
-            attributes, table_name, where_attr_format)
+        if where_clause_dict:
+            select_query = "SELECT {} FROM {} WHERE {}".format(
+                attributes, table_name, where_attr_format)
+        else:
+            select_query = "SELECT {} FROM {}".format(attributes, table_name)
         self.cursor.execute(select_query, where_clause_dict.values())
 
     def _execute_select_query(self, attributes, table_name, where_clause=None,
@@ -236,11 +239,15 @@ class Apps(object):
         TODO:
         """
         # Generate select query statement and execute it
-        if where_clause and where_values_list:
+        if where_clause is not None and where_values_list is not None:
             select_query = "SELECT {} FROM {} WHERE {}".format(
                 attributes, table_name, where_clause)
             # Execute select query with complicated WHERE clause
             self.cursor.execute(select_query, where_values_list)
+        else:
+            select_query = "SELECT {} FROM {}".format(attributes, table_name)
+            # Execute select query with complicated WHERE clause
+            self.cursor.execute(select_query)
 
     def _execute_insert_query(self, dictionary, table_name):
         """
@@ -1814,7 +1821,7 @@ class Apps(object):
                 select_attr = 'id, ' + select_attr
             # Determine all Reservation tuples
             self._execute_simple_select_query(
-                'id, check_out_time, hotel_id, room_number',
+                'id, check_in_time, check_out_time, hotel_id, room_number',
                 'Reservations', where_clause_dict)
             reservation_tuples = self.cursor.fetchall()
             # If check-in, do all check-in logic: i) Ensure that check-out
@@ -1827,10 +1834,12 @@ class Apps(object):
                     reservation_tuples is not None:
                 staff_df_result = None
                 for reservation in reservation_tuples:
-                    # Check if check-out has never been done previously
-                    if not reservation[1] or reservation[1] == 'NULL':
+                    # Check if neither check-in or check-out has never been
+                    # done previously
+                    if not reservation[1] or reservation[1] == 'NULL' and \
+                            not reservation[2] or reservation[2] == 'NULL':
                         staff_df = self._assign_staff_to_room(
-                            reservation[2], reservation[3], staff_id=None,
+                            reservation[3], reservation[4], staff_id=None,
                             reservation_id=reservation[0])
                         staff_df_result = staff_df.append(staff_df_result,
                                                           ignore_index=True)
@@ -1848,7 +1857,7 @@ class Apps(object):
                 df_result = None
                 for reservation in reservation_tuples:
                     # Check if check-out has never been done previously
-                    if not reservation[1] or reservation[1] == 'NULL':
+                    if not reservation[2] or reservation[2] == 'NULL':
                         staff_transact_df = self._check_out(
                             reservation[0], reservation_dict['check_out_time'])
                         df_result = staff_transact_df.append(df_result,
