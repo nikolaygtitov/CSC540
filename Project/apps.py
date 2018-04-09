@@ -1841,8 +1841,9 @@ class Apps(object):
                         staff_df = self._assign_staff_to_room(
                             reservation[3], reservation[4], staff_id=None,
                             reservation_id=reservation[0])
-                        staff_df_result = staff_df.append(staff_df_result,
-                                                          ignore_index=True)
+                        if staff_df is not None:
+                            staff_df_result = staff_df.append(staff_df_result,
+                                                              ignore_index=True)
                 # Execute update query
                 data_frame = self._execute_update_query(
                     select_attr, 'Reservations', reservation_dict,
