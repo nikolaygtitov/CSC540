@@ -294,11 +294,15 @@ class HotelSoft(object):
                         if item != '':
                             where_dict[arg] = item
 
+                        # Try to find row - we may be able to end early
+                        search_result = self.client.select(
+                            where_dict, action.api_info.table_name)
+                        number_found = len(search_result)
+                        if number_found <= 1:
+                            break
+
                     # See if that item can be found
                     # If not, reprompt and try again
-                    search_result = self.client.select(where_dict,
-                                                       action.api_info.table_name)
-                    number_found = len(search_result)
                     if number_found > 0:
                         print('\n')
                         print tabulate(search_result,
@@ -446,10 +450,14 @@ def get_db():
             #                       password='001029047',                   #
             #                       database='ngtitov')                     #
             # ###############################################################
+            # db = maria_db.connect(host='classdb2.csc.ncsu.edu',
+            #                       user='pdscott2',
+            #                       password='2CGxZg27R3utum',
+            #                       database='pdscott2')
             db = maria_db.connect(host='classdb2.csc.ncsu.edu',
-                                  user='pdscott2',
-                                  password='2CGxZg27R3utum',
-                                  database='pdscott2')
+                                  user='nfschnoo',
+                                  password='001027748',
+                                  database='nfschnoo')
             return db
         except maria_db.Error:
             print ('Unable to establish database connection')
