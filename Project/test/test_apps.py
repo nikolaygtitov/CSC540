@@ -324,6 +324,89 @@ class TestApps(SQLUnitTestBase):
         })
         df = apps.delete_hotel({'name': 'Test Hotel'})
         self.assertEqual(0, len(df.index))
+
+    def test_add_staff(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        # Do not assign to room when created
+        df = apps.add_staff(
+            {'name': 'FirstTest LastTest', 'title': 'Room Service Staff',
+             'date_of_birth': '1985-04-05', 'department': 'Service',
+             'phone_number': '(919)-555-1111', 'street': 'TestStreet',
+             'zip': '27606', 'works_for_hotel_id': 2})
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual('FirstTest LastTest', row['name'])
+        self.assertEqual('Room Service Staff', row['title'])
+        self.assertEqual('1985-04-05', row['date_of_birth'])
+        self.assertEqual('Service', row['department'])
+        self.assertEqual('(919)-555-1111', row['phone_number'])
+        self.assertEqual('TestStreet', row['street'])
+        self.assertEqual('27606', row['zip'])
+        self.assertEqual(2, row['works_for_hotel_id'])
+        # Assign staff to room when created
+        df = apps.add_staff(
+            {'name': 'FirstTestTwo LastTestTwo', 'title': 'Room Service Staff',
+             'date_of_birth': '1989-03-10', 'department': 'Service',
+             'phone_number': '(919)-666-2222', 'street': 'TestStreetTwo',
+             'zip': '27606', 'works_for_hotel_id': 9,
+             'assigned_hotel_id': 9, 'assigned_room_number': 100})
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual('FirstTestTwo LastTestTwo', row['name'])
+        self.assertEqual('Room Service Staff', row['title'])
+        self.assertEqual('1989-03-10', row['date_of_birth'])
+        self.assertEqual('Service', row['department'])
+        self.assertEqual('(919)-666-2222', row['phone_number'])
+        self.assertEqual('TestStreetTwo', row['street'])
+        self.assertEqual('27606', row['zip'])
+        self.assertEqual(9, row['works_for_hotel_id'])
+        self.assertEqual(9, row['assigned_hotel_id'])
+        self.assertEqual(100, row['assigned_room_number'])
+        self.assertEqual(11, row['Serves_staff_id'])
+        self.assertEqual(9, row['Serves_reservation_id'])
+        apps.cursor.close()
+
+    def test_update_staff(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        # Assign to a room and also update some other 3 attributes
+        # Search is done based on Name not ID, but should return ID as well
+        df = apps.update_staff(
+            {'date_of_birth': '1945-05-09',
+             'phone_number': '(919)-222-0202',
+             'street': 'Staff Updated St., Apt. A',
+             'assigned_hotel_id': 9, 'assigned_room_number': 100},
+            {'name': 'FirstStaff LastStaff'})
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual(9, row['id'])
+        self.assertEqual('1945-05-09', row['date_of_birth'])
+        self.assertEqual('(919)-222-0202', row['phone_number'])
+        self.assertEqual('Staff Updated St., Apt. A', row['street'])
+        self.assertEqual(9, row['assigned_hotel_id'])
+        self.assertEqual(100, row['assigned_room_number'])
+        self.assertEqual(9, row['Serves_staff_id'])
+        self.assertEqual(9, row['Serves_reservation_id'])
+        apps.cursor.close()
+        # Free staff from reservation based on ID
+        df = apps.update_staff(
+            {'assigned_hotel_id': None, 'assigned_room_number': None},
+            {'id': 9})
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual(9, row['id'])
+        self.assertEqual('NULL', row['assigned_hotel_id'])
+        self.assertEqual('NULL', row['assigned_room_number'])
+        apps.cursor.close()
+
+    def test_delete_staff(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        df = apps.delete_staff({'id': 9})
+        self.assertEqual(0, len(df.index))
+        df = apps.get_data_frame('*', 'Staff')
+        self.assertEqual(8, len(df.index))
         apps.cursor.close()
 
     def test_report_occupancy_by_hotel(self):

@@ -211,7 +211,9 @@ class SQLUnitTestBase(unittest.TestCase):
             ['Wolf Inn Los Angeles Kings', '640 Irolo St',
              '90010', '323-920-3782'],
             ['Wolf Inn Los Angeles Sharks',
-             '9000 Lincoln Ave', '90050', '213-628-8344']
+             '9000 Lincoln Ave', '90050', '213-628-8344'],
+            ['Nikolay Test Inn',
+             '1111 Who Knows Dr.', '27606', '(919)-555-5555']
         ]
         for row in hotel_data:
             cursor.execute('INSERT INTO Hotels(name, street, zip, phone_number)'
@@ -226,7 +228,8 @@ class SQLUnitTestBase(unittest.TestCase):
             [5, 200, 'Deluxe', 2, 350.40],
             [6, 300, 'Executive Suite', 1, 600.00],
             [7, 400, 'Presidential Suite', 1, 1200.00],
-            [8, 400, 'Presidential Suite', 1, 2000.00]
+            [8, 400, 'Presidential Suite', 1, 2000.00],
+            [9, 100, 'Economy', 2, 100.00]
         ]
         for row in room_data:
             cursor.execute("INSERT INTO "
@@ -236,9 +239,11 @@ class SQLUnitTestBase(unittest.TestCase):
         # Staff
         staff_data = [
             ['Joe S. Rogan', 'Manager', '1970-08-30', 'Management Department',
-             '919-398-1209', '2505 Avent Ferry Rd, Apt. A', '27606', 2],
+             '919-398-1209', '2505 Avent Ferry Rd, Apt. A', '27606', 2, None,
+             None],
             ['Conor McGregor', 'Front Desk Representative', '1989-06-25',
-             'Front End', '213-738-9201', '830 Sunshine St', '90050', 8],
+             'Front End', '213-738-9201', '830 Sunshine St', '90050', 8, None,
+             None],
             ['Luke Rockhold', 'Room Service Staff', '1984-09-05',
              'Room Service Department', '323-832-8912', '7626 Banana Lane',
              '90010', 7, 7, 400],
@@ -246,28 +251,27 @@ class SQLUnitTestBase(unittest.TestCase):
              '215-839-2508', '409 Stamp St, Apt. 213', '02130', 5, 5, 200],
             ['Tony Ferguson', 'Billing Staff', '1986-12-31',
              'Billing Department', '929-029-2789', '644 10th Ave, Apt. 12',
-             '10001', 3],
+             '10001', 3, None, None],
             ['Brian Ortega', 'Repairman', '1970-08-30', 'Repairs Department',
-             '215-348-7853', '6409 Walnut St, Apt. 409', '19141', 4],
+             '215-348-7853', '6409 Walnut St, Apt. 409', '19141', 4, None,
+             None],
             ['Robbie Lawler', 'Janitor', '1970-08-30', 'Cleaning Department',
-             '305-638-9832', '6559 Oyster Lane', '33222', 6],
+             '305-638-9832', '6559 Oyster Lane', '33222', 6, None, None],
             ['Rory McDonald', 'Room Service Staff', '1980-02-15',
              'Room Service Department', '919-383-2991',
-             '2300 Sugar Bush Rd, Apt. 52', '27965', 2, 2, 200]
+             '2300 Sugar Bush Rd, Apt. 52', '27965', 2, 2, 200],
+            ['FirstStaff LastStaff', 'Catering Staff', '1956-05-09',
+             'Cooking Hell Department', '(919)-111-0101',
+             'Staff St., Apt. 59', '27606', 9, None, None]
+
         ]
         for row in staff_data:
-            if len(row) == 8:
-                cursor.execute("INSERT INTO "
-                               "Staff(name, title, date_of_birth, department, "
-                               "phone_number, street, zip, works_for_hotel_id)"
-                               "VALUES(%s, %s, %s, %s, %s, %s, %s, %s)", row)
-            else:
-                cursor.execute("INSERT INTO "
-                               "Staff(name, title, date_of_birth, department, "
-                               "phone_number, street, zip, works_for_hotel_id,"
-                               "assigned_hotel_id, assigned_room_number)"
-                               "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                               row)
+            cursor.execute("INSERT INTO "
+                           "Staff(name, title, date_of_birth, department, "
+                           "phone_number, street, zip, works_for_hotel_id,"
+                           "assigned_hotel_id, assigned_room_number)"
+                           "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                           row)
 
         # Customers
         customer_data = [
@@ -326,7 +330,9 @@ class SQLUnitTestBase(unittest.TestCase):
             [1, '2018-01-16', '2018-01-20',
              '2018-01-17 04:45:00', '2018-01-20 11:52:19', 7, 400, 3],
             [1, '2018-02-25', '2018-02-26',
-             '2018-02-25 03:41:21', '2018-02-26 13:12:55', 8, 400, 4]
+             '2018-02-25 03:41:21', '2018-02-26 13:12:55', 8, 400, 4],
+            [1, '2018-04-08', '2018-04-10',
+             '2018-04-08 12:12:12', None, 9, 100, 1]
         ]
 
         for row in reservation_data:

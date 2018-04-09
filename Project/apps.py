@@ -551,15 +551,13 @@ class Apps(object):
                 'Found multiple active reservations for room \'{}\' in hotel ' \
                 '\'{}\' with a checked-in customer. Cannot assign staff to ' \
                 'multiple room simultaneously.\n'
-            if reservation_tuples is not None:
-                serves_df = self.add_serves(
-                    {'staff_id': staff_id,
-                     'reservation_id': reservation_tuples[0][0]})
-                serves_df = serves_df.rename(
-                    index=str,
-                    columns={'staff_id': 'Serves_staff_id',
-                             'reservation_id': 'Serves_reservation_id'})
-                return serves_df
+            serves_df = self.add_serves(
+                {'staff_id': staff_id,
+                 'reservation_id': reservation_tuples[0][0]})
+            serves_df = serves_df.rename(
+                index=str, columns={'staff_id': 'Serves_staff_id',
+                                    'reservation_id': 'Serves_reservation_id'})
+            return serves_df
         if reservation_id is not None and staff_id is None:
             # Staff is assigned from add_reservation() or
             # update_reservation() functions
