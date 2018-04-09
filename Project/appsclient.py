@@ -21,75 +21,91 @@ class ReportAttributes(Attributes):
 class AppsParams(object):
     zip = CrudAttributes(
         'ZipToCityState',
-        ['zip', 'city', 'state'],
-        ['24354', 'Marion', 'VA'])
+        {'where':['zip', 'city', 'state'],'set':['zip', 'city', 'state']},
+        {'where':['24354', 'Marion', 'VA'], 'set':['24354', 'Marion', 'VA']})
     hotels = CrudAttributes(
         'Hotels',
-        ['id', 'name', 'street', 'zip', 'phone_number'],
-        ['1', 'Wolf Inn Raleigh', '100 Main Street', '24354', '919-555-1212'],
+        {'where':['id', 'name', 'street', 'zip', 'phone_number'],'set':['id', 'name', 'street', 'zip', 'phone_number']},
+        {'where':['1', 'Wolf Inn Raleigh', '100 Main Street', '24354', '919-555-1212'],
+        'set':['1', 'Wolf Inn Raleigh', '100 Main Street', '24354', '919-555-1212']},
         ['city', 'state'])
     rooms = CrudAttributes(
         'Rooms',
-        ['hotel_id', 'room_number', 'category', 'occupancy', 'rate'],
-        ['1', '100', 'Economy', '2', '85.00'])
+        {'where':['hotel_id', 'room_number', 'category', 'occupancy', 'rate'],'set':['hotel_id', 'room_number', 'category', 'occupancy', 'rate']},
+        {'where':['1', '100', 'Economy', '2', '85.00'],'set':['1', '100', 'Economy', '2', '85.00']})
     staff = CrudAttributes(
         'Staff',
-        ['id', 'name', 'title', 'date_of_birth', 'department', 'phone_number', 'street', 'zip',
+        {'where':['id', 'name', 'title', 'date_of_birth', 'department', 'phone_number', 'street', 'zip',
         'works_for_hotel_id', 'assigned_hotel_id', 'assigned_room_number'],
-        ['1', 'John Doe', 'Manager', '1992-04-04', 'Maintenance', '919-555-1212', '100 Main Street', '25354',
+        'set':['id', 'name', 'title', 'date_of_birth', 'department', 'phone_number', 'street', 'zip',
+        'works_for_hotel_id', 'assigned_hotel_id', 'assigned_room_number']},
+        {'where':['1', 'John Doe', 'Manager', '1992-04-04', 'Maintenance', '919-555-1212', '100 Main Street', '25354',
         '1','1','100'],
+        'set':['1', 'John Doe', 'Manager', '1992-04-04', 'Maintenance', '919-555-1212', '100 Main Street', '25354',
+        '1','1','100']},
         ['city', 'state'])
     customers = CrudAttributes(
         'Customers',
-        ['id', 'name', 'date_of_birth', 'phone_number', 'email', 'street', 'zip', 'ssn', 'account_number',
+        {'where':['id', 'name', 'date_of_birth', 'phone_number', 'email', 'street', 'zip', 'ssn', 'account_number',
         'is_hotel_card'],
-        ['1', 'John Doe', '1992-04-04', '919-555-1212', 'john@email.com', '100 Main Street', '24354',
+        'set':['id', 'name', 'date_of_birth', 'phone_number', 'email', 'street', 'zip', 'ssn', 'account_number',
+        'is_hotel_card']},
+        {'where':['1', 'John Doe', '1992-04-04', '919-555-1212', 'john@email.com', '100 Main Street', '24354',
          '111-22-3333', '7145243', '0'],
+         'set':['1', 'John Doe', '1992-04-04', '919-555-1212', 'john@email.com', '100 Main Street', '24354',
+         '111-22-3333', '7145243', '0']},
         ['city', 'state'])
     reservations = CrudAttributes(
         'Reservations',
-        ['id', 'number_of_guests', 'start_date', 'end_date', 'hotel_id', 'room_number', 'customer_id',
+        {'where':['id', 'number_of_guests', 'start_date', 'end_date', 'hotel_id', 'room_number', 'customer_id',
         'check_in_time', 'check_out_time'],
-        ['1', '2', '2018-5-1', '2018-5-5', '1', '100', '1', '2018-5-1 2:00:00', '2018-5-5 10:00:00'])
+        'set':['id', 'number_of_guests', 'start_date', 'end_date', 'hotel_id', 'room_number', 'customer_id',
+        'check_in_time', 'check_out_time']},
+        {'where':['1', '2', '2018-5-1', '2018-5-5', '1', '100', '1', '2018-5-1 2:00:00', '2018-5-5 10:00:00'],
+        'set':['1', '2', '2018-5-1', '2018-5-5', '1', '100', '1', '2018-5-1 2:00:00', '2018-5-5 10:00:00']})
     check_in = CrudAttributes(
         'Reservations',
-        ['id', 'check_in_time'],
-        ['reservation id', 'YYYY-MM-DD HH:MM:SS'])
+        {'where':['id', 'number_of_guests', 'start_date', 'end_date', 'hotel_id', 'room_number', 'customer_id',
+        'check_in_time', 'check_out_time'],
+        'set':['id', 'check_in_time']},
+        {'where':['1', '2', '2018-5-1', '2018-5-5', '1', '100', '1', '2018-5-1 2:00:00', '2018-5-5 10:00:00'],
+        'set':['reservation id', 'YYYY-MM-DD HH:MM:SS']})
     check_out = CrudAttributes(
         'Reservations',
-        ['id', 'check_out_time'],
-        ['reservation id', 'YYYY-MM-DD HH:MM:SS'])
+        {'where':['id', 'number_of_guests', 'start_date', 'end_date', 'hotel_id', 'room_number', 'customer_id',
+        'check_in_time', 'check_out_time'],
+        'set':['id', 'check_out_time']},
+        {'where':['1', '2', '2018-5-1', '2018-5-5', '1', '100', '1', '2018-5-1 2:00:00', '2018-5-5 10:00:00'],
+        'set':['reservation id', 'YYYY-MM-DD HH:MM:SS']})
     transactions = CrudAttributes(
         'Transactions',
-        ['id', 'amount', 'type', 'date', 'reservation_id'],
-        ['1', '25.00', 'Room service', '2018-5-3', '1'])
+        {'where':['id', 'amount', 'type', 'date', 'reservation_id'],
+        'set':['id', 'amount', 'type', 'date', 'reservation_id']},
+        {'where':['1', '25.00', 'Room service', '2018-5-3', '1'],
+        'set':['1', '25.00', 'Room service', '2018-5-3', '1']})
     serves = CrudAttributes(
         'Serves',
         ['staff_id', 'reservation_id'],
         ['1', '1'])
-    gen_bill = ReportAttributes('Generate_bill', ['reservation_id'], ['1'])
-    occ_hotel = ReportAttributes('Occupancy_hotel', ['query_date'], ['2018-4-4'])
-    occ_room = ReportAttributes('Occupancy_room', ['query_date'], ['2018-4-4'])
-    occ_city = ReportAttributes('Occupancy_city', ['query_date'], ['2018-4-4'])
-    occ_date = ReportAttributes('Occupancy_date', ['start_date', 'end_date'], ['2018-4-4', '2018-4-8'])
-    list_staff = ReportAttributes('List_staff', ['hotel_id'], ['1'])
-    cust_inter = ReportAttributes('Customer_inter', ['reservation_id'], ['1'])
+    gen_bill = ReportAttributes('Generate_bill', {'set':['reservation_id']}, {'set':['1']})
+    occ_hotel = ReportAttributes('Occupancy_hotel', {'set':['query_date']}, {'set':['2018-4-4']})
+    occ_room = ReportAttributes('Occupancy_room', {'set':['query_date']}, {'set':['2018-4-4']})
+    occ_city = ReportAttributes('Occupancy_city', {'set':['query_date']}, {'set':['2018-4-4']})
+    occ_date = ReportAttributes('Occupancy_date', {'set':['start_date', 'end_date']}, {'set':['2018-4-4', '2018-4-8']})
+    list_staff = ReportAttributes('List_staff', {'set':['hotel_id']}, {'set':['1']})
+    cust_inter = ReportAttributes('Customer_inter', {'set':['reservation_id']}, {'set':['1']})
     rev_hotel = ReportAttributes('Revenue_hotel',
-                                 ['start_date', 'end_date', 'hotel_id'],
-                                 ['2018-4-4', '2018-4-8', '1'])
+                                 {'set':['start_date', 'end_date', 'hotel_id']},
+                                 {'set':['2018-4-4', '2018-4-8', '1']})
     rev_all = ReportAttributes('Revenue_all',
-                                 ['start_date', 'end_date'],
-                                 ['2018-4-4', '2018-4-8'])
+                                 {'set':['start_date', 'end_date']},
+                                 {'set':['2018-4-4', '2018-4-8']})
     cust_no_card = ReportAttributes('Customer_nocard',
-                                 ['start_date', 'end_date'],
-                                 ['2018-4-4', '2018-4-8'])
+                                 {'set':['start_date', 'end_date']},
+                                 {'where':['2018-4-4', '2018-4-8']})
     room_avail = ReportAttributes('Room_avail',
-                                 ['start_date', 'end_date', 'hotel_id', 'name', 'zip'],
-                                 ['2018-4-4', '2018-4-8', '1', 'Wolf Inn Raleigh', '24354'])
-
-
-
-
+                                 {'set':['start_date', 'end_date', 'hotel_id', 'name', 'zip']},
+                                 {'set':['2018-4-4', '2018-4-8', '1', 'Wolf Inn Raleigh', '24354']})
 
 ################################################################################
 # Interface from UI to API
@@ -125,7 +141,7 @@ class AppsClient(object):
                     return zip_result
 
             # Remove extra arguments (city, state)
-            item_dict = {k: set_dict[k] for k in api_info.attr_names if k in set_dict}
+            item_dict = {k: set_dict[k] for k in api_info.attr_names['set'] if k in set_dict}
 
             # select the correct API and submit
             result = {
@@ -155,8 +171,8 @@ class AppsClient(object):
                     return zip_result
 
             # Remove extra arguments (city, state)
-            item_dict = {k: set_dict[k] for k in api_info.attr_names if k in set_dict}
-            where_clause_dict = {k: where_dict[k] for k in api_info.attr_names if k in where_dict}
+            item_dict = {k: set_dict[k] for k in api_info.attr_names['set'] if k in set_dict}
+            where_clause_dict = {k: where_dict[k] for k in api_info.attr_names['set'] if k in where_dict}
 
             # select the correct API and submit
             result = {
@@ -190,7 +206,7 @@ class AppsClient(object):
 
     def get_report(self, param_dict, api_info):
         set_dict = param_dict['set']
-        arg_list = [set_dict[key] for key in api_info.attr_names]
+        arg_list = [set_dict[key] for key in api_info.attr_names['set']]
 
         with sql_transaction(self.db):
             result = {

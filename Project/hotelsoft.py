@@ -284,8 +284,8 @@ class HotelSoft(object):
                     print('<<Press enter to ignore a parameter>>\n')
 
                     # Enter one or more parameters to find the entry
-                    for index, arg in enumerate(action.api_info.attr_names):
-                        example = '(e.g. %s)' % action.api_info.examples[index]
+                    for index, arg in enumerate(action.api_info.attr_names['where']):
+                        example = '(e.g. %s)' % action.api_info.examples['where'][index]
                         val = (arg in where_dict and '[%s]' % where_dict[arg]
                                or '')
                         item = raw_input((
@@ -329,9 +329,9 @@ class HotelSoft(object):
                     print('(Press enter to ignore a parameter)')
 
                 # Enter the normal parameters
-                for index, arg in enumerate(action.api_info.attr_names):
+                for index, arg in enumerate(action.api_info.attr_names['set']):
                     item = raw_input(arg + '(e.g. %s): ' %
-                                     action.api_info.examples[index]).strip()
+                                     action.api_info.examples['set'][index]).strip()
                     if item != '':
                         set_dict[arg] = item
 
@@ -447,9 +447,9 @@ def get_db():
             #                       database='ngtitov')                     #
             # ###############################################################
             db = maria_db.connect(host='classdb2.csc.ncsu.edu',
-                                  user='nfschnoo',
-                                  password='001027748',
-                                  database='nfschnoo')
+                                  user='pdscott2',
+                                  password='2CGxZg27R3utum',
+                                  database='pdscott2')
             return db
         except maria_db.Error:
             print ('Unable to establish database connection')

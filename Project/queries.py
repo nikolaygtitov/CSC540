@@ -160,3 +160,12 @@ date AS 'Date'
 FROM Transactions
 WHERE reservation_id = %s
 """
+
+# TODO - comment
+QUERY_ASSIGNED_STAFF = """
+SELECT Staff.id as staff_id
+FROM Staff INNER JOIN Reservations
+ON assigned_hotel_id = Reservations.hotel_id
+AND assigned_room_number = Reservations.room_number
+WHERE Reservations.id = %s;
+"""
