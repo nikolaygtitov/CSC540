@@ -18,7 +18,7 @@ class TestApps(SQLUnitTestBase):
         apps = Apps(self._con, True)
         self._insert_test_data()
         df = apps.get_data_frame('*', 'Hotels')
-        self.assertEqual(8, len(df.index))
+        self.assertEqual(9, len(df.index))
         row = df.ix[0]
         self.assertEqual('Wolf Inn Raleigh Hurricanes', row['name'])
         self.assertEqual('100 Glenwood Ave', row['street'])
@@ -44,22 +44,22 @@ class TestApps(SQLUnitTestBase):
         self.assertEqual('213-628-8344', row['phone_number'])
         apps.cursor.close()
 
-    def test_get_data_frame_single_field(self):
+    def test_get_data_frame_multiple_fields(self):
         apps = Apps(self._con, True)
         self._insert_test_data()
         df = apps.get_data_frame('name, zip', 'Hotels',
-                                 'phone_number=213-628-8344')
+                                 "phone_number='213-628-8344'")
         self.assertEqual(1, len(df.index))
         row = df.ix[0]
         self.assertEqual('Wolf Inn Los Angeles Sharks', row['name'])
         self.assertEqual('90050', row['zip'])
         apps.cursor.close()
 
-    def test_get_data_frame_multiple_fields(self):
+    def test_get_data_frame_single_field(self):
         apps = Apps(self._con, True)
         self._insert_test_data()
         df = apps.get_data_frame('name', 'Hotels',
-                                 'phone_number=213-628-8344')
+                                 "phone_number='213-628-8344'")
         self.assertEqual(1, len(df.index))
         row = df.ix[0]
         self.assertEqual('Wolf Inn Los Angeles Sharks', row['name'])
@@ -281,11 +281,8 @@ class TestApps(SQLUnitTestBase):
     def test_update_hotel_id_does_not_exist(self):
         apps = Apps(self._con, True)
         self._insert_test_data()
-        try:
-            apps.update_hotel({'id': 10}, {'id': 100})
-            self.assertTrue(False)
-        except mariadb.Error:
-            pass
+        df = apps.update_hotel({'id': 10}, {'id': 100})
+        self.assertEqual(0, len(df.index))
         apps.cursor.close()
 
     def test_delete_hotel_id(self):
@@ -305,11 +302,8 @@ class TestApps(SQLUnitTestBase):
     def test_delete_hotel_id_does_not_exist(self):
         apps = Apps(self._con, True)
         self._insert_test_data()
-        try:
-            apps.delete_hotel({'id': 100})
-            self.assertTrue(False)
-        except mariadb.Error:
-            pass
+        df = apps.delete_hotel({'id': 100})
+        self.assertEqual(0, len(df.index))
         apps.cursor.close()
 
     def test_delete_hotel_name(self):
