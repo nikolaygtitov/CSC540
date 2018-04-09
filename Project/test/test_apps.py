@@ -14,6 +14,57 @@ class TestApps(SQLUnitTestBase):
                               database='nfschnoo')
         return con
 
+    def test_get_data_frame_star_no_where(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        df = apps.get_data_frame('*', 'Hotels')
+        self.assertEqual(9, len(df.index))
+        row = df.ix[0]
+        self.assertEqual('Wolf Inn Raleigh Hurricanes', row['name'])
+        self.assertEqual('100 Glenwood Ave', row['street'])
+        self.assertEqual('27965', row['zip'])
+        self.assertEqual('919-965-6743', row['phone_number'])
+        row = df.ix[7]
+        self.assertEqual('Wolf Inn Los Angeles Sharks', row['name'])
+        self.assertEqual('9000 Lincoln Ave', row['street'])
+        self.assertEqual('90050', row['zip'])
+        self.assertEqual('213-628-8344', row['phone_number'])
+        apps.cursor.close()
+
+    def test_get_data_frame_star_where_name(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        df = apps.get_data_frame('*', 'Hotels',
+                                 "name='Wolf Inn Los Angeles Sharks'")
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual('Wolf Inn Los Angeles Sharks', row['name'])
+        self.assertEqual('9000 Lincoln Ave', row['street'])
+        self.assertEqual('90050', row['zip'])
+        self.assertEqual('213-628-8344', row['phone_number'])
+        apps.cursor.close()
+
+    def test_get_data_frame_multiple_fields(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        df = apps.get_data_frame('name, zip', 'Hotels',
+                                 "phone_number='213-628-8344'")
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual('Wolf Inn Los Angeles Sharks', row['name'])
+        self.assertEqual('90050', row['zip'])
+        apps.cursor.close()
+
+    def test_get_data_frame_single_field(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        df = apps.get_data_frame('name', 'Hotels',
+                                 "phone_number='213-628-8344'")
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual('Wolf Inn Los Angeles Sharks', row['name'])
+        apps.cursor.close()
+
     def test_add_zip(self):
         apps = Apps(self._con, True)
         df = apps.add_zip({'zip': '27511', 'city': 'Cary', 'state': 'NC'})
@@ -48,6 +99,225 @@ class TestApps(SQLUnitTestBase):
         df = apps.get_data_frame('*', 'ZipToCityState')
         self.assertEqual(0, len(df.index))
         apps.cursor.close()
+
+    def test_add_hotel_no_id(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        df = apps.add_hotel({
+            'name': 'Test Hotel',
+            'street': '123 Test St',
+            'zip': '90050',
+            'phone_number': '919-123-4567'
+        })
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual('Test Hotel', row['name'])
+        self.assertEqual('123 Test St', row['street'])
+        self.assertEqual('90050', row['zip'])
+        self.assertEqual('919-123-4567', row['phone_number'])
+        apps.cursor.close()
+
+    def test_add_hotel_id(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        df = apps.add_hotel({
+            'id': 100,
+            'name': 'Test Hotel',
+            'street': '123 Test St',
+            'zip': '90050',
+            'phone_number': '919-123-4567'
+        })
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual(100, row['id'])
+        self.assertEqual('Test Hotel', row['name'])
+        self.assertEqual('123 Test St', row['street'])
+        self.assertEqual('90050', row['zip'])
+        self.assertEqual('919-123-4567', row['phone_number'])
+        # Add hotel with lower id - not the highest
+        df = apps.add_hotel({
+            'id': 99,
+            'name': 'Test Hotel 2',
+            'street': '456 Test St',
+            'zip': '90050',
+            'phone_number': '919-345-6789'
+        })
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual(99, row['id'])
+        self.assertEqual('Test Hotel 2', row['name'])
+        self.assertEqual('456 Test St', row['street'])
+        self.assertEqual('90050', row['zip'])
+        self.assertEqual('919-345-6789', row['phone_number'])
+        apps.cursor.close()
+
+    def test_add_hotel_fail_id_exists(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        apps.add_hotel({
+            'id': 100,
+            'name': 'Test Hotel',
+            'street': '123 Test St',
+            'zip': '90050',
+            'phone_number': '919-123-4567'
+        })
+        try:
+            apps.add_hotel({
+                'id': 100,
+                'name': 'Test Hotel 2',
+                'street': '456 Test St',
+                'zip': '90050',
+                'phone_number': '919-234-5678'
+            })
+            self.assertTrue(False)
+        except mariadb.Error:
+            pass
+        apps.cursor.close()
+
+    def test_update_hotel_name_where_name(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        df = apps.update_hotel({
+            'name': 'Test Hotel'
+        }, {
+            'name': 'Wolf Inn Raleigh Wolfpack'
+        })
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual('Test Hotel', row['name'])
+        apps.cursor.close()
+
+    def test_update_hotel_id_where_id(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        df = apps.update_hotel({
+            'id': 10
+        }, {
+            'id': 2
+        })
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual(10, row['id'])
+        apps.cursor.close()
+
+    def test_update_hotel_multiple_fields_where_id(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        df = apps.update_hotel({
+            'id': 10,
+            'name': 'Test Hotel',
+            'street': '123 Test Dr',
+            'zip': '90050',
+            'phone_number': '919-987-6543'
+        }, {
+            'id': 2
+        })
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual(10, row['id'])
+        self.assertEqual('Test Hotel', row['name'])
+        self.assertEqual('123 Test Dr', row['street'])
+        self.assertEqual('90050', row['zip'])
+        self.assertEqual('919-987-6543', row['phone_number'])
+        apps.cursor.close()
+
+    def test_update_hotel_name_where_multiple(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        df = apps.update_hotel({
+            'name': 'Test Hotel'
+        }, {
+            'name': 'Wolf Inn Raleigh Wolfpack',
+            'street': '875 Penny Rd',
+            'zip': '27606',
+            'phone_number': '919-546-7439'
+        })
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual('Test Hotel', row['name'])
+        apps.cursor.close()
+
+    def test_update_hotel_id_where_multiple(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        df = apps.update_hotel({
+            'id': 10
+        }, {
+            'name': 'Wolf Inn Raleigh Wolfpack',
+            'street': '875 Penny Rd',
+            'zip': '27606',
+            'phone_number': '919-546-7439'
+        })
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual(10, row['id'])
+        apps.cursor.close()
+
+    def test_update_hotel_multiple_fields_where_multiple(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        df = apps.update_hotel({
+            'id': 10,
+            'name': 'Test Hotel',
+            'street': '123 Test Dr',
+            'zip': '90050',
+            'phone_number': '919-987-6543'
+        }, {
+            'id': 2,
+            'name': 'Wolf Inn Raleigh Wolfpack',
+            'street': '875 Penny Rd',
+            'zip': '27606',
+            'phone_number': '919-546-7439'
+        })
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual(10, row['id'])
+        self.assertEqual('Test Hotel', row['name'])
+        self.assertEqual('123 Test Dr', row['street'])
+        self.assertEqual('90050', row['zip'])
+        self.assertEqual('919-987-6543', row['phone_number'])
+        apps.cursor.close()
+
+    def test_update_hotel_id_does_not_exist(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        df = apps.update_hotel({'id': 10}, {'id': 100})
+        self.assertEqual(0, len(df.index))
+        apps.cursor.close()
+
+    def test_delete_hotel_id(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        apps.add_hotel({
+            'id': 100,
+            'name': 'Test Hotel',
+            'street': '123 Test St',
+            'zip': '90050',
+            'phone_number': '919-123-4567'
+        })
+        df = apps.delete_hotel({'id': 100})
+        self.assertEqual(0, len(df.index))
+        apps.cursor.close()
+
+    def test_delete_hotel_id_does_not_exist(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        df = apps.delete_hotel({'id': 100})
+        self.assertEqual(0, len(df.index))
+        apps.cursor.close()
+
+    def test_delete_hotel_name(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        apps.add_hotel({
+            'id': 100,
+            'name': 'Test Hotel',
+            'street': '123 Test St',
+            'zip': '90050',
+            'phone_number': '919-123-4567'
+        })
+        df = apps.delete_hotel({'name': 'Test Hotel'})
+        self.assertEqual(0, len(df.index))
 
     def test_add_staff(self):
         apps = Apps(self._con, True)
