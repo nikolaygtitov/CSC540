@@ -425,7 +425,7 @@ class Apps(object):
         TODO: Testing
         """
         # Determine all staff assigned to this reservation
-        self.maria_db_connection.execute(QUERY_ASSIGNED_STAFF, [reservation_id])
+        self.cursor.execute(QUERY_ASSIGNED_STAFF, [reservation_id])
         staff_tuples = self.cursor.fetchall()
         staff_df_result = None
         transaction_df = None
