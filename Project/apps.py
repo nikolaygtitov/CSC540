@@ -156,11 +156,11 @@ class Apps(object):
         TODO:
         """
         # Query for desired tuple(s) and return it as Pandas DataFrame
-        if where_clause is None:
-            select_query = "SELECT {} FROM {}".format(attributes, table_name)
-        else:
+        if where_clause:
             select_query = "SELECT {} FROM {} WHERE {}".format(
                 attributes, table_name, where_clause)
+        else:
+            select_query = "SELECT {} FROM {}".format(attributes, table_name)
         data_frame = pd.read_sql(select_query, con=self.maria_db_connection)
         return data_frame
 
@@ -203,9 +203,10 @@ class Apps(object):
         if where_clause_dict:
             select_query = "SELECT {} FROM {} WHERE {}".format(
                 attributes, table_name, where_attr_format)
+            self.cursor.execute(select_query, where_clause_dict.values())
         else:
             select_query = "SELECT {} FROM {}".format(attributes, table_name)
-        self.cursor.execute(select_query, where_clause_dict.values())
+            self.cursor.execute(select_query)
 
     def _execute_select_query(self, attributes, table_name, where_clause=None,
                               where_values_list=None):
