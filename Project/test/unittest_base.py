@@ -229,7 +229,8 @@ class SQLUnitTestBase(unittest.TestCase):
             [6, 300, 'Executive Suite', 1, 600.00],
             [7, 400, 'Presidential Suite', 1, 1200.00],
             [8, 400, 'Presidential Suite', 1, 2000.00],
-            [9, 100, 'Economy', 2, 100.00]
+            [9, 100, 'Economy', 2, 100.00],
+            [9, 500, 'Presidential Suite', 5, 10000.00]
         ]
         for row in room_data:
             cursor.execute("INSERT INTO "
@@ -260,9 +261,12 @@ class SQLUnitTestBase(unittest.TestCase):
             ['Rory McDonald', 'Room Service Staff', '1980-02-15',
              'Room Service Department', '919-383-2991',
              '2300 Sugar Bush Rd, Apt. 52', '27965', 2, 2, 200],
-            ['FirstStaff LastStaff', 'Catering Staff', '1956-05-09',
+            ['Service Dude', 'Catering Staff', '1956-05-09',
              'Cooking Hell Department', '(919)-111-0101',
-             'Staff St., Apt. 59', '27606', 9, None, None]
+             'Service Staff St., Apt. 59', '27606', 9, None, None],
+            ['Catering Dude', 'Catering Staff', '1945-05-09',
+             'Cooking Hell Department', '(919)-777-0202',
+             'Cooking Staff St., Apt. A', '27606', 9, None, None]
 
         ]
         for row in staff_data:
