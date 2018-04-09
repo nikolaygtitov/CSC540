@@ -379,7 +379,7 @@ class Apps(object):
         where_attr_delete_format = ' AND '.join([attr + '=%s' for attr in
                                                 dictionary.iterkeys()])
         where_attr_select = ' AND '.join(
-            [attr + '=' + value for attr, value in dictionary.iteritems()])
+            [attr + '=' + str(value) for attr, value in dictionary.iteritems()])
         # Generate delete query statement
         delete_query = "DELETE FROM {} WHERE {}".format(
             table_name, where_attr_delete_format)
