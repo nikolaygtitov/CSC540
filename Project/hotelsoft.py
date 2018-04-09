@@ -270,10 +270,11 @@ class HotelSoft(object):
 
             # Update and delete queries build a "where" dictionary
             if action.type == 'update' or action.type == 'delete':
-                found = False
+
+                number_found = 0
 
                 # Loop runs until user finds an item to update or delete
-                while not found:
+                while number_found == 0:
                     if action.type == 'update':
                         print('\nWhich item do you want to update?')
                         print('Enter one or more fields to identify it.')
@@ -284,8 +285,12 @@ class HotelSoft(object):
 
                     # Enter one or more parameters to find the entry
                     for index, arg in enumerate(action.api_info.attr_names):
-                        item = raw_input(arg + '(e.g. %s): ' %
-                                         action.api_info.examples[index]).strip()
+                        example = '(e.g. %s)' % action.api_info.examples[index]
+                        val = (arg in where_dict and '[%s]' % where_dict[arg]
+                               or '')
+                        item = raw_input((
+                            '%s %s %s' % (arg, example, val)).strip() + ': '
+                        ).strip()
                         if item != '':
                             where_dict[arg] = item
 
@@ -293,23 +298,25 @@ class HotelSoft(object):
                     # If not, reprompt and try again
                     search_result = self.client.select(where_dict,
                                                        action.api_info.table_name)
-                    if len(search_result) == 1:
-                        found = True
+                    number_found = len(search_result)
+                    if number_found > 0:
                         print('\n')
                         print tabulate(search_result,
                                        headers=search_result.columns.values.tolist(),
                                        tablefmt='psql')
-                    elif len(search_result > 1):
-                        found = True
-                        print('\n')
-                        print tabulate(search_result,
-                                       headers=search_result.columns.values.tolist(),
-                                       tablefmt='psql')
-                        print('WARNING: multiple items will be updated')
+                        if number_found > 1:
+                            continue_filter = not raw_input(
+                                'Multiple items found. Continue to filter? '
+                                '(y/n): ').lower().startswith('n')
+                            if continue_filter:
+                                number_found = 0
                     else:
                         print('\nNo result found for %s' % where_dict)
                         print('Please try again')
                         where_dict = {}
+
+                if number_found > 1:
+                    print('WARNING: multiple items will be %sd' % action.type)
 
             # Insert and update queries build a "set" dictionary
             if action.type == 'insert' or action.type == 'update' or \
