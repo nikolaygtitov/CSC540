@@ -3,8 +3,8 @@ import pandas as pd
 from util import sql_transaction
 
 ###############################
-OBSOLETE AND PRESENTLY UNUSED
-Keeping in repository for reference
+# OBSOLETE AND PRESENTLY UNUSED
+# Keeping in repository for reference
 ###############################
 
 class ArgList(object):

@@ -271,6 +271,11 @@ class HotelSoft(object):
             # Update and delete queries build a "where" dictionary
             if action.type == 'update' or action.type == 'delete':
 
+                preview_table = self.client.select(None, action.api_info.table_name)
+                if isinstance(preview_table, pd.DataFrame):
+                    print tabulate(preview_table, 
+                        headers=preview_table.columns.values.tolist(), tablefmt='psql')
+
                 number_found = 0
 
                 # Loop runs until user finds an item to update or delete
@@ -285,7 +290,7 @@ class HotelSoft(object):
 
                     # Enter one or more parameters to find the entry
                     for index, arg in enumerate(action.api_info.attr_names['where']):
-                        example = '(e.g. %s)' % action.api_info.examples['where'][index]
+                        example = '(%s)' % action.api_info.examples['where'][index]
                         val = (arg in where_dict and '[%s]' % where_dict[arg]
                                or '')
                         item = raw_input((
@@ -334,7 +339,7 @@ class HotelSoft(object):
 
                 # Enter the normal parameters
                 for index, arg in enumerate(action.api_info.attr_names['set']):
-                    item = raw_input(arg + '(e.g. %s): ' %
+                    item = raw_input(arg + '(%s): ' %
                                      action.api_info.examples['set'][index]).strip()
                     if item != '':
                         set_dict[arg] = item
@@ -353,9 +358,11 @@ class HotelSoft(object):
             # Package up the set and where dictionaries and call api
             param_dict = {'set': set_dict, 'where': where_dict}
 
+            # Need this to execute actions with no arguments
+            # i.e. no arguments to pass, nothing to print
             results = None
             if action.type == 'exec':
-                results = action.handler()
+                action.handler()
             else:
                 results = action.handler(param_dict, action.api_info)
 

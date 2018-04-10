@@ -475,10 +475,10 @@ class Apps(object):
             transaction_df = transaction_df.rename(
                 index=str,
                 columns={'id': 'Transaction_id',
-                         'amount': 'Trans_amount',
-                         'type': 'Trans_type',
-                         'date': 'Trans_date',
-                         'reservation_id': 'Trans_reserve_id'})
+                         'amount': 'Transaction_amount',
+                         'type': 'Transaction_type',
+                         'date': 'Transaction_date',
+                         'reservation_id': 'Transaction_reserve_id'})
         # Returns
         result_df = pd.concat((transaction_df, staff_df_result), axis=1)
         return result_df

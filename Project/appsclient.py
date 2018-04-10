@@ -1,48 +1,116 @@
+"""
+appsclient.py
+
+This file contains the client classes for communicating directly with the
+Apps.py API.  These classes are intended to be instantiated by HotelSoft.py.
+See HotelSoft.py for execution instructions.
+
++---------------+     +---------------+    +-------------+     +------------+
+|   UI          |     |   Client      |    |    API      |     |  DATABASE  |
+|  hotelsoft.py | ->  | appsclient.py | -> |   apps.py   |  -> |            |
++---------------+     +---------------+    +-------------+     +------------+
+
+@version: 1.0
+@todo: Testing, Demo
+@since: April 8, 2018
+@status: Incomplete
+@requires: Connection to MariaDB server
+@contact: nfschnoo@ncsu.edu
+          ngtitov@ncsu.edu
+          pdscott2@ncsu.edu
+@authors: Nathan Schnoor
+          Nikolay Titov
+          Preston Scott
+
+"""
+
+################################################################################
+# Supporting classes                                                           #
+################################################################################
+
 from apps import Apps
 import pandas as pd
 from util import sql_transaction
 
 class Attributes(object):
+    """
+    Base class for attributes objects.
+    """
     def __init__(self, attr_names, examples):
+        """
+        Instantiates attributes base class
+        Parameters:
+            :param attr_names: a list of attribute name strings
+            :param examples: a list of atttribute example strings
+        """
         self.attr_names = attr_names
         self.examples = examples
 
 class CrudAttributes(Attributes):
+    """
+    Subclass of Attributes for CRUD related database interactions
+    """
     def __init__(self, table_name, attr_names, examples, secondary_args=None):
+        """
+        Instantiates CRUD attributes subclass
+        Parameters:
+            :param table_name: the name of the database table to CRUD
+            :param attr_names: a list of attribute name strings
+            :param examples: a list of atttribute example strings
+            :param secondary_args: a list of follow-up attributes (zip handling)
+        """
         super(CrudAttributes, self).__init__(attr_names, examples)
         self.table_name = table_name
         self.secondary_args = secondary_args
 
 class ReportAttributes(Attributes):
+    """
+    Subclass of Attributes for Report related database interactions
+    """
     def __init__(self, report_name, attr_names, examples):
+        """
+        Instantiates Reports attributes subclass
+        Parameters:
+            :param report_name: string identifier for the related report
+            :param attr_names: a list of attribute name strings
+            :param examples: a list of atttribute example strings
+        """
         super(ReportAttributes, self).__init__(attr_names, examples)
         self.report_name = report_name
 
 class AppsParams(object):
+    """
+    Static class containing attribute lists for all CRUD and Report interactions
+    """
     zip = CrudAttributes(
         'ZipToCityState',
-        {'where':['zip', 'city', 'state'],'set':['zip', 'city', 'state']},
-        {'where':['24354', 'Marion', 'VA'], 'set':['24354', 'Marion', 'VA']})
+        {'where':['zip', 'city', 'state'],
+        'set':['zip', 'city', 'state']},
+        {'where':['e.g. 24354', 'e.g. Raleigh', 'e.g. NC'], 
+        'set':['e.g. 24354', 'e.g. Raleigh', 'e.g. NC']})
     hotels = CrudAttributes(
         'Hotels',
-        {'where':['id', 'name', 'street', 'zip', 'phone_number'],'set':['id', 'name', 'street', 'zip', 'phone_number']},
-        {'where':['1', 'Wolf Inn Raleigh', '100 Main Street', '24354', '919-555-1212'],
-        'set':['1', 'Wolf Inn Raleigh', '100 Main Street', '24354', '919-555-1212']},
+        {'where':['id', 'name', 'street', 'zip', 'phone_number'],
+        'set':['id', 'name', 'street', 'zip', 'phone_number']},
+        {'where':['Hotel ID', 'e.g. Wolf Inn Raleigh', 'e.g. 100 Main Street', 'e.g. 24354', 'e.g. 919-555-1212'],
+        'set':['Hotel ID', 'e.g. Wolf Inn Raleigh', 'e.g. 100 Main Street', 'e.g. 24354', 'e.g. 919-555-1212']},
         ['city', 'state'])
     rooms = CrudAttributes(
         'Rooms',
-        {'where':['hotel_id', 'room_number', 'category', 'occupancy', 'rate'],'set':['hotel_id', 'room_number', 'category', 'occupancy', 'rate']},
-        {'where':['1', '100', 'Economy', '2', '85.00'],'set':['1', '100', 'Economy', '2', '85.00']})
+        {'where':['hotel_id', 'room_number', 'category', 'occupancy', 'rate'],
+        'set':['hotel_id', 'room_number', 'category', 'occupancy', 'rate']},
+        {'where':['Hotel ID', 'e.g. 100', 'e.g. Economy', 'e.g. 2', 'e.g. 85.00'],
+        'set':['Hotel ID', 'e.g. 100', 'e.g. Economy', 'e.g. 2', 'e.g. 85.00']})
     staff = CrudAttributes(
         'Staff',
         {'where':['id', 'name', 'title', 'date_of_birth', 'department', 'phone_number', 'street', 'zip',
         'works_for_hotel_id', 'assigned_hotel_id', 'assigned_room_number'],
         'set':['id', 'name', 'title', 'date_of_birth', 'department', 'phone_number', 'street', 'zip',
         'works_for_hotel_id', 'assigned_hotel_id', 'assigned_room_number']},
-        {'where':['1', 'John Doe', 'Manager', '1992-04-04', 'Maintenance', '919-555-1212', '100 Main Street', '25354',
-        '1','1','100'],
-        'set':['1', 'John Doe', 'Manager', '1992-04-04', 'Maintenance', '919-555-1212', '100 Main Street', '25354',
-        '1','1','100']},
+        {'where':['Staff ID', 'e.g. John Doe', 'e.g. Manager', 'YYYY-MM-DD', 'e.g. Maintenance', '919-555-1212', 
+        'e.g. 100 Main Street', 'e.g. 25354', 'e.g. 1','e.g. 1','e.g. 100'],
+        'set':['Staff ID', 'e.g. John Doe', 'e.g. Manager', 'YYYY-MM-DD', 'e.g. Maintenance', '919-555-1212', 
+        'e.g. 100 Main Street', 'e.g. 25354', 'e.g. 1','e.g. 1','e.g. 100']},
         ['city', 'state'])
     customers = CrudAttributes(
         'Customers',
@@ -50,10 +118,10 @@ class AppsParams(object):
         'is_hotel_card'],
         'set':['id', 'name', 'date_of_birth', 'phone_number', 'email', 'street', 'zip', 'ssn', 'account_number',
         'is_hotel_card']},
-        {'where':['1', 'John Doe', '1992-04-04', '919-555-1212', 'john@email.com', '100 Main Street', '24354',
-         '111-22-3333', '7145243', '0'],
-         'set':['1', 'John Doe', '1992-04-04', '919-555-1212', 'john@email.com', '100 Main Street', '24354',
-         '111-22-3333', '7145243', '0']},
+        {'where':['Customer ID', 'e.g. John Doe', 'YYYY-MM-DD', 'e.g. 919-555-1212', 'e.g. john@email.com', 
+        'e.g. 100 Main Street', 'e.g. 24354', 'e.g. 111-22-3333', 'e.g. 7145243', '0 or 1'],
+         'set':['Customer ID', 'e.g. John Doe', 'YYYY-MM-DD', 'e.g. 919-555-1212', 'e.g. john@email.com', 
+        'e.g. 100 Main Street', 'e.g. 24354', 'e.g. 111-22-3333', 'e.g. 7145243', '0 or 1']},
         ['city', 'state'])
     reservations = CrudAttributes(
         'Reservations',
@@ -61,66 +129,98 @@ class AppsParams(object):
         'check_in_time', 'check_out_time'],
         'set':['id', 'number_of_guests', 'start_date', 'end_date', 'hotel_id', 'room_number', 'customer_id',
         'check_in_time', 'check_out_time']},
-        {'where':['1', '2', '2018-5-1', '2018-5-5', '1', '100', '1', '2018-5-1 2:00:00', '2018-5-5 10:00:00'],
-        'set':['1', '2', '2018-5-1', '2018-5-5', '1', '100', '1', '2018-5-1 2:00:00', '2018-5-5 10:00:00']})
+        {'where':['Reservation ID', 'e.g. 2', 'YYYY-MM-DD', 'YYYY-MM-DD', 'e.g. 1', 'e.g. 100', 'e.g. 1', 
+        'YYYY-MM-DD HH:MM:SS', 'YYYY-MM-DD HH:MM:SS'],
+        'set':['Reservation ID', 'e.g. 2', 'YYYY-MM-DD', 'YYYY-MM-DD', 'e.g. 1', 'e.g. 100', 'e.g. 1', 
+        'YYYY-MM-DD HH:MM:SS', 'YYYY-MM-DD HH:MM:SS']})
     check_in = CrudAttributes(
         'Reservations',
         {'where':['id', 'number_of_guests', 'start_date', 'end_date', 'hotel_id', 'room_number', 'customer_id',
         'check_in_time', 'check_out_time'],
-        'set':['id', 'check_in_time']},
-        {'where':['1', '2', '2018-5-1', '2018-5-5', '1', '100', '1', '2018-5-1 2:00:00', '2018-5-5 10:00:00'],
-        'set':['reservation id', 'YYYY-MM-DD HH:MM:SS']})
+        'set':['check_in_time']},
+        {'where':['Reservation ID', 'e.g. 2', 'YYYY-MM-DD', 'YYYY-MM-DD', 'e.g. 1', 'e.g. 100', 'e.g. 1', 
+        'YYYY-MM-DD HH:MM:SS', 'YYYY-MM-DD HH:MM:SS'],
+        'set':['YYYY-MM-DD HH:MM:SS']})
     check_out = CrudAttributes(
         'Reservations',
         {'where':['id', 'number_of_guests', 'start_date', 'end_date', 'hotel_id', 'room_number', 'customer_id',
         'check_in_time', 'check_out_time'],
         'set':['id', 'check_out_time']},
-        {'where':['1', '2', '2018-5-1', '2018-5-5', '1', '100', '1', '2018-5-1 2:00:00', '2018-5-5 10:00:00'],
-        'set':['reservation id', 'YYYY-MM-DD HH:MM:SS']})
+        {'where':['Reservation ID', 'e.g. 2', 'YYYY-MM-DD', 'YYYY-MM-DD', 'e.g. 1', 'e.g. 100', 'e.g. 1', 
+        'YYYY-MM-DD HH:MM:SS', 'YYYY-MM-DD HH:MM:SS'],
+        'set':['YYYY-MM-DD HH:MM:SS']})
     transactions = CrudAttributes(
         'Transactions',
         {'where':['id', 'amount', 'type', 'date', 'reservation_id'],
         'set':['id', 'amount', 'type', 'date', 'reservation_id']},
-        {'where':['1', '25.00', 'Room service', '2018-5-3', '1'],
-        'set':['1', '25.00', 'Room service', '2018-5-3', '1']})
+        {'where':['Transaction ID', 'e.g. 25.00', 'e.g. Room service', 'YYYY-MM-DD', 'e.g. 1'],
+        'set':['Transaction ID', 'e.g. 25.00', 'e.g. Room service', 'YYYY-MM-DD', 'e.g. 1']})
     serves = CrudAttributes(
         'Serves',
         ['staff_id', 'reservation_id'],
-        ['1', '1'])
-    gen_bill = ReportAttributes('Generate_bill', {'set':['reservation_id']}, {'set':['1']})
-    occ_hotel = ReportAttributes('Occupancy_hotel', {'set':['query_date']}, {'set':['2018-4-4']})
-    occ_room = ReportAttributes('Occupancy_room', {'set':['query_date']}, {'set':['2018-4-4']})
-    occ_city = ReportAttributes('Occupancy_city', {'set':['query_date']}, {'set':['2018-4-4']})
-    occ_date = ReportAttributes('Occupancy_date', {'set':['start_date', 'end_date']}, {'set':['2018-4-4', '2018-4-8']})
-    list_staff = ReportAttributes('List_staff', {'set':['hotel_id']}, {'set':['1']})
-    cust_inter = ReportAttributes('Customer_inter', {'set':['reservation_id']}, {'set':['1']})
+        ['e.g. 1', 'e.g. 1'])
+    gen_bill = ReportAttributes('Generate_bill', {'set':['reservation_id']}, {'set':['e.g. 1']})
+    occ_hotel = ReportAttributes('Occupancy_hotel', {'set':['query_date']}, {'set':['YYYY-MM-SS']})
+    occ_room = ReportAttributes('Occupancy_room', {'set':['query_date']}, {'set':['YYYY-MM-SS']})
+    occ_city = ReportAttributes('Occupancy_city', {'set':['query_date']}, {'set':['YYYY-MM-SS']})
+    occ_date = ReportAttributes('Occupancy_date', {'set':['start_date', 'end_date']}, {'set':['YYYY-MM-SS', 'YYYY-MM-SS']})
+    list_staff = ReportAttributes('List_staff', {'set':['hotel_id']}, {'set':['e.g. 1']})
+    cust_inter = ReportAttributes('Customer_inter', {'set':['reservation_id']}, {'set':['e.g. 1']})
     rev_hotel = ReportAttributes('Revenue_hotel',
                                  {'set':['start_date', 'end_date', 'hotel_id']},
-                                 {'set':['2018-4-4', '2018-4-8', '1']})
+                                 {'set':['YYYY-MM-SS', 'YYYY-MM-SS', 'e.g. 1']})
     rev_all = ReportAttributes('Revenue_all',
                                  {'set':['start_date', 'end_date']},
-                                 {'set':['2018-4-4', '2018-4-8']})
+                                 {'set':['YYYY-MM-SS', 'YYYY-MM-SS']})
     cust_no_card = ReportAttributes('Customer_nocard',
                                  {'set':['start_date', 'end_date']},
-                                 {'where':['2018-4-4', '2018-4-8']})
+                                 {'where':['YYYY-MM-SS', 'YYYY-MM-SS']})
     room_avail = ReportAttributes('Room_avail',
                                  {'set':['start_date', 'end_date', 'hotel_id', 'name', 'zip']},
-                                 {'set':['2018-4-4', '2018-4-8', '1', 'Wolf Inn Raleigh', '24354']})
+                                 {'set':['YYYY-MM-SS', 'YYYY-MM-SS', 'e.g. 1', 'e.g. Wolf Inn Raleigh', 'e.g. 24354']})
 
 ################################################################################
-# Interface from UI to API
-# - Edit this file to control interactions between UI and Apps
+# Main Interface from UI to API                                                #
 ################################################################################
 class AppsClient(object):
+    """
+    Client interface to Apps API
+    """
     def __init__(self, db, check=False):
+        """
+        Instantiates client class.
+        This class in turn instantiations the Apps API class and passes the db connection
+        Parameters:
+            :param db: a mysql.connector connection
+            :param check: Boolean indicating whether SQL checks should be used
+        """
         self.apps = Apps(db, check)
         self.db = db
 
     # Helper interfaces
     def select(self, where_dict, table_name):
-        return self.apps.get_data_frame('*', table_name, where_dict)
+        """
+        Used to make basic SELECT queries to the database.  Interfaces with
+        get_data_frame method in Apps.py
+        Parameters:
+            :param where_dict: dictionary of attributes for the select clause
+            :param table_name: Name of SQL table to search
+        Returns:
+            :return: Pandas data frame or Error
+        """
+        if where_dict is not None:
+            return self.apps.get_data_frame('*', table_name, where_dict)
+        else:
+            return self.apps.get_data_frame('*', table_name)
 
     def zip_is_present(self, zip):
+        """
+        Used to check existence of a zip code in the database.
+        Parameters:
+            :param zip: Zip code of interest
+        Returns:
+            :return: Pandas data frame or Error
+        """
         result = self.apps.get_data_frame('*', 'ZipToCityState', {'zip': zip})
         if len(result) == 0:
             return False
@@ -128,6 +228,18 @@ class AppsClient(object):
             return True
 
     def insert(self, param_dict, api_info):
+        """
+        Used to make INSERT transactions on the database. Interfaces with the
+        insert method of the appropriate entity in Apps.py. Since zip is a 
+        foreign key constraint, any zip information is entered first. 
+        Parameters:
+            :param param_dict: Attribute dictionary containing embedded 'set' and 'where'
+            dicionaries for formulating SQL statement.  For inserts, only the 'set' 
+            dictionary need be used.
+            :param api_info: The api information (attribute lists) for the relevant entity
+        Returns:
+            :return: Pandas data frame or Error
+        """
         set_dict = param_dict['set']
         zip_result = None
 
@@ -157,9 +269,22 @@ class AppsClient(object):
             return result
 
     def update(self, param_dict, api_info):
+        """
+        Used to make UPDATE transactions on the database. Interfaces with the
+        update method of the appropriate entity in Apps.py. Since zip is a 
+        foreign key constraint, any zip information is entered first. 
+        Parameters:
+            :param param_dict: Attribute dictionary containing embedded 'set' and 'where'
+            dicionaries for formulating SQL statement. 
+            :param api_info: The api information (attribute lists) for the relevant entity
+        Returns:
+            :return: Pandas data frame or Error
+        """
         set_dict = param_dict['set']
         where_dict = param_dict['where']
         zip_result = None
+        print set_dict
+        print where_dict
 
         with sql_transaction(self.db):
             # If a city and state is present, insert the new zip
@@ -188,6 +313,18 @@ class AppsClient(object):
             return result
 
     def delete(self, param_dict, api_info):
+        """
+        Used to make DELETE transactions on the database. Interfaces with the
+        delete method of the appropriate entity in Apps.py. Since zip is a 
+        foreign key constraint, any zip information is entered first. 
+        Parameters:
+            :param param_dict: Attribute dictionary containing embedded 'set' and 'where'
+            dicionaries for formulating SQL statement.  For deletes, only the 'where' 
+            dictionary need be used.
+            :param api_info: The api information (attribute lists) for the relevant entity
+        Returns:
+            :return: Pandas data frame or Error
+        """
         where_dict = param_dict['where']
         print where_dict
         with sql_transaction(self.db):
@@ -204,6 +341,16 @@ class AppsClient(object):
             return result
 
     def get_report(self, param_dict, api_info):
+        """
+        Used to call pre-formulated SQL queries for generating reports. 
+        Parameters:
+            :param param_dict: Attribute dictionary containing embedded 'set' and 'where'
+            dicionaries for formulating SQL statement.  For reports only the 'set' 
+            dictionary need be used.
+            :param api_info: The api information (attribute lists) for the relevant report
+        Returns:
+            :return: Pandas data frame or Error
+        """
         set_dict = param_dict['set']
         arg_list = [set_dict[key] for key in api_info.attr_names['set']]
 
@@ -224,6 +371,17 @@ class AppsClient(object):
 
 
     def get_report_with_dict(self, param_dict, api_info):
+        """
+        Used to call pre-formulated SQL queries for generating reports. Similar to previous
+        function except api call uses a dictionary instead of a list.
+        Parameters:
+            :param param_dict: Attribute dictionary containing embedded 'set' and 'where'
+            dicionaries for formulating SQL statement.  For reports only the 'set' 
+            dictionary need be used.
+            :param api_info: The api information (attribute lists) for the relevant report
+        Returns:
+            :return: Pandas data frame or Error
+        """
         set_dict = param_dict['set']
         print set_dict
         with sql_transaction(self.db):
