@@ -332,8 +332,10 @@ class Apps(object):
                                           where_clause_dict.iterkeys()])
         where_attr_args = where_clause_dict.values()
         # Construct update query statement
-        update_query = "UPDATE {} SET {} WHERE {}".format(
-            table_name, set_attr_format, where_attr_format)
+        update_query = "UPDATE {} SET {}".format(
+            table_name, set_attr_format)
+        if where_attr_args:
+            update_query += ' WHERE {}'.format(where_attr_format)
         # Execute update query
         self.cursor.execute(update_query, set_attr_args + where_attr_args)
 

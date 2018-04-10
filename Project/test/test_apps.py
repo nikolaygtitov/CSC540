@@ -107,6 +107,17 @@ class TestApps(SQLUnitTestBase):
         self.assertEqual('(919)-555-5555', row['phone_number'])
         apps.cursor.close()
 
+    def test_execute_update_query_update_empty_where(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        df = apps._execute_update_query(
+            'amount', 'Transactions',
+            {'amount': 1},
+            {})
+        self.assertEqual(8, len(df.index))
+        self.assertListEqual([1] * 8, list(df['amount']))
+        apps.cursor.close()
+
     def test_execute_select_query(self):
         apps = Apps(self._con, True)
         self._insert_test_data()
