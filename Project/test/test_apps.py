@@ -810,6 +810,181 @@ class TestApps(SQLUnitTestBase):
         self.assertEqual(1, row['Room Number'])
         apps.cursor.close()
 
+    def test_availability_conflict_outside(self):
+        apps = Apps(self._con, False)
+        load_demo_data(self._con)
+        df = apps.room_availability({
+            'start_date': '2017-5-11',
+            'end_date': '2017-5-12',
+            'hotel_id': 1
+        })
+        self.assertEqual(1, len(df.index))
+        print df
+        row = df.ix[0]
+        self.assertEqual(1, row['Hotel ID'])
+        self.assertEqual(5, row['Room Number'])
+
+    def test_availability_conflict_outside_no_hotel_id(self):
+        apps = Apps(self._con, False)
+        load_demo_data(self._con)
+        df = apps.room_availability({
+            'start_date': '2017-5-11',
+            'end_date': '2017-5-12',
+        })
+        self.assertEqual(4, len(df.index))
+        print df
+        row = df.ix[0]
+        self.assertEqual(1, row['Hotel ID'])
+        self.assertEqual(5, row['Room Number'])
+        row = df.ix[1]
+        self.assertEqual(2, row['Hotel ID'])
+        self.assertEqual(3, row['Room Number'])
+        row = df.ix[2]
+        self.assertEqual(3, row['Hotel ID'])
+        self.assertEqual(2, row['Room Number'])
+        apps.cursor.close()
+        row = df.ix[3]
+        self.assertEqual(4, row['Hotel ID'])
+        self.assertEqual(1, row['Room Number'])
+        apps.cursor.close()
+
+    def test_availability_conflict_left(self):
+        apps = Apps(self._con, False)
+        load_demo_data(self._con)
+        df = apps.room_availability({
+            'start_date': '2017-5-9',
+            'end_date': '2017-5-12',
+            'hotel_id': 1
+        })
+        self.assertEqual(1, len(df.index))
+        print df
+        row = df.ix[0]
+        self.assertEqual(1, row['Hotel ID'])
+        self.assertEqual(5, row['Room Number'])
+
+    def test_availability_conflict_left_no_hotel_id(self):
+        apps = Apps(self._con, False)
+        load_demo_data(self._con)
+        df = apps.room_availability({
+            'start_date': '2017-5-9',
+            'end_date': '2017-5-12',
+        })
+        self.assertEqual(4, len(df.index))
+        print df
+        row = df.ix[0]
+        self.assertEqual(1, row['Hotel ID'])
+        self.assertEqual(5, row['Room Number'])
+        row = df.ix[1]
+        self.assertEqual(2, row['Hotel ID'])
+        self.assertEqual(3, row['Room Number'])
+        row = df.ix[2]
+        self.assertEqual(3, row['Hotel ID'])
+        self.assertEqual(2, row['Room Number'])
+        apps.cursor.close()
+        row = df.ix[3]
+        self.assertEqual(4, row['Hotel ID'])
+        self.assertEqual(1, row['Room Number'])
+        apps.cursor.close()
+
+    def test_availability_conflict_right(self):
+        apps = Apps(self._con, False)
+        load_demo_data(self._con)
+        df = apps.room_availability({
+            'start_date': '2017-5-12',
+            'end_date': '2017-5-15',
+            'hotel_id': 1
+        })
+        self.assertEqual(1, len(df.index))
+        print df
+        row = df.ix[0]
+        self.assertEqual(1, row['Hotel ID'])
+        self.assertEqual(5, row['Room Number'])
+        apps.cursor.close()
+
+    def test_availability_conflict_right_no_hotel_id(self):
+        apps = Apps(self._con, False)
+        load_demo_data(self._con)
+        df = apps.room_availability({
+            'start_date': '2017-5-12',
+            'end_date': '2017-5-15',
+        })
+        self.assertEqual(4, len(df.index))
+        print df
+        row = df.ix[0]
+        self.assertEqual(1, row['Hotel ID'])
+        self.assertEqual(5, row['Room Number'])
+        row = df.ix[1]
+        self.assertEqual(2, row['Hotel ID'])
+        self.assertEqual(3, row['Room Number'])
+        row = df.ix[2]
+        self.assertEqual(3, row['Hotel ID'])
+        self.assertEqual(2, row['Room Number'])
+        apps.cursor.close()
+        row = df.ix[3]
+        self.assertEqual(4, row['Hotel ID'])
+        self.assertEqual(1, row['Room Number'])
+        apps.cursor.close()
+
+    def test_availability_all_available(self):
+        apps = Apps(self._con, False)
+        load_demo_data(self._con)
+        df = apps.room_availability({
+            'start_date': '2012-1-12',
+            'end_date': '2012-1-15',
+        })
+        self.assertEqual(6, len(df.index))
+        print df
+        row = df.ix[0]
+        self.assertEqual(1, row['Hotel ID'])
+        self.assertEqual(1, row['Room Number'])
+        apps.cursor.close()
+        row = df.ix[1]
+        self.assertEqual(1, row['Hotel ID'])
+        self.assertEqual(2, row['Room Number'])
+        row = df.ix[2]
+        self.assertEqual(1, row['Hotel ID'])
+        self.assertEqual(5, row['Room Number'])
+        row = df.ix[3]
+        self.assertEqual(2, row['Hotel ID'])
+        self.assertEqual(3, row['Room Number'])
+        row = df.ix[4]
+        self.assertEqual(3, row['Hotel ID'])
+        self.assertEqual(2, row['Room Number'])
+        row = df.ix[5]
+        self.assertEqual(4, row['Hotel ID'])
+        self.assertEqual(1, row['Room Number'])
+        apps.cursor.close()
+
+    def test_availability_left_boundary(self):
+        apps = Apps(self._con, False)
+        load_demo_data(self._con)
+        df = apps.room_availability({
+            'start_date': '2017-5-9',
+            'end_date': '2017-5-10',
+            'hotel_id': 1
+        })
+        self.assertEqual(1, len(df.index))
+        print df
+        row = df.ix[0]
+        self.assertEqual(1, row['Hotel ID'])
+        self.assertEqual(5, row['Room Number'])
+        apps.cursor.close()
+
+    def test_availability_right_boundary(self):
+        apps = Apps(self._con, False)
+        load_demo_data(self._con)
+        df = apps.room_availability({
+            'start_date': '2017-5-13',
+            'end_date': '2017-5-15',
+            'hotel_id': 1
+        })
+        self.assertEqual(1, len(df.index))
+        print df
+        row = df.ix[0]
+        self.assertEqual(1, row['Hotel ID'])
+        self.assertEqual(5, row['Room Number'])
+        apps.cursor.close()
+
     def test_report_occupancy_by_hotel(self):
         apps = Apps(self._con, True)
         self._insert_test_data()
