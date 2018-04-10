@@ -4,7 +4,7 @@ import mysql.connector as mariadb
 
 from unittest_base import SQLUnitTestBase
 from Project.apps import Apps
-
+from Project.demo_data import load_demo_data
 
 class TestApps(SQLUnitTestBase):
 
@@ -760,6 +760,54 @@ class TestApps(SQLUnitTestBase):
         self.assertEqual(0, len(df.index))
         df = apps.get_data_frame('*', 'Reservations')
         self.assertEqual(8, len(df.index))
+        apps.cursor.close()
+
+    def test_availability_conflict_inside(self):
+        apps = Apps(self._con, False)
+        load_demo_data(self._con)
+        df = apps.room_availability({
+            'start_date': '2017-1-1',
+            'end_date': '2018-1-1',
+            'hotel_id': 1
+        })
+        self.assertEqual(1, len(df.index))
+        print df
+        row = df.ix[0]
+        self.assertEqual(1, row['Hotel ID'])
+        self.assertEqual('Hotel A', row['Hotel Name'])
+        self.assertEqual('21 ABC St', row['Street'])
+        self.assertEqual('Raleigh', row['City'])
+        self.assertEqual('NC', row['State'])
+        self.assertEqual(5, row['Room Number'])
+        self.assertEqual('27', row['ZIP'])
+        self.assertEqual('919', row['Phone Number'])
+        self.assertEqual(5, row['Room Number'])
+        self.assertEqual(2, row['Occupancy'])
+        self.assertEqual(200.0, row['Rate per Night'])
+        apps.cursor.close()
+
+    def test_availability_conflict_inside_no_hotel_id(self):
+        apps = Apps(self._con, False)
+        load_demo_data(self._con)
+        df = apps.room_availability({
+            'start_date': '2017-1-1',
+            'end_date': '2018-1-1',
+        })
+        self.assertEqual(4, len(df.index))
+        print df
+        row = df.ix[0]
+        self.assertEqual(1, row['Hotel ID'])
+        self.assertEqual(5, row['Room Number'])
+        row = df.ix[1]
+        self.assertEqual(2, row['Hotel ID'])
+        self.assertEqual(3, row['Room Number'])
+        row = df.ix[2]
+        self.assertEqual(3, row['Hotel ID'])
+        self.assertEqual(2, row['Room Number'])
+        apps.cursor.close()
+        row = df.ix[3]
+        self.assertEqual(4, row['Hotel ID'])
+        self.assertEqual(1, row['Room Number'])
         apps.cursor.close()
 
     def test_report_occupancy_by_hotel(self):

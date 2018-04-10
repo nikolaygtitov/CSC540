@@ -131,7 +131,7 @@ Rooms.hotel_id = Hotels.id
 # Nested WHERE clause for Room Availability query used for Reservations table
 # Parameters: None
 ROOM_AVAILABILITY_NESTED_WHERE_CLAUSE = """
-room_number NOT IN (SELECT room_number FROM Reservations 
+(Rooms.hotel_id, room_number) NOT IN (SELECT hotel_id, room_number FROM Reservations 
 WHERE ((('{}' BETWEEN start_date AND end_date) OR ('{}' between start_date 
 AND end_date) OR (start_date BETWEEN '{}' AND '{}') OR (end_date BETWEEN '{}' 
 AND '{}'))
