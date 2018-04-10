@@ -2089,7 +2089,7 @@ class Apps(object):
                 assert transaction_dict, \
                     'Exception: Cannot identify tuple(s) to be deleted from ' \
                     'the table.\n'
-            return self._execute_delete_query('Reservations', transaction_dict)
+            return self._execute_delete_query('Transactions', transaction_dict)
         except maria_db.Error as error:
             raise error
 
