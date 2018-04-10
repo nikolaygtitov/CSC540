@@ -156,21 +156,15 @@ class Apps(object):
         TODO:
         """
         # Build select query
-        select_query = 'SELECT {} FROM {}'.format(
-            attributes,
-            table_name
-        )
-
+        select_query = 'SELECT {} FROM {}'.format(attributes, table_name)
         # Add where clause
         where_values = []
         if where_clause_dict:
             select_query += ' WHERE {}'.format(
                 ' AND '.join([key + '=%s' for key in where_clause_dict.keys()]))
             where_values = where_clause_dict.values()
-
         # Execute select query
-        data_frame = pd.read_sql(select_query,
-                                 params=where_values,
+        data_frame = pd.read_sql(select_query, params=where_values,
                                  con=self.maria_db_connection)
         return data_frame
 
