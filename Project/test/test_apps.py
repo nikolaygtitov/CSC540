@@ -35,7 +35,7 @@ class TestApps(SQLUnitTestBase):
         apps = Apps(self._con, True)
         self._insert_test_data()
         df = apps.get_data_frame('*', 'Hotels',
-                                 "name='Wolf Inn Los Angeles Sharks'")
+                                 {'name':'Wolf Inn Los Angeles Sharks'})
         self.assertEqual(1, len(df.index))
         row = df.ix[0]
         self.assertEqual('Wolf Inn Los Angeles Sharks', row['name'])
@@ -48,7 +48,7 @@ class TestApps(SQLUnitTestBase):
         apps = Apps(self._con, True)
         self._insert_test_data()
         df = apps.get_data_frame('name, zip', 'Hotels',
-                                 "phone_number='213-628-8344'")
+                                 {'phone_number':'213-628-8344'})
         self.assertEqual(1, len(df.index))
         row = df.ix[0]
         self.assertEqual('Wolf Inn Los Angeles Sharks', row['name'])
@@ -59,10 +59,52 @@ class TestApps(SQLUnitTestBase):
         apps = Apps(self._con, True)
         self._insert_test_data()
         df = apps.get_data_frame('name', 'Hotels',
-                                 "phone_number='213-628-8344'")
+                                 {'phone_number':'213-628-8344'})
         self.assertEqual(1, len(df.index))
         row = df.ix[0]
         self.assertEqual('Wolf Inn Los Angeles Sharks', row['name'])
+        apps.cursor.close()
+
+    def test_execute_update_query_update_in_where_clause(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        df = apps._execute_update_query(
+            'name, phone_number', 'Hotels',
+            {'phone_number': '213-123-4567'},
+            {'phone_number': '213-628-8344'})
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual('Wolf Inn Los Angeles Sharks', row['name'])
+        self.assertEqual('213-123-4567', row['phone_number'])
+        apps.cursor.close()
+
+    def test_execute_update_query_update_not_in_where_clause(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        df = apps._execute_update_query(
+            '*', 'Hotels',
+            {'name': 'Test Hotel'},
+            {'phone_number': '213-628-8344'})
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual('Test Hotel', row['name'])
+        self.assertEqual('213-628-8344', row['phone_number'])
+        apps.cursor.close()
+
+    def test_execute_update_query_update_multiple(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        df = apps._execute_update_query(
+            '*', 'Hotels',
+            {'name': 'Same Name Hotel'},
+            {'zip': '27606'})
+        self.assertEqual(2, len(df.index))
+        row = df.ix[0]
+        self.assertEqual('Same Name Hotel', row['name'])
+        self.assertEqual('919-546-7439', row['phone_number'])
+        row = df.ix[1]
+        self.assertEqual('Same Name Hotel', row['name'])
+        self.assertEqual('(919)-555-5555', row['phone_number'])
         apps.cursor.close()
 
     def test_add_zip(self):

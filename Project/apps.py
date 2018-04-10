@@ -129,7 +129,7 @@ class Apps(object):
         self.cursor = maria_db_connection.cursor()
         self.check = check
 
-    def get_data_frame(self, attributes, table_name, where_clause=None):
+    def get_data_frame(self, attributes, table_name, where_clause_dict=None):
         """
         Generates Pandas DataFrame with desired tuple(s)/row(s) in a table.
 
@@ -140,13 +140,13 @@ class Apps(object):
         3) Returns Pandas DataFrame to the caller function
 
         Parameters:
-            :param attributes: String of attributes desired to be shown in the
-            resulting data frame or table (e.g. *)
+            :param attributes: Comma-separated list of attributes desired to be
+            shown in the resulting data frame or table (e.g. '*').
             :param table_name: Name of the table on which SELECT query is
             performed for generating Pandas DataFrame
-            :param where_clause: String specifying the WHERE clause for SELECT
-            query. It can be None if all tuples (rows) in the table are desired
-            to be shown in the resulting data frame.
+            :param where_clause_dict: Dictionary of attributes and values used
+            for generating WHERE clause. If all tuples/rows in a table are
+            desired to be selected at once, this argument must be None.
 
         Returns:
             :return: Pandas DataFrame (two-dimensional size-mutable,
@@ -155,13 +155,23 @@ class Apps(object):
 
         TODO:
         """
-        # Query for desired tuple(s) and return it as Pandas DataFrame
-        if where_clause:
-            select_query = "SELECT {} FROM {} WHERE {}".format(
-                attributes, table_name, where_clause)
-        else:
-            select_query = "SELECT {} FROM {}".format(attributes, table_name)
-        data_frame = pd.read_sql(select_query, con=self.maria_db_connection)
+        # Build select query
+        select_query = 'SELECT {} FROM {}'.format(
+            attributes,
+            table_name
+        )
+
+        # Add where clause
+        where_values = []
+        if where_clause_dict:
+            select_query += ' WHERE {}'.format(
+                ' AND '.join([key + '=%s' for key in where_clause_dict.keys()]))
+            where_values = where_clause_dict.values()
+
+        # Execute select query
+        data_frame = pd.read_sql(select_query,
+                                 params=where_values,
+                                 con=self.maria_db_connection)
         return data_frame
 
     def _execute_simple_select_query(self, attributes, table_name,
@@ -332,16 +342,16 @@ class Apps(object):
             table_name, set_attr_format, where_attr_format)
         # Execute update query
         self.cursor.execute(update_query, set_attr_args + where_attr_args)
+
         # Generate WHERE clause for SELECT query
-        if 'id' in dictionary:
-            set_attr_format = ' AND '.join([attr + '=%s' for attr in
-                                           dictionary.iterkeys()])
-            where_clause = set_attr_format % tuple(set_attr_args)
-        else:
-            where_clause = where_attr_format % tuple(where_attr_args)
+        select_where_clause_dict = {
+            key: key in dictionary and dictionary[key] or old_where_value
+            for key, old_where_value in where_clause_dict.iteritems()
+        }
+
         # Query for this updated tuple and return it as Pandas DataFrame
         data_frame = self.get_data_frame(select_attributes, table_name,
-                                         where_clause)
+                                         select_where_clause_dict)
         return data_frame
 
     def _execute_delete_query(self, table_name, dictionary):
@@ -378,15 +388,14 @@ class Apps(object):
         """
         where_attr_delete_format = ' AND '.join([attr + '=%s' for attr in
                                                 dictionary.iterkeys()])
-        where_attr_select = ' AND '.join(
-            [attr + '=' + str(value) for attr, value in dictionary.iteritems()])
+
         # Generate delete query statement
         delete_query = "DELETE FROM {} WHERE {}".format(
             table_name, where_attr_delete_format)
         # Execute delete query
         self.cursor.execute(delete_query, dictionary.values())
         # Query this deleted tuple and return it as empty Pandas DataFrame
-        data_frame = self.get_data_frame('*', table_name, where_attr_select)
+        data_frame = self.get_data_frame('*', table_name, dictionary)
         return data_frame
 
     def _check_out(self, reservation_id, check_out_time):
@@ -675,7 +684,7 @@ class Apps(object):
             self._execute_insert_query(zip_dict, 'ZipToCityState')
             # Query for this inserted tuple and return it as Pandas DataFrame
             data_frame = self.get_data_frame('*', 'ZipToCityState',
-                                             'zip={}'.format(zip_dict['zip']))
+                                             {'zip': zip_dict['zip']})
             return data_frame
         except AssertionError, error:
             raise error
@@ -837,7 +846,7 @@ class Apps(object):
             self._execute_insert_query(hotel_dict, 'Hotels')
             # Query for this inserted tuple and return it as Pandas DataFrame
             data_frame = self.get_data_frame(
-                '*', 'Hotels', 'id={}'.format(self.cursor.lastrowid))
+                '*', 'Hotels', {'id': self.cursor.lastrowid})
             return data_frame
         except AssertionError, error:
             raise error
@@ -1002,8 +1011,8 @@ class Apps(object):
             self._execute_insert_query(room_dict, 'Rooms')
             # Query for this inserted tuple and return it as Pandas DataFrame
             data_frame = self.get_data_frame(
-                '*', 'Rooms', 'hotel_id={} AND room_number = {}'.format(
-                    room_dict['hotel_id'], room_dict['room_number']))
+                '*', 'Rooms', {'hotel_id': room_dict['hotel_id'],
+                               'room_number': room_dict['room_number']})
             return data_frame
         except AssertionError, error:
             raise error
@@ -1213,8 +1222,7 @@ class Apps(object):
             self._execute_insert_query(staff_dict, 'Staff')
             staff_id = self.cursor.lastrowid
             # Query for inserted Staff tuple and return it as Pandas DataFrame
-            data_frame = self.get_data_frame('*', 'Staff',
-                                             'id={}'.format(staff_id))
+            data_frame = self.get_data_frame('*', 'Staff', {'id': staff_id})
             # If staff gets assigned to a room, add it into Serves table
             if 'assigned_hotel_id' in staff_dict and \
                     'assigned_room_number' in staff_dict and \
@@ -1499,7 +1507,7 @@ class Apps(object):
             self._execute_insert_query(customer_dict, 'Customers')
             # Query for this inserted tuple and return it as Pandas DataFrame
             data_frame = self.get_data_frame(
-                '*', 'Customers', 'id={}'.format(self.cursor.lastrowid))
+                '*', 'Customers', {'id': self.cursor.lastrowid})
             return data_frame
         except AssertionError, error:
             raise error
@@ -1715,7 +1723,7 @@ class Apps(object):
             reservation_id = self.cursor.lastrowid
             # Query for inserted tuple and return it as Pandas DataFrame
             data_frame = self.get_data_frame('*', 'Reservations',
-                                             'id={}'.format(reservation_id))
+                                             {'id': reservation_id})
             # If check-in, do all check-in logic: i) Check whether this
             # reservation is Presidential suite ii) Assign one Catering Staff
             # and one Room Service Staff to this reservation
@@ -1982,7 +1990,7 @@ class Apps(object):
             self._execute_insert_query(transaction_dict, 'Transactions')
             # Query for this inserted tuple and return it as Pandas DataFrame
             data_frame = self.get_data_frame(
-                '*', 'Transactions', 'id={}'.format(self.cursor.lastrowid))
+                '*', 'Transactions', {'id': self.cursor.lastrowid})
             return data_frame
         except AssertionError, error:
             raise error
@@ -2139,8 +2147,9 @@ class Apps(object):
             self._execute_insert_query(serves_dict, 'Serves')
             # Query for this inserted tuple and return it as Pandas DataFrame
             data_frame = self.get_data_frame(
-                '*', 'Serves', 'staff_id={} AND reservation_id={}'.format(
-                    serves_dict['staff_id'], serves_dict['reservation_id']))
+                '*', 'Serves', {
+                    'staff_id': serves_dict['staff_id'],
+                    'reservation_id': serves_dict['reservation_id']})
             return data_frame
         except AssertionError, error:
             raise error
@@ -2318,10 +2327,18 @@ class Apps(object):
                 if dictionary else ''
             where_clause = where_clause + nested_where_clause
             where_clause = where_clause % tuple(dictionary.values())
-            # SELECT statement is ready. Get Pandas DataFrame and return it.
-            data_frame = self.get_data_frame(
+
+            # Build select query
+            select_query = 'SELECT {} FROM {} WHERE {}'.format(
                 ROOM_AVAILABILITY_COLUMN_NAMES,
-                ROOM_AVAILABILITY_TABLE_STATEMENT, where_clause=where_clause)
+                ROOM_AVAILABILITY_TABLE_STATEMENT,
+                where_clause
+            )
+
+            # SELECT statement is ready. Get Pandas DataFrame and return it.
+            # Execute select query
+            data_frame = pd.read_sql(select_query,
+                                     con=self.maria_db_connection)
             return data_frame
         except AssertionError, error:
             raise error

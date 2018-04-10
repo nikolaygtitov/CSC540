@@ -118,11 +118,10 @@ class AppsClient(object):
 
     # Helper interfaces
     def select(self, where_dict, table_name):
-        where_string = ' AND '.join([key + ('="%s"' % value) for key,value in where_dict.items()])
-        return self.apps.get_data_frame('*', table_name, where_string)
+        return self.apps.get_data_frame('*', table_name, where_dict)
 
     def zip_is_present(self, zip):
-        result = self.apps.get_data_frame('*', 'ZipToCityState', ('zip=%s' % zip))
+        result = self.apps.get_data_frame('*', 'ZipToCityState', {'zip': zip})
         if len(result) == 0:
             return False
         else:
