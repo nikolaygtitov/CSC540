@@ -107,6 +107,32 @@ class TestApps(SQLUnitTestBase):
         self.assertEqual('(919)-555-5555', row['phone_number'])
         apps.cursor.close()
 
+    def test_execute_select_query(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        apps._execute_select_query('*', 'Hotels', 'zip=%s', ['27606'])
+        results = apps.cursor.fetchall()
+        print results
+        self.assertEqual(2, len(results))
+        row = results[0]
+        self.assertEqual('Wolf Inn Raleigh Wolfpack', row[1])
+        row = results[1]
+        self.assertEqual('Nikolay Test Inn', row[1])
+        apps.cursor.close()
+
+    def test_execute_select_query_no_where(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        apps._execute_select_query('*', 'Hotels')
+        results = apps.cursor.fetchall()
+        print results
+        self.assertEqual(9, len(results))
+        row = results[0]
+        self.assertEqual('Wolf Inn Raleigh Hurricanes', row[1])
+        row = results[1]
+        self.assertEqual('Wolf Inn Raleigh Wolfpack', row[1])
+        apps.cursor.close()
+
     def test_add_zip(self):
         apps = Apps(self._con, True)
         df = apps.add_zip({'zip': '27511', 'city': 'Cary', 'state': 'NC'})

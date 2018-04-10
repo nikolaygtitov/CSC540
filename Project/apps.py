@@ -175,7 +175,7 @@ class Apps(object):
         return data_frame
 
     def _execute_simple_select_query(self, attributes, table_name,
-                                     where_clause_dict):
+                                     where_clause_dict=None):
         """
         Generates and executes SELECT query in python format with basic WHERE
         clause having only AND key words.
@@ -199,18 +199,18 @@ class Apps(object):
             executed
             :param where_clause_dict: Dictionary of attributes and values used
             for generating WHERE clause. If all tuples/rows in a table are
-            desired to be selected at once, this argument must be None.
+            desired to be selected at once, this argument can be left out.
 
         Returns:
             :return:
 
         TODO:
         """
-        # Generate WHERE clause format only with AND key words
-        where_attr_format = ' AND '.join([attr + '=%s' for attr in
-                                          where_clause_dict.iterkeys()])
         # Generate select query statement and execute it
         if where_clause_dict:
+            # Generate WHERE clause format only with AND key words
+            where_attr_format = ' AND '.join([attr + '=%s' for attr in
+                                              where_clause_dict.iterkeys()])
             select_query = "SELECT {} FROM {} WHERE {}".format(
                 attributes, table_name, where_attr_format)
             self.cursor.execute(select_query, where_clause_dict.values())
