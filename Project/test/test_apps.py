@@ -996,6 +996,79 @@ class TestApps(SQLUnitTestBase):
         self.assertEqual(5, row['Room Number'])
         apps.cursor.close()
 
+    def test_check_out(self):
+        apps = Apps(self._con, False)
+        load_demo_data(self._con)
+        apps.cursor.execute('UPDATE Reservations SET '
+                            'check_out_time=NULL '
+                            'WHERE id=4')
+        self._con.commit()
+        apps._check_out(4, '2018-05-12 10:02:00')
+        df = apps.get_data_frame('*', 'Transactions', {
+            'date': '2018-05-12 10:02:00'
+        })
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual(2000.0, row['amount'])
+        self.assertEqual('2-night(s) Room Reservation Charge', row['type'])
+        self.assertEqual(4, row['reservation_id'])
+        apps.cursor.close()
+
+    def test_check_out_have_check_out_time(self):
+        apps = Apps(self._con, False)
+        load_demo_data(self._con)
+        apps._check_out(4, '2018-05-12 10:02:00')
+        df = apps.get_data_frame('*', 'Transactions', {
+            'date': '2018-05-12 10:02:00'
+        })
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual(2000.0, row['amount'])
+        self.assertEqual('2-night(s) Room Reservation Charge', row['type'])
+        self.assertEqual(4, row['reservation_id'])
+        apps.cursor.close()
+
+    def test_check_out_twice(self):
+        apps = Apps(self._con, False)
+        load_demo_data(self._con)
+        apps._check_out(4, '2018-05-12 10:01:00')
+        apps._check_out(4, '2018-05-12 10:02:00')
+        df = apps.get_data_frame('*', 'Transactions', {
+            'date': '2018-05-12 10:01:00'
+        })
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual(2000.0, row['amount'])
+        self.assertEqual('2-night(s) Room Reservation Charge', row['type'])
+        self.assertEqual(4, row['reservation_id'])
+        df = apps.get_data_frame('*', 'Transactions', {
+            'date': '2018-05-12 10:00:00'
+        })
+        self.assertEqual(0, len(df.index))
+        apps.cursor.close()
+
+    def test_check_out_free_staff(self):
+        apps = Apps(self._con, False)
+        load_demo_data(self._con)
+        # Assign Staff
+        apps.cursor.execute('UPDATE Staff SET '
+                            'assigned_hotel_id=1, '
+                            'assigned_room_number=1 '
+                            'WHERE id=103')
+        apps.cursor.execute('UPDATE Staff SET '
+                            'assigned_hotel_id=1, '
+                            'assigned_room_number=1 '
+                            'WHERE id=104')
+        self._con.commit()
+        # Check out
+        apps._check_out(1, '2017-05-13 10:22:01')
+        df = apps.get_data_frame('*', 'Staff', {
+            'assigned_hotel_id': 1,
+            'assigned_room_number': 1
+        })
+        self.assertEqual(0, len(df.index))
+        apps.cursor.close()
+
     def test_report_occupancy_by_hotel(self):
         apps = Apps(self._con, True)
         self._insert_test_data()
