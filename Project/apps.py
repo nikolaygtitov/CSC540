@@ -3,67 +3,48 @@ apps.py
 
 CSC 540 (601) - Database Management Concepts and Systems
 Project for CSC 540
-This program implements the solution for the main Project assignment:
 
-The design and development processes of Database Management System for WolfInns
-are completed in the Project Report 1 and Project Report 2.
+Description of the Project and Software read in the main program: hotelsoft.py
 
-Description of the Project:
-The Popular Hotel Chain database system is designed and built to manage and
-maintain information of hotels, rooms, staff, and customers, including but not
-limited to storing, updating, and deleting data. The database maintains a
-variety of information records about hotels located in various cities around
-the country, including staff, rooms, customers, and billing records. For each
-customer stay it maintains service records, such as phone bills, dry cleaning,
-gyms, room service, and special requests. It generates and maintains billing
-accounts for each customer stay. It generates report occupancy by hotel, room
-category, date range, and city. The database system is developed for Wolf Inns
-and is used by hotels operators and employees including management staff, front
-desk representatives, room service, billing, and catering staff. The Popular
-Hotel Chain database system resolves constraints on availability and pricing of
-rooms, maintaining proper customer, billing, check-in, and check-out
-information. Users of the database may perform different tasks concurrently,
-each consisting of multiple sequential operations that have an affect on the
-database. There are four major tasks that are performed by corresponding
-users on the database:
-    1. Information Processing
-    2. Maintaining Service Records
-    3. Maintaining Billing Accounts
-    4. Reports
+Description of the apps.py file:
+This file provides all required APIs for full interaction between front-end and
+back-end programs. The APIs are constructed with the wrappers around MySQL
+queries allowing the front-end (UI) to call appropriate functions performing
+MySQL interactions. MySQL interactions include retrieving, storing, updating,
+and deleting data from/into database. All query wrappers are enclosed within
+a single class Apps.
+To make a call to any of the APIs, the Apps class must be instantiated.
+It has several private functions that serve as internal helper functions and
+not intended to be referenced by either front-end of back-end.
+All APIs are self-explanatory and do exactly what they are designed to do.
+Some APIs perform several operations/tasks on the database. For example,
+check-out API does the following operations:
+1) Updates Reservations table with 'check_out_time' value
+2) Frees all the assigned Staff to that reservation by updating Staff table
+with NULL values for 'assigned_hotel_id' and 'assigned_room_number' attributes
+of all Staff that are serving this reservation
+3) Generates and inserts new transaction into Transactions table by
+calculating the difference between 'start_date' and 'end_date',
+and multiplying by the 'rate' of the room.
 
-Description of the program project.py:
-It provides a user with friendly UI to select tasks and operations user
-needs/wants to perform.
-All of the following operations are performed on MySQL MariaDB Server at NCSU
-(classdb2.csc.ncsu.edu):
-    - INSERT
-    - SELECT
-    - DROP TABLE
+Following is the list APIs that may perform more than one operation at a time:
+add_staff() - also performs assign_staff_to_room API if corresponding
+attributes specified
+update_staff() - also performs assign_staff_to_room API if corresponding
+attributes specified
+add_reservation() - also performs check-in/check-out APIs and may call
+update_staff() API if corresponding attributes specified
+update_reservation() - also performs check-in/check-out APIs and may call
+update_staff() API if corresponding attributes specified
 
-Description of the program apps.py:
-It provides the wrappers around MySQL queries allowing the northbound (UI) to
-call appropriate functions to perform MySQL interaction including storing,
-retrieving and deleting data.
-
-Execute the program run:
- > python apps.py
+All APIs return Pandas DataFrame to the front-end layer.
 
 @version: 1.0
-@todo: Integrate with UI, Add Transactions, Add Documentation, Testing, Demo
+@todo: Demo
 @since: March 24, 2018
 
-@status: Incomplete
-@requires: Connection to MariaDB server at the NCSU.
-           Option 1: Establish connection through NCSU VPN.
-                     Installation of Cisco AnyConnect VPN Software is required.
-                     Installation instructions of Cisco AnyConnect can be
-                     found here:
-https://oit.ncsu.edu/campus-it/campus-data-network/network-security/vpn/
-
-           Option 2: Pull or copy source code to the NCSU remote machine and
-                     run it there:
-scp project.py unity_id@remote.eos.ncsu.edu:/afs/unity.ncsu.edu/users/u/unity_id
-
+@status: Complete
+@requires: Apps class to be instantiated
 @contact: nfschnoo@ncsu.edu
           ngtitov@ncsu.edu
           pdscott2@ncsu.edu
@@ -71,7 +52,6 @@ scp project.py unity_id@remote.eos.ncsu.edu:/afs/unity.ncsu.edu/users/u/unity_id
 @authors: Nathan Schnoor
           Nikolay Titov
           Preston Scott
-
 """
 
 # Import required Python and MySQL libraries
@@ -175,7 +155,8 @@ class Apps(object):
         clause having only AND key words.
 
         This is private function of the class and not intended to be referenced
-        by upper layers. It is referenced only by internal caller functions.
+        by either front-end or back-end layers. It is referenced only by
+        internal caller functions.
         For a given attributes, table name, over which SELECT query is
         executed, and dictionary of attributes and values for corresponding
         WHERE clause, specified in the arguments respectively, it does the
@@ -219,7 +200,8 @@ class Apps(object):
         WHERE clause.
 
         This is private function of the class and not intended to be referenced
-        by upper layers. It is referenced only by internal caller functions.
+        by either front-end or back-end layers. It is referenced only by
+        internal caller functions.
         For a given attributes, table name, WHERE clause format, and list of
         values used for WHERE clause, over which SELECT query is executed, it
         does the following:
@@ -259,7 +241,8 @@ class Apps(object):
         Generates and executes INSERT query in python format.
 
         This is private function of the class and not intended to be referenced
-        by upper layers. It is referenced only by internal caller functions.
+        by either front-end or back-end layers. It is referenced only by
+        internal caller functions.
         For a given dictionary of attributes and values to be stored in a
         particular table, specified as an dictionary argument, it does the
         following:
@@ -292,7 +275,8 @@ class Apps(object):
         Generates and executes UPDATE query in python format.
 
         This is private function of the class and not intended to be referenced
-        by upper layers. It is referenced only by internal caller functions.
+        by either front-end or back-end layers. It is referenced only by
+        internal caller functions.
         For a given dictionary of attributes and values to be updated in a
         particular table, specified as an dictionary argument and table_name
         respectively, it does the following:
@@ -355,7 +339,8 @@ class Apps(object):
         Generates and executes DELETE query in python format.
 
         This is private function of the class and not intended to be referenced
-        by upper layers. It is referenced only by internal caller functions.
+        by either front-end or back-end layers. It is referenced only by
+        internal caller functions.
         For a given dictionary of attributes and values, specified as an
         dictionary argument, that must identify a tuple(s) in a particular
         table, it does the following:
@@ -399,7 +384,8 @@ class Apps(object):
         Performs the check-out logic operations on Staff and Transaction tables.
 
         This is private function of the class and not intended to be referenced
-        by upper layers. It is referenced by two internal caller functions
+        by either front-end or back-end layers. It is referenced by two
+        internal caller functions:
         i) add_reservation() - Within new reservation a check-out time
         follows immediately after check-in. It is very unlikely,
         but possible. This reservation must not have dedicated staff assigned.
@@ -485,8 +471,8 @@ class Apps(object):
         Assigns staff member to a room by adding it into Serves table.
 
         This is private function of the class and not intended to be referenced
-        by upper layers. Request to assign staff to a room may come from four
-        different internal caller functions:
+        by either front-end or back-end layers. Request to assign staff to a
+        room may come from four different internal caller functions:
         i) add_staff() - Staff is immediately assigned to a room once is added
         ii) update_staff() - Staff is assigned to a room as an update
         iii) add_reservation() - Customer checks-in immediately when
@@ -1247,7 +1233,7 @@ class Apps(object):
         executes it. Once data is successfully updated in the table, the helper
         function also queries this tuple and returns it as Pandas DataFrame.
         If staff member gets assigned to a room through this update by the
-        upper layer (UI layer), it does not specify reservation_id argument.
+        front-end layer (UI layer), it does not specify reservation_id argument.
         Therefore, it calls private helper function _assign_staff_to_room(),
         which determines reservation ID based on hotel_id, room_number,
         check-in and check-out times, which inserts a tuple into Serves table
@@ -1278,7 +1264,7 @@ class Apps(object):
             and room number to which staff gets assigned. It is only specified
             when caller is internal private helper function
             _assign_staff_to_room(). It is None, if the call is made by the
-            upper layer.
+            front-end layer.
 
         Returns:
             :return: Concatenated Pandas DataFrame (two-dimensional

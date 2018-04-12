@@ -25,7 +25,7 @@ Execute the program run:
 @requires: Connection to MariaDB server at the NCSU.
            Option 1: Establish connect through NCSU VPN.
            Installation of Cisco AnyConnect VPN Software is required.
-           Installation instractions can be found here:
+           Installation instructions can be found here:
                https://oit.ncsu.edu/campus-it/campus-data-network/network
               -security/vpn/
            Option 2: Pull or copy source code to the NCSU remote machine and
@@ -55,9 +55,9 @@ import pandas as pd
 # Initialization of constants
 # Change all the constants accordingly USER, PASSWORD, DB
 HOST = 'classdb2.csc.ncsu.edu'
-USER = 'unity_id'
-PASSWORD = 'student_id'
-DB = 'db'
+USER = 'ngtitov'
+PASSWORD = '001029047'
+DB = 'ngtitov'
 
 # Actual program starts here
 # Establish a DB connection

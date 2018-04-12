@@ -1,17 +1,76 @@
 """
 hotelsoft.py
 
+CSC 540 (601) - Database Management Concepts and Systems
+Project for CSC 540
+This program implements the solution for the main Project assignment:
+
+The design and development processes of Database Management System for WolfInns
+are completed in the Project Report 1 and Project Report 2.
+
+Description of the Project:
+The Popular Hotel Chain database system is designed and built to manage and
+maintain information of hotels, rooms, staff, and customers, including but not
+limited to storing, updating, and deleting data. The database maintains a
+variety of information records about hotels located in various cities around
+the country, including staff, rooms, customers, and billing records.
+For each customer stay it maintains service records, such as phone bills, dry
+cleaning, gyms, room service, and special requests. It generates and maintains
+billing accounts for each customer stay. It generates report occupancy by
+hotel, room category, date range, and city.
+The database system is developed for Wolf Inns and is used by hotels operators
+and employees including management staff, front desk representatives, room
+service, billing, and catering staff.
+The Popular Hotel Chain database system resolves constraints on availability
+and pricing of rooms, maintaining proper customer, billing, check-in, and
+check-out information. Users of the database may perform different tasks
+concurrently, each consisting of multiple sequential operations that have an
+affect on the database.
+There are four major tasks that are performed by corresponding users on the
+database:
+    1. Information Processing
+    2. Maintaining Service Records
+    3. Maintaining Billing Accounts
+    4. Reports
+
+Description of the Software:
+This program allows retrieving, storing, manipulating and deleting any data
+from the DBMS through various user-friendly applications instead of direct
+interaction with MariaDB MySQL server via MySQL queries, such as SELECT,
+INSERT, UPDATE, and DELETE.
+The architecture of the software is designed as follows:
++---------------+     +---------------+    +-------------+     +------------+
+|      UI       |     |    Client     |    |    APIs     |     |  DATABASE  |
+|  hotelsoft.py | ->  | appsclient.py | -> |   apps.py   |  -> |   MariaDB  |
++---------------+     +---------------+    +-------------+     +------------+
+
+The entire front-end interaction between a user and the program takes place via
+UI, which is a menu driven system that enables interaction with the back-end
+database.
+
+The following is a sample of menu driven system of the implemented UI:
+
+Here the output of UI
+
+The program is written without any security constraints, such as user
+permissions and others. All the data is fully retrievable from the MariaDB
+MySQL regardless permissions.
+
+Description of the hotelsoft.py file:
+This is the main file that gets executed from the prompt by a user to initiate
+the program. It connects to the NCSU MySQL MariaDB Server as specified in the
+default MySQL settings/parameters in the code. In order to connect to different
+database, please consider changing the following default database parameters
+in the code:
+
+db = maria_db.connect(host=DESIRED_HOST, user=USER_NAME,
+                      password=PASSWORD, database=DATABASE)
+
 This file contains the classes comprising the user interface for the WolfInn
 Database Management System. The UI is a menu driven system that enables
-interaction with the backend database.  The architecture is as follows:
-
-+---------------+     +---------------+    +-------------+     +------------+
-|   UI          |     |   Client      |    |    API      |     |  DATABASE  |
-|  hotelsoft.py | ->  | appsclient.py | -> |   apps.py   |  -> |            |
-+---------------+     +---------------+    +-------------+     +------------+
-
+interaction with the backend database.
 The UI functions communicate with the Apps API through a Client class which
-aggregrates common functionality.
+aggregates common functionality.
 
 To execute the program run:
  > python hotesoft.py [-options]
@@ -20,17 +79,27 @@ To execute the program run:
    -c: run in check mode (USE SQL CHECK functionality)
 
 @version: 1.0
-@todo: Testing, Demo
+@todo: Demo
 @since: April 8, 2018
-@status: Incomplete
-@requires: Connection to MariaDB server
+@status: Complete
+@requires: Connection to MariaDB server at the NCSU. If default database
+           parameters are changed, ignore both options below (unless DBMS used
+           is at the NCSU MySQL Server).
+           Option 1: Establish connection through NCSU VPN.
+                     Installation of Cisco AnyConnect VPN Software is required.
+                     Installation instructions of Cisco AnyConnect can be
+                     found here:
+https://oit.ncsu.edu/campus-it/campus-data-network/network-security/vpn/
+
+           Option 2: Pull or copy source code to the NCSU remote machine and
+                     run it there:
+scp * unity_id@remote.eos.ncsu.edu:/afs/unity.ncsu.edu/users/u/unity_id/CSC540
 @contact: nfschnoo@ncsu.edu
           ngtitov@ncsu.edu
           pdscott2@ncsu.edu
 @authors: Nathan Schnoor
           Nikolay Titov
           Preston Scott
-
 """
 
 import sys
@@ -47,9 +116,9 @@ from demo_data import load_demo_data
 ################################################################################
 class Menu(object):
     """
-    Template for menu objects which will comprise the menuing system.
-    Menu options are the sub-items for each parent menu that respond to selection.
-    Menu options must be MenuOption objects.
+    Template for menu objects which will comprise the menu system.
+    Menu options are the sub-items for each parent menu that respond to
+    selection. Menu options must be MenuOption objects.
     """
 
     def __init__(self, name, title, prompt='Select a menu option:'):
@@ -271,10 +340,13 @@ class HotelSoft(object):
             # Update and delete queries build a "where" dictionary
             if action.type == 'update' or action.type == 'delete':
 
-                preview_table = self.client.select(None, action.api_info.table_name)
+                preview_table = self.client.select(None,
+                                                   action.api_info.table_name)
                 if isinstance(preview_table, pd.DataFrame):
-                    print tabulate(preview_table, 
-                        headers=preview_table.columns.values.tolist(), tablefmt='psql')
+                    print tabulate(
+                        preview_table,
+                        headers=preview_table.columns.values.tolist(),
+                        tablefmt='psql')
 
                 number_found = 0
 
@@ -289,30 +361,31 @@ class HotelSoft(object):
                     print('<<Press enter to ignore a parameter>>\n')
 
                     # Enter one or more parameters to find the entry
-                    for index, arg in enumerate(action.api_info.attr_names['where']):
-                        example = '(%s)' % action.api_info.examples['where'][index]
+                    for index, arg in enumerate(
+                            action.api_info.attr_names['where']):
+                        example = '(%s)' % \
+                                  action.api_info.examples['where'][index]
                         val = (arg in where_dict and '[%s]' % where_dict[arg]
                                or '')
-                        item = raw_input((
-                            '%s %s %s' % (arg, example, val)).strip() + ': '
-                        ).strip()
+                        item = raw_input(
+                            ('%s %s %s' % (arg, example, val)).strip() + ': ').\
+                            strip()
                         if item != '':
                             where_dict[arg] = item
-
                         # Try to find row - we may be able to end early
                         search_result = self.client.select(
                             where_dict, action.api_info.table_name)
                         number_found = len(search_result)
                         if number_found <= 1:
                             break
-
                     # See if that item can be found
-                    # If not, reprompt and try again
+                    # If not, re-prompt and try again
                     if number_found > 0:
                         print('\n')
-                        print tabulate(search_result,
-                                       headers=search_result.columns.values.tolist(),
-                                       tablefmt='psql')
+                        print tabulate(
+                            search_result,
+                            headers=search_result.columns.values.tolist(),
+                            tablefmt='psql')
                         if number_found > 1:
                             continue_filter = not raw_input(
                                 'Multiple items found. Continue to filter? '
@@ -339,8 +412,9 @@ class HotelSoft(object):
 
                 # Enter the normal parameters
                 for index, arg in enumerate(action.api_info.attr_names['set']):
-                    item = raw_input(arg + '(%s): ' %
-                                     action.api_info.examples['set'][index]).strip()
+                    item = raw_input(
+                        arg + '(%s): ' %
+                        action.api_info.examples['set'][index]).strip()
                     if item != '':
                         set_dict[arg] = item
 
@@ -365,9 +439,6 @@ class HotelSoft(object):
                 action.handler()
             else:
                 results = action.handler(param_dict, action.api_info)
-
-
-
             print '\nMenuAction Successful ' + u"\u2713"
             if isinstance(results, list):
                 for result in results:
@@ -375,7 +446,8 @@ class HotelSoft(object):
                                    headers=result.columns.values.tolist(),
                                    tablefmt='psql')
             else:
-                print tabulate(results, headers=results.columns.values.tolist(),
+                print tabulate(results,
+                               headers=results.columns.values.tolist(),
                                tablefmt='psql')
             print('\n')
 
@@ -498,8 +570,8 @@ def main():
         MenuAction('delete_hotel', 'DELETE A HOTEL', AppsParams.hotels,
                    wolf_inn.client.delete))
     wolf_inn.add_menu_action(
-        MenuAction('insert_room', 'ADD A NEW ROOM TO A HOTEL', AppsParams.rooms,
-                   wolf_inn.client.insert))
+        MenuAction('insert_room', 'ADD A NEW ROOM TO A HOTEL',
+                   AppsParams.rooms, wolf_inn.client.insert))
     wolf_inn.add_menu_action(
         MenuAction('update_room', 'UPDATE A ROOM', AppsParams.rooms,
                    wolf_inn.client.update))
@@ -516,23 +588,23 @@ def main():
         MenuAction('delete_staff', 'DELETE A STAFF MEMBER', AppsParams.staff,
                    wolf_inn.client.delete))
     wolf_inn.add_menu_action(
-        MenuAction('insert_customer', 'ADD A NEW CUSTOMER', AppsParams.customers,
-                   wolf_inn.client.insert))
+        MenuAction('insert_customer', 'ADD A NEW CUSTOMER',
+                   AppsParams.customers, wolf_inn.client.insert))
     wolf_inn.add_menu_action(
-        MenuAction('update_customer', 'UPDATE A CUSTOMER', AppsParams.customers,
-                   wolf_inn.client.update))
+        MenuAction('update_customer', 'UPDATE A CUSTOMER',
+                   AppsParams.customers, wolf_inn.client.update))
     wolf_inn.add_menu_action(
-        MenuAction('delete_customer', 'DELETE A CUSTOMER', AppsParams.customers,
-                   wolf_inn.client.delete))
+        MenuAction('delete_customer', 'DELETE A CUSTOMER',
+                   AppsParams.customers, wolf_inn.client.delete))
     wolf_inn.add_menu_action(
-        MenuAction('insert_res', 'ADD A NEW RESERVATION', AppsParams.reservations,
-                   wolf_inn.client.insert))
+        MenuAction('insert_res', 'ADD A NEW RESERVATION',
+                   AppsParams.reservations, wolf_inn.client.insert))
     wolf_inn.add_menu_action(
-        MenuAction('update_res', 'UPDATE A RESERVATION', AppsParams.reservations,
-                   wolf_inn.client.update))
+        MenuAction('update_res', 'UPDATE A RESERVATION',
+                   AppsParams.reservations, wolf_inn.client.update))
     wolf_inn.add_menu_action(
-        MenuAction('delete_res', 'DELETE A RESERVATION', AppsParams.reservations,
-                   wolf_inn.client.delete))
+        MenuAction('delete_res', 'DELETE A RESERVATION',
+                   AppsParams.reservations, wolf_inn.client.delete))
     wolf_inn.add_menu_action(
         MenuAction('insert_charge', 'APPLY A TRANSACTION TO A RESERVATION',
                    AppsParams.transactions, wolf_inn.client.insert))
@@ -708,7 +780,8 @@ def main():
                    wolf_inn.store_action('update_check_out', 'reservations')))
     wolf_inn.get_menu('reservations').add(
         MenuOption('Assign staff to room',
-                   wolf_inn.store_action('update_assign_staff', 'reservations')))
+                   wolf_inn.store_action('update_assign_staff',
+                                         'reservations')))
     wolf_inn.get_menu('reservations').add(
         MenuOption('Return to previous menu', wolf_inn.store_menu('info')))
     wolf_inn.get_menu('reservations').add(

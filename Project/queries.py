@@ -1,3 +1,26 @@
+"""
+queries.py
+
+CSC 540 (601) - Database Management Concepts and Systems
+Project for CSC 540
+
+Description of the Project and Software read in the main program: hotelsoft.py
+
+Description of the queries.py file:
+
+@version: 1.0
+@todo: Demo
+@since: March 24, 2018
+
+@status: Complete
+@requires: None
+@contact: nfschnoo@ncsu.edu
+          ngtitov@ncsu.edu
+          pdscott2@ncsu.edu
+@authors: Nathan Schnoor
+          Nikolay Titov
+          Preston Scott
+"""
 
 # Query to report the occupancy grouped by hotel
 # Parameters:
@@ -49,7 +72,7 @@ ZipToCityState NATURAL LEFT JOIN ((SELECT * from Reservations WHERE
 (DATEDIFF(start_date, %s) <= 0 AND DATEDIFF(end_date, %s) > 0)) AS CurrentRes)
 GROUP BY city, state
 """
-#                   Please check below and verify it is correct                #
+
 # Query to report the occupancy grouped by city
 # Parameters:
 #     - query_end: The date for which to end the query
@@ -161,7 +184,11 @@ FROM Transactions
 WHERE reservation_id = %s
 """
 
-# TODO - comment
+# Query to find all the staff (staff_id) assigned to a particular reservation
+# as dedicated staff
+# Parameters:
+#    - Reservations.id: Reservation ID of the room for which customer does a
+#      check-out (to find all assigned staff members to free them)
 QUERY_ASSIGNED_STAFF = """
 SELECT Staff.id as staff_id
 FROM Staff INNER JOIN Reservations
