@@ -185,31 +185,31 @@ class AppsParams(object):
     gen_bill = ReportAttributes(
         'Generate_bill', {'set': ['reservation_id']}, {'set': ['e.g. 1']})
     occ_hotel = ReportAttributes(
-        'Occupancy_hotel', {'set': ['query_date']}, {'set': ['YYYY-MM-SS']})
+        'Occupancy_hotel', {'set': ['query_date']}, {'set': ['YYYY-MM-DD']})
     occ_room = ReportAttributes(
-        'Occupancy_room', {'set': ['query_date']}, {'set': ['YYYY-MM-SS']})
+        'Occupancy_room', {'set': ['query_date']}, {'set': ['YYYY-MM-DD']})
     occ_city = ReportAttributes(
-        'Occupancy_city', {'set': ['query_date']}, {'set': ['YYYY-MM-SS']})
+        'Occupancy_city', {'set': ['query_date']}, {'set': ['YYYY-MM-DD']})
     occ_date = ReportAttributes(
         'Occupancy_date', {'set': ['start_date', 'end_date']},
-        {'set': ['YYYY-MM-SS', 'YYYY-MM-SS']})
+        {'set': ['YYYY-MM-DD', 'YYYY-MM-DD']})
     list_staff = ReportAttributes(
         'List_staff', {'set': ['hotel_id']}, {'set': ['e.g. 1']})
     cust_inter = ReportAttributes(
         'Customer_inter', {'set': ['reservation_id']}, {'set': ['e.g. 1']})
     rev_hotel = ReportAttributes(
         'Revenue_hotel', {'set': ['start_date', 'end_date', 'hotel_id']},
-        {'set': ['YYYY-MM-SS', 'YYYY-MM-SS', 'e.g. 1']})
+        {'set': ['YYYY-MM-DD', 'YYYY-MM-DD', 'e.g. 1']})
     rev_all = ReportAttributes(
         'Revenue_all', {'set': ['start_date', 'end_date']},
-        {'set': ['YYYY-MM-SS', 'YYYY-MM-SS']})
+        {'set': ['YYYY-MM-DD', 'YYYY-MM-DD']})
     cust_no_card = ReportAttributes(
         'Customer_nocard', {'set': ['start_date', 'end_date']},
-        {'where': ['YYYY-MM-SS', 'YYYY-MM-SS']})
+        {'where': ['YYYY-MM-DD', 'YYYY-MM-DD']})
     room_avail = ReportAttributes(
         'Room_avail', {'set': ['start_date', 'end_date', 'hotel_id', 'name',
                                'zip']},
-        {'set': ['YYYY-MM-SS', 'YYYY-MM-SS', 'e.g. 1', 'e.g. Wolf Inn Raleigh',
+        {'set': ['YYYY-MM-DD', 'YYYY-MM-DD', 'e.g. 1', 'e.g. Wolf Inn Raleigh',
                  'e.g. 24354']})
 
 
