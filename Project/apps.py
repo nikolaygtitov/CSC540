@@ -7,9 +7,37 @@ Project for CSC 540
 Description of the Project and Software read in the main program: hotelsoft.py
 
 Description of the apps.py file:
-This file provides the wrappers around MySQL queries allowing the front-end
-(UI) to make calls of appropriate functions to perform MySQL interaction
-including retrieving, storing, updating, and deleting data.
+This file provides all required APIs for full interaction between front-end and
+back-end programs. The APIs are constructed with the wrappers around MySQL
+queries allowing the front-end (UI) to call appropriate functions performing
+MySQL interactions. MySQL interactions include retrieving, storing, updating,
+and deleting data from/into database. All query wrappers are enclosed within
+a single class Apps.
+To make a call to any of the APIs, the Apps class must be instantiated.
+It has several private functions that serve as internal helper functions and
+not intended to be referenced by either front-end of back-end.
+All APIs are self-explanatory and do exactly what they are designed to do.
+Some APIs perform several operations/tasks on the database. For example,
+check-out API does the following operations:
+1) Updates Reservations table with 'check_out_time' value
+2) Frees all the assigned Staff to that reservation by updating Staff table
+with NULL values for 'assigned_hotel_id' and 'assigned_room_number' attributes
+of all Staff that are serving this reservation
+3) Generates and inserts new transaction into Transactions table by
+calculating the difference between 'start_date' and 'end_date',
+and multiplying by the 'rate' of the room.
+
+Following is the list APIs that may perform more than one operation at a time:
+add_staff() - also performs assign_staff_to_room API if corresponding
+attributes specified
+update_staff() - also performs assign_staff_to_room API if corresponding
+attributes specified
+add_reservation() - also performs check-in/check-out APIs and may call
+update_staff() API if corresponding attributes specified
+update_reservation() - also performs check-in/check-out APIs and may call
+update_staff() API if corresponding attributes specified
+
+All APIs return Pandas DataFrame to the front-end layer.
 
 @version: 1.0
 @todo: Demo
@@ -127,7 +155,8 @@ class Apps(object):
         clause having only AND key words.
 
         This is private function of the class and not intended to be referenced
-        by upper layers. It is referenced only by internal caller functions.
+        by either front-end or back-end layers. It is referenced only by
+        internal caller functions.
         For a given attributes, table name, over which SELECT query is
         executed, and dictionary of attributes and values for corresponding
         WHERE clause, specified in the arguments respectively, it does the
@@ -171,7 +200,8 @@ class Apps(object):
         WHERE clause.
 
         This is private function of the class and not intended to be referenced
-        by upper layers. It is referenced only by internal caller functions.
+        by either front-end or back-end layers. It is referenced only by
+        internal caller functions.
         For a given attributes, table name, WHERE clause format, and list of
         values used for WHERE clause, over which SELECT query is executed, it
         does the following:
@@ -211,7 +241,8 @@ class Apps(object):
         Generates and executes INSERT query in python format.
 
         This is private function of the class and not intended to be referenced
-        by upper layers. It is referenced only by internal caller functions.
+        by either front-end or back-end layers. It is referenced only by
+        internal caller functions.
         For a given dictionary of attributes and values to be stored in a
         particular table, specified as an dictionary argument, it does the
         following:
@@ -244,7 +275,8 @@ class Apps(object):
         Generates and executes UPDATE query in python format.
 
         This is private function of the class and not intended to be referenced
-        by upper layers. It is referenced only by internal caller functions.
+        by either front-end or back-end layers. It is referenced only by
+        internal caller functions.
         For a given dictionary of attributes and values to be updated in a
         particular table, specified as an dictionary argument and table_name
         respectively, it does the following:
@@ -307,7 +339,8 @@ class Apps(object):
         Generates and executes DELETE query in python format.
 
         This is private function of the class and not intended to be referenced
-        by upper layers. It is referenced only by internal caller functions.
+        by either front-end or back-end layers. It is referenced only by
+        internal caller functions.
         For a given dictionary of attributes and values, specified as an
         dictionary argument, that must identify a tuple(s) in a particular
         table, it does the following:
@@ -351,7 +384,8 @@ class Apps(object):
         Performs the check-out logic operations on Staff and Transaction tables.
 
         This is private function of the class and not intended to be referenced
-        by upper layers. It is referenced by two internal caller functions
+        by either front-end or back-end layers. It is referenced by two
+        internal caller functions:
         i) add_reservation() - Within new reservation a check-out time
         follows immediately after check-in. It is very unlikely,
         but possible. This reservation must not have dedicated staff assigned.
@@ -437,8 +471,8 @@ class Apps(object):
         Assigns staff member to a room by adding it into Serves table.
 
         This is private function of the class and not intended to be referenced
-        by upper layers. Request to assign staff to a room may come from four
-        different internal caller functions:
+        by either front-end or back-end layers. Request to assign staff to a
+        room may come from four different internal caller functions:
         i) add_staff() - Staff is immediately assigned to a room once is added
         ii) update_staff() - Staff is assigned to a room as an update
         iii) add_reservation() - Customer checks-in immediately when
@@ -1199,7 +1233,7 @@ class Apps(object):
         executes it. Once data is successfully updated in the table, the helper
         function also queries this tuple and returns it as Pandas DataFrame.
         If staff member gets assigned to a room through this update by the
-        upper layer (UI layer), it does not specify reservation_id argument.
+        front-end layer (UI layer), it does not specify reservation_id argument.
         Therefore, it calls private helper function _assign_staff_to_room(),
         which determines reservation ID based on hotel_id, room_number,
         check-in and check-out times, which inserts a tuple into Serves table
@@ -1230,7 +1264,7 @@ class Apps(object):
             and room number to which staff gets assigned. It is only specified
             when caller is internal private helper function
             _assign_staff_to_room(). It is None, if the call is made by the
-            upper layer.
+            front-end layer.
 
         Returns:
             :return: Concatenated Pandas DataFrame (two-dimensional
