@@ -1,4 +1,4 @@
-# CSC 540 - Database Management concepts and Systems
+# CSC 540 (601) - Database Management Concepts and Systems
 
 # Course Project
 
@@ -7,7 +7,9 @@ The design and development processes of Database Management System for WolfInns 
 ### Description of the Project:
 The Popular Hotel Chain database system is designed and built to manage and maintain information of hotels, rooms, staff, and customers, including but not limited to storing, updating, and deleting data. The database maintains a variety of information records about hotels located in various cities around the country, including staff, rooms, customers, and billing records. 
 
-For each customer stay it maintains service records, such as phone bills, dry cleaning, gyms, room service, and special requests. It generates and maintains billing accounts for each customer stay. It generates report occupancy by hotel, room category, date range, and city. The database system is developed for Wolf Inns and is used by hotels operators and employees including management staff, front desk representatives, room service, billing, and catering staff.
+For each customer stay it maintains service records, such as phone bills, dry cleaning, gyms, room service, and special requests. It generates and maintains billing accounts for each customer stay. It generates report occupancy by hotel, room category, date range, and city.
+
+The database system is developed for Wolf Inns and is used by hotels operators and employees including management staff, front desk representatives, room service, billing, and catering staff.
 
 The Popular Hotel Chain database system resolves constraints on availability and pricing of rooms, maintaining proper customer, billing, check-in, and check-out information. Users of the database may perform different tasks concurrently, each consisting of multiple sequential operations that have an affect on the database.
 
@@ -17,30 +19,90 @@ There are four major tasks that are performed by corresponding users on the data
 3. Maintaining Billing Accounts
 4. Reports
 ### Description of the Software:
-It provides a user with friendly User Interface (text-based menu system) to select tasks and operations user needs/wants to perform.
+This program allows retrieving, storing, manipulating and deleting any data
+from the DBMS through various user-friendly applications instead of direct
+interaction with MariaDB MySQL server via MySQL queries, such as SELECT,
+INSERT, UPDATE, and DELETE.
+The architecture of the software is designed as follows:
+```
++---------------+     +---------------+    +-------------+     +------------+
+|      UI       |     |    Client     |    |    APIs     |     |  DATABASE  |
+|  hotelsoft.py | ->  | appsclient.py | -> |   apps.py   |  -> |   MariaDB  |
++---------------+     +---------------+    +-------------+     +------------+
+```
+The entire front-end interaction between a user and the program takes place via
+UI, which is a menu driven system that enables interaction with the back-end
+database.
 
-The following is a sample of the User Interface that a user sees as the program started:
+The following is a sample of menu driven system of the implemented UI:
 ```
 Here the output of UI
 ```
 
-All of the following operations are performed on MySQL MariaDB NCSU Server at [classdb2.csc.ncsu.edu](https://courses.ncsu.edu/csc540/lec/001/wrap/FAQ_general.html):
+All of the following queries are performed in the back-end on the default MySQL
+MariaDB NCSU Server at
+[classdb2.csc.ncsu.edu](https://courses.ncsu.edu/csc540/lec/001/wrap/FAQ_general.html):
 * __SELECT__
 * __INSERT__
 * __UPDATE__
 * __DELETE__
 
-## Run the Software:
-To start the program that connects to DBMS (MySQL MariaDB Server at NCSU) run the following command:
+### File Contents and Descriptions:
+The following is the list of existing files required by the program and their
+content.
+#### hotelsoft.py
+This is the main file that gets executed from the prompt by a user to initiate
+the program. It connects to the NCSU MySQL MariaDB Server as specified in the
+default MySQL settings/parameters in the code. In order to connect to different
+database, please consider changing the following default database parameters
+in the code:
 ```
-python hotelsoft.py
+db = maria_db.connect(host=DESIRED_HOST, user=USER_NAME,
+                      password=PASSWORD, database=DATABASE)
 ```
-Note that current DBMS (MySQL MariaDB Server at NCSU) version ignores all the `CHECK` and `NOT NULL` constraints for insert and update operations.
+This file contains the classes comprising the user interface for the WolfInn
+Database Management System. The UI is a menu driven system that enables
+interaction with the backend database. The UI functions communicate with the
+Apps API through a Client class which aggregates common functionality.
+#### apps.py
 
-To enable assertions within the program itself ensuring that data to be inserted or updated obeys MySQL constraints currently ignored, run the following command:
+### DBMS
+Currently the program initiates connection with the default MySQL MariaDB
+Server at the NCSU. In order to successfully establish connection with the NCSU
+MySQL Server, which behind firewall and drops all exteranl connection attempts,
+use one of the two following options. Note: If default database parameters are
+changed, ignore both options below (unless DBMS used is at the NCSU MySQL
+Server).
+* Option 1: Establish connection through NCSU VPN. Installation of Cisco
+AnyConnect VPN Software is required. Installation instructions of Cisco
+AnyConnect can be found [here](https://oit.ncsu.edu/campus-it/campus-data-network/network-security/vpn/)
+
+* Option 2: Pull or copy source code to the NCSU remote machine and run the
+program there:
 ```
-python hotelsoft.py -c
+scp * unity_id@remote.eos.ncsu.edu:/afs/unity.ncsu.edu/users/u/unity_id/CSC540
 ```
+*Note:* Some of the required libraries, tools and other packages (e.g. pandas,
+mysql.connector, tabulate, and etc.) may be missing at the NCSU servers.
+Administrator's permissions are required to install any missing environment
+libraries or tools.
+
+### Intended Users:
+The program is written without any security constraints, such as user
+permissions and others. All the data is fully retrievable from the MariaDB
+MySQL regardless permissions.
+
+## Run the Software:
+To start the program that connects to a default DBMS (MariaDB MySQL Server at the NCSU) run the following command:
+```
+ > python hotesoft.py [-options]
+
+   OPTIONS
+   -c: run in check mode (Enable MySQL CHECK constraints in the program)
+```
+Note that default DBMS (MariaDB MySQL Server at the NCSU) version ignores all the `CHECK` and `NOT NULL` constraints for insert and update operations.
+To enable assertions within the program itself, ensuring that data to be inserted or updated obeys MySQL constraints, run the program with `-c` option.
+
 ## Configurations and Specifications:
 The following describes environment configurations and software specifications. 
 ### Language:
@@ -95,6 +157,6 @@ Note that some of the constraints can be ignored if program executes without che
 ## Contributing
 Please contact the authors for any contributions.
 ## Authors
-* **Nathan Schnoor**
-* **Nikolay G. Titov**
-* **Preston Scott**
+* **Nathan Schnoor** (nfschnoo@ncsu.edu)
+* **Nikolay G. Titov** (ngtitov@ncsu.edu)
+* **Preston Scott** (pdscott2@ncsu.edu)

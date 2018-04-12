@@ -1,24 +1,48 @@
+"""
+apihelper.py
+
+CSC 540 (601) - Database Management Concepts and Systems
+Project for CSC 540
+
+Description of the Project and Software read in the main program: hotelsoft.py
+
+Description of the apihelper.py file:
+
+@version: 1.0
+@todo: Demo
+@since: March 24, 2018
+
+@status: Complete
+@requires: Each class to be instantiated
+@contact: nfschnoo@ncsu.edu
+          ngtitov@ncsu.edu
+          pdscott2@ncsu.edu
+@authors: Nathan Schnoor
+          Nikolay Titov
+          Preston Scott
+"""
+
 from apps import Apps
 import pandas as pd
 from util import sql_transaction
 
-###############################
+
+################################################################################
 # OBSOLETE AND PRESENTLY UNUSED
 # Keeping in repository for reference
-###############################
-
+################################################################################
 class ArgList(object):
-    zip = ['zip', 'city', 'state']
+    zip_code = ['zip', 'city', 'state']
     hotel = ['id', 'name', 'street', 'zip', 'phone_number']
     room = ['hotel_id', 'room_number', 'category', 'occupancy', 'rate']
     staff = ['id', 'name', 'title', 'date_of_birth', 'department',
-               'phone_number', 'street', 'zip', 'works_for_hotel_id',
-               'assigned_hotel_id', 'assigned_room_number']
-    customer =  ['id', 'name', 'date_of_birth', 'phone_number', 'email',
-               'street', 'zip', 'ssn', 'account_number', 'is_hotel_card']
-    reservation = ['id', 'number_of_guests', 'start_date', 'end_date', 'hotel_id',
-               'room_number', 'customer_id', 'check_in_time',
-               'check_out_time']
+             'phone_number', 'street', 'zip', 'works_for_hotel_id',
+             'assigned_hotel_id', 'assigned_room_number']
+    customer = ['id', 'name', 'date_of_birth', 'phone_number', 'email',
+                'street', 'zip', 'ssn', 'account_number', 'is_hotel_card']
+    reservation = ['id', 'number_of_guests', 'start_date', 'end_date',
+                   'hotel_id', 'room_number', 'customer_id', 'check_in_time',
+                   'check_out_time']
     transaction = ['id', 'amount', 'type', 'date', 'reservation_id']
 
 
@@ -32,12 +56,12 @@ class APIHelper(object):
         self.db = db
 
     # Helper interfaces
-    def call_select(self, where_dict, table_name ):
+    def call_select(self, where_dict, table_name):
         return self.apps.get_data_frame('*', table_name, where_dict)
 
-
-    def zip_is_present(self, zip):
-        result = self.apps.get_data_frame('*', 'ZipToCityState', {'zip':zip})
+    def zip_is_present(self, zip_code):
+        result = self.apps.get_data_frame('*', 'ZipToCityState',
+                                          {'zip': zip_code})
         if len(result) == 0:
             return False
         else:
@@ -49,32 +73,35 @@ class APIHelper(object):
         with sql_transaction(self.db):
             # If a city and state is present, insert the new zip
             if 'zip' in set_dict and 'city' in set_dict and 'state' in set_dict:
-                zip_dict = {k: set_dict[k] for k in ('city', 'state', 'zip') if k in set_dict}
+                zip_dict = {k: set_dict[k] for k in ('city', 'state', 'zip')
+                            if k in set_dict}
                 result = self.apps.add_zip(zip_dict)
-                # TODO: Check if the following code is needed - I don't think so.
-                #       This interferes with the transaction. Also check all other instances
+                # TODO: Check if the following code is needed - I don't think
+                # so. This interferes with the transaction. Also check all
+                # other instances.
                 # if not isinstance(result, pd.DataFrame):
                 #     return result
-
             # Insert the hotel
-            hotel_dict = {k: set_dict[k] for k in ArgList.hotel if k in set_dict}
+            hotel_dict = {k: set_dict[k] for k in ArgList.hotel
+                          if k in set_dict}
             return self.apps.add_hotel(hotel_dict)
 
     def call_update_hotel(self, param_dict):
         set_dict = param_dict['set']
         where_dict = param_dict['where']
-
         with sql_transaction(self.db):
             # If a city and state is present, insert the new zip
             if 'zip' in set_dict and 'city' in set_dict and 'state' in set_dict:
-                zip_dict = {k: set_dict[k] for k in ArgList.zip if k in set_dict}
+                zip_dict = {k: set_dict[k] for k in ArgList.zip_code
+                            if k in set_dict}
                 result = self.apps.add_zip(zip_dict)
                 # if not isinstance(result, pd.DataFrame):
                 #     return result
-
             # Update the hotel
-            hotel_dict = {k: set_dict[k] for k in ArgList.hotel if k in set_dict}
-            where_clause_dict = {k: where_dict[k] for k in ArgList.hotel if k in where_dict}
+            hotel_dict = {k: set_dict[k] for k in ArgList.hotel
+                          if k in set_dict}
+            where_clause_dict = {k: where_dict[k] for k in ArgList.hotel
+                                 if k in where_dict}
             return self.apps.update_hotel(hotel_dict, where_clause_dict)
 
     def call_delete_hotel(self, param_dict):
@@ -84,7 +111,6 @@ class APIHelper(object):
 
     def call_add_room(self, param_dict):
         set_dict = param_dict['set']
-
         # Insert the room
         room_dict = {k: set_dict[k] for k in ArgList.room if k in set_dict}
         return self.apps.add_room(room_dict)
@@ -92,10 +118,10 @@ class APIHelper(object):
     def call_update_room(self, param_dict):
         set_dict = param_dict['set']
         where_dict = param_dict['where']
-
         # Update the room
         room_dict = {k: set_dict[k] for k in ArgList.room if k in set_dict}
-        where_clause_dict = {k: where_dict[k] for k in ArgList.room if k in where_dict}
+        where_clause_dict = {k: where_dict[k] for k in ArgList.room
+                             if k in where_dict}
         return self.apps.update_room(room_dict, where_clause_dict)
 
     def call_delete_room(self, param_dict):
@@ -104,14 +130,13 @@ class APIHelper(object):
 
     def call_add_staff(self, param_dict):
         set_dict = param_dict['set']
-
         # If a city and state is present, insert the new zip
         if 'zip' in set_dict and 'city' in set_dict and 'state' in set_dict:
-            zip_dict = {k: set_dict[k] for k in ('city', 'state', 'zip') if k in set_dict}
+            zip_dict = {k: set_dict[k] for k in ('city', 'state', 'zip')
+                        if k in set_dict}
             result = self.apps.add_zip(zip_dict)
             if not isinstance(result, pd.DataFrame):
                 return result
-
         # Insert the staff
         staff_dict = {k: set_dict[k] for k in ArgList.staff if k in set_dict}
         return self.apps.add_staff(staff_dict)
@@ -119,17 +144,17 @@ class APIHelper(object):
     def call_update_staff(self, param_dict):
         set_dict = param_dict['set']
         where_dict = param_dict['where']
-
         # If a city and state is present, insert the new zip
         if 'zip' in set_dict and 'city' in set_dict and 'state' in set_dict:
-            zip_dict = {k: set_dict[k] for k in ArgList.zip if k in set_dict}
+            zip_dict = {k: set_dict[k] for k in ArgList.zip_code
+                        if k in set_dict}
             result = self.apps.add_zip(zip_dict)
             if not isinstance(result, pd.DataFrame):
                 return result
-
         # Update the staff
         staff_dict = {k: set_dict[k] for k in ArgList.staff if k in set_dict}
-        where_clause_dict = {k: where_dict[k] for k in ArgList.staff if k in where_dict}
+        where_clause_dict = {k: where_dict[k] for k in ArgList.staff
+                             if k in where_dict}
         return self.apps.update_staff(staff_dict, where_clause_dict)
 
     def call_delete_staff(self, param_dict):
@@ -138,32 +163,33 @@ class APIHelper(object):
 
     def call_add_customer(self, param_dict):
         set_dict = param_dict['set']
-
         # If a city and state is present, insert the new zip
         if 'zip' in set_dict and 'city' in set_dict and 'state' in set_dict:
-            zip_dict = {k: set_dict[k] for k in ('city', 'state', 'zip') if k in set_dict}
+            zip_dict = {k: set_dict[k] for k in ('city', 'state', 'zip')
+                        if k in set_dict}
             result = self.apps.add_zip(zip_dict)
             if not isinstance(result, pd.DataFrame):
                 return result
-
         # Insert the customer
-        customer_dict = {k: set_dict[k] for k in ArgList.customer if k in set_dict}
+        customer_dict = {k: set_dict[k] for k in ArgList.customer
+                         if k in set_dict}
         return self.apps.add_customer(customer_dict)
 
     def call_update_customer(self, param_dict):
         set_dict = param_dict['set']
         where_dict = param_dict['where']
-
         # If a city and state is present, insert the new zip
         if 'zip' in set_dict and 'city' in set_dict and 'state' in set_dict:
-            zip_dict = {k: set_dict[k] for k in ArgList.zip if k in set_dict}
+            zip_dict = {k: set_dict[k] for k in ArgList.zip_code
+                        if k in set_dict}
             result = self.apps.add_zip(zip_dict)
             if not isinstance(result, pd.DataFrame):
                 return result
-
         # Update the customer
-        customer_dict = {k: set_dict[k] for k in ArgList.customer if k in set_dict}
-        where_clause_dict = {k: where_dict[k] for k in ArgList.customer if k in where_dict}
+        customer_dict = {k: set_dict[k] for k in ArgList.customer
+                         if k in set_dict}
+        where_clause_dict = {k: where_dict[k] for k in ArgList.customer
+                             if k in where_dict}
         return self.apps.update_customer(customer_dict, where_clause_dict)
 
     def call_delete_customer(self, param_dict):
@@ -172,18 +198,19 @@ class APIHelper(object):
 
     def call_create_reservation(self, param_dict):
         set_dict = param_dict['set']
-
         # Insert the reservation
-        reservation_dict = {k: set_dict[k] for k in ArgList.reservation if k in set_dict}
+        reservation_dict = {k: set_dict[k] for k in ArgList.reservation
+                            if k in set_dict}
         return self.apps.add_reservation(reservation_dict)
 
     def call_update_reservation(self, param_dict):
         set_dict = param_dict['set']
         where_dict = param_dict['where']
-
         # Update the reservation
-        reservation_dict = {k: set_dict[k] for k in ArgList.reservation if k in set_dict}
-        where_clause_dict = {k: where_dict[k] for k in ArgList.reservation if k in where_dict}
+        reservation_dict = {k: set_dict[k] for k in ArgList.reservation
+                            if k in set_dict}
+        where_clause_dict = {k: where_dict[k] for k in ArgList.reservation
+                             if k in where_dict}
         return self.apps.update_reservation(reservation_dict, where_clause_dict)
 
     def call_delete_reservation(self, param_dict):
@@ -201,9 +228,9 @@ class APIHelper(object):
 
     def call_add_transaction(self, param_dict):
         set_dict = param_dict['set']
-
         # Insert the transaction
-        transaction_dict = {k: set_dict[k] for k in ArgList.transaction if k in set_dict}
+        transaction_dict = {k: set_dict[k] for k in ArgList.transaction
+                            if k in set_dict}
         return self.apps.add_transaction(transaction_dict)
 
     def call_update_transaction(self, param_dict):
@@ -211,8 +238,10 @@ class APIHelper(object):
         where_dict = param_dict['where']
 
         # Update the transaction
-        transaction_dict = {k: set_dict[k] for k in ArgList.transaction if k in set_dict}
-        where_clause_dict = {k: where_dict[k] for k in ArgList.transaction if k in where_dict}
+        transaction_dict = {k: set_dict[k] for k in ArgList.transaction
+                            if k in set_dict}
+        where_clause_dict = {k: where_dict[k] for k in ArgList.transaction
+                             if k in where_dict}
         return self.apps.update_transaction(transaction_dict, where_clause_dict)
 
     def call_delete_transaction(self, param_dict):

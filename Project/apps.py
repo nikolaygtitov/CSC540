@@ -3,67 +3,20 @@ apps.py
 
 CSC 540 (601) - Database Management Concepts and Systems
 Project for CSC 540
-This program implements the solution for the main Project assignment:
 
-The design and development processes of Database Management System for WolfInns
-are completed in the Project Report 1 and Project Report 2.
+Description of the Project and Software read in the main program: hotelsoft.py
 
-Description of the Project:
-The Popular Hotel Chain database system is designed and built to manage and
-maintain information of hotels, rooms, staff, and customers, including but not
-limited to storing, updating, and deleting data. The database maintains a
-variety of information records about hotels located in various cities around
-the country, including staff, rooms, customers, and billing records. For each
-customer stay it maintains service records, such as phone bills, dry cleaning,
-gyms, room service, and special requests. It generates and maintains billing
-accounts for each customer stay. It generates report occupancy by hotel, room
-category, date range, and city. The database system is developed for Wolf Inns
-and is used by hotels operators and employees including management staff, front
-desk representatives, room service, billing, and catering staff. The Popular
-Hotel Chain database system resolves constraints on availability and pricing of
-rooms, maintaining proper customer, billing, check-in, and check-out
-information. Users of the database may perform different tasks concurrently,
-each consisting of multiple sequential operations that have an affect on the
-database. There are four major tasks that are performed by corresponding
-users on the database:
-    1. Information Processing
-    2. Maintaining Service Records
-    3. Maintaining Billing Accounts
-    4. Reports
-
-Description of the program project.py:
-It provides a user with friendly UI to select tasks and operations user
-needs/wants to perform.
-All of the following operations are performed on MySQL MariaDB Server at NCSU
-(classdb2.csc.ncsu.edu):
-    - INSERT
-    - SELECT
-    - DROP TABLE
-
-Description of the program apps.py:
-It provides the wrappers around MySQL queries allowing the northbound (UI) to
-call appropriate functions to perform MySQL interaction including storing,
-retrieving and deleting data.
-
-Execute the program run:
- > python apps.py
+Description of the apps.py file:
+This file provides the wrappers around MySQL queries allowing the front-end
+(UI) to make calls of appropriate functions to perform MySQL interaction
+including retrieving, storing, updating, and deleting data.
 
 @version: 1.0
-@todo: Integrate with UI, Add Transactions, Add Documentation, Testing, Demo
+@todo: Demo
 @since: March 24, 2018
 
-@status: Incomplete
-@requires: Connection to MariaDB server at the NCSU.
-           Option 1: Establish connection through NCSU VPN.
-                     Installation of Cisco AnyConnect VPN Software is required.
-                     Installation instructions of Cisco AnyConnect can be
-                     found here:
-https://oit.ncsu.edu/campus-it/campus-data-network/network-security/vpn/
-
-           Option 2: Pull or copy source code to the NCSU remote machine and
-                     run it there:
-scp project.py unity_id@remote.eos.ncsu.edu:/afs/unity.ncsu.edu/users/u/unity_id
-
+@status: Complete
+@requires: Apps class to be instantiated
 @contact: nfschnoo@ncsu.edu
           ngtitov@ncsu.edu
           pdscott2@ncsu.edu
@@ -71,7 +24,6 @@ scp project.py unity_id@remote.eos.ncsu.edu:/afs/unity.ncsu.edu/users/u/unity_id
 @authors: Nathan Schnoor
           Nikolay Titov
           Preston Scott
-
 """
 
 # Import required Python and MySQL libraries

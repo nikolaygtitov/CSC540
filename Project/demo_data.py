@@ -1,37 +1,72 @@
+"""
+demo_data.py
+
+CSC 540 (601) - Database Management Concepts and Systems
+Project for CSC 540
+
+Description of the Project and Software read in the main program: hotelsoft.py
+
+Description of the demo_data.py file:
+
+@version: 1.0
+@todo: Demo
+@since: March 24, 2018
+
+@status: Complete
+@requires: Connection to MariaDB server at the NCSU. If default database
+           parameters are changed, ignore both options below (unless DBMS used
+           is at the NCSU MySQL Server).
+           Option 1: Establish connection through NCSU VPN.
+                     Installation of Cisco AnyConnect VPN Software is required.
+                     Installation instructions of Cisco AnyConnect can be
+                     found here:
+https://oit.ncsu.edu/campus-it/campus-data-network/network-security/vpn/
+
+           Option 2: Pull or copy source code to the NCSU remote machine and
+                     run it there:
+scp * unity_id@remote.eos.ncsu.edu:/afs/unity.ncsu.edu/users/u/unity_id/CSC540
+@contact: nfschnoo@ncsu.edu
+          ngtitov@ncsu.edu
+          pdscott2@ncsu.edu
+@authors: Nathan Schnoor
+          Nikolay Titov
+          Preston Scott
+"""
+
 
 def _drop_tables(db):
     cursor = db.cursor()
     try:
         cursor.execute('DROP TABLE Serves')
-    except:
+    except maria_db.Error:
         pass
     try:
         cursor.execute('DROP TABLE Transactions')
-    except:
+    except maria_db.Error:
         pass
     try:
         cursor.execute('DROP TABLE Reservations')
-    except:
+    except maria_db.Error:
         pass
     try:
         cursor.execute('DROP TABLE Customers')
-    except:
+    except maria_db.Error:
         pass
     try:
         cursor.execute('DROP TABLE Staff')
-    except:
+    except maria_db.Error:
         pass
     try:
         cursor.execute('DROP TABLE Rooms')
-    except:
+    except maria_db.Error:
         pass
     try:
         cursor.execute('DROP TABLE Hotels')
-    except:
+    except maria_db.Error:
         pass
     try:
         cursor.execute('DROP TABLE ZipToCityState')
-    except:
+    except maria_db.Error:
         pass
     db.commit()
 
@@ -165,7 +200,7 @@ def load_demo_data(db):
     zip_data = [
         ['27', 'Raleigh', 'NC'],
         ['54', 'Rochester', 'NY'],
-        ['28', 'Greensboro', 'NC'], # Zip: 27
+        ['28', 'Greensboro', 'NC'],  # Zip: 27
         ['32', 'Raleigh', 'NC'],
         ['78', 'Rochester', 'NY'],
         ['14', 'Dallas', 'TX'],
@@ -174,7 +209,7 @@ def load_demo_data(db):
     hotel_data = [
         [1, 'Hotel A', '21 ABC St', '27', '919'],
         [2, 'Hotel B', '25 XYZ St', '54', '718'],
-        [3, 'Hotel C', '29 PQR St', '28', '984'], # Zip: 27
+        [3, 'Hotel C', '29 PQR St', '28', '984'],  # Zip: 27
         [4, 'Hotel D', '28 GHW St', '32', '920'],
     ]
 
@@ -182,7 +217,7 @@ def load_demo_data(db):
         [1, 1, 'Economy', 1, 100],
         [1, 2, 'Deluxe', 2, 200],
         [2, 3, 'Economy', 1, 100],
-        [3, 2, 'Executive', 3, 1000], # Available: no
+        [3, 2, 'Executive', 3, 1000],  # Available: no
         [4, 1, 'Presidential', 4, 5000],
         [1, 5, 'Deluxe', 2, 200],
     ]
@@ -212,7 +247,7 @@ def load_demo_data(db):
     ]
 
     transaction_data = [
-        [16, 'Dry Ceaning', '2017-05-10', 1],
+        [16, 'Dry Cleaning', '2017-05-10', 1],
         [15, 'Gym', '2017-05-10', 1],
         [15, 'Gym', '2017-05-10', 2],
         [10, 'Room Service', '2016-05-10', 3],
@@ -265,8 +300,8 @@ def load_demo_data(db):
 
 
 if __name__ == '__main__':
-    import mysql.connector as mariadb
-    con = mariadb.connect(host='classdb2.csc.ncsu.edu', user='nfschnoo',
-                          password='001027748', database='nfschnoo')
+    import mysql.connector as maria_db
+    con = maria_db.connect(host='classdb2.csc.ncsu.edu', user='nfschnoo',
+                           password='001027748', database='nfschnoo')
 
     load_demo_data(con)
