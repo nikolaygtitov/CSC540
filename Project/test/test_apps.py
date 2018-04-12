@@ -509,8 +509,13 @@ class TestApps(SQLUnitTestBase):
         self.assertNotIn('Transaction_date', row)
         self.assertNotIn('Serves_staff_id', row)
         self.assertNotIn('Serves_reservation_id', row)
+        apps.cursor.close()
+
+    def test_add_reservation_check_in_time_non_presidential(self):
         # Create Non-Presidential reservation with check-in time, but no
         # check-out time
+        apps = Apps(self._con, True)
+        self._insert_test_data()
         df = apps.add_reservation(
             {'number_of_guests': 2, 'start_date': '2018-04-19',
              'end_date': '2018-04-26', 'hotel_id': 9,
@@ -534,28 +539,39 @@ class TestApps(SQLUnitTestBase):
         self.assertNotIn('Transaction_date', row)
         self.assertNotIn('Serves_staff_id', row)
         self.assertNotIn('Serves_reservation_id', row)
+        apps.cursor.close()
+
+    def test_add_reservation_check_in_check_out(self):
         # Create Non-Presidential reservation with check-in and check-out time.
         # Should not free any staff. But add new transaction 'Room Charge'
+        apps = Apps(self._con, True)
+        self._insert_test_data()
         df = apps.add_reservation(
             {'number_of_guests': 2, 'start_date': '2018-05-01',
              'end_date': '2018-05-05', 'hotel_id': 9,
              'room_number': 100, 'customer_id': 1,
              'check_in_time': '2018-05-01 12:12:12',
              'check_out_time': '2018-05-05 09:09:09'})
-        self.assertEqual(1, len(df.index))
+        self.assertEqual(2, len(df.index))
         row = df.ix[0]
         self.assertEqual('2018-05-05 09:09:09', str(row['check_out_time']))
+        row = df.ix[1]
         self.assertEqual(9, row['Transaction_id'])
-        self.assertEqual('500.00', row['Transaction_amount'])
-        self.assertEqual('5-night(s) Room Reservation Charge',
+        self.assertEqual(400.0, row['Transaction_amount'])
+        self.assertEqual('4-night(s) Room Reservation Charge',
                          row['Transaction_type'])
-        self.assertEqual('2018-05-05 09:09:09', str(row['Transaction_date']))
+        self.assertEqual('2018-05-05', str(row['Transaction_date'].date()))
         self.assertNotIn('Staff_id', row)
         self.assertNotIn('Staff_assigned_hotel_id', row)
         self.assertNotIn('Staff_assigned_room', row)
         self.assertNotIn('Serves_staff_id', row)
         self.assertNotIn('Serves_reservation_id', row)
+        apps.cursor.close()
+
+    def test_add_reservation_presidential(self):
         # Create Presidential reservation w/out check-in and check-out time
+        apps = Apps(self._con, True)
+        self._insert_test_data()
         df = apps.add_reservation(
             {'number_of_guests': 5, 'start_date': '2018-04-01',
              'end_date': '2018-04-07', 'hotel_id': 9,
@@ -577,8 +593,13 @@ class TestApps(SQLUnitTestBase):
         self.assertNotIn('Transaction_amount', row)
         self.assertNotIn('Transaction_type', row)
         self.assertNotIn('Transaction_date', row)
+        apps.cursor.close()
+
+    def test_add_reservation_presidential_check_in(self):
         # Create Presidential reservation with check-in, but not check-out time.
         # Must assign Room Service and Catering Staff.
+        apps = Apps(self._con, True)
+        self._insert_test_data()
         df = apps.add_reservation(
             {'number_of_guests': 5, 'start_date': '2018-04-08',
              'end_date': '2018-04-12', 'hotel_id': 9,
@@ -608,8 +629,13 @@ class TestApps(SQLUnitTestBase):
         self.assertNotIn('Transaction_amount', row)
         self.assertNotIn('Transaction_type', row)
         self.assertNotIn('Transaction_date', row)
+        apps.cursor.close()
+
+    def test_add_reservation_presidential_check_in_check_out(self):
         # Create Presidential reservation with check-in and check-out time.
         # No Staff must be freed. But must add new transaction 'Room Charge'.
+        apps = Apps(self._con, True)
+        self._insert_test_data()
         df = apps.add_reservation(
             {'number_of_guests': 5, 'start_date': '2018-04-15',
              'end_date': '2018-04-20', 'hotel_id': 9,

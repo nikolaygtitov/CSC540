@@ -594,11 +594,10 @@ class Apps(object):
                                 reservation_id=reservation_id)
                         self._execute_select_query(
                             'id', 'Staff',
-                            where_clause=where_clause.format(
-                                'Room Service'),
+                            where_clause=where_clause.format('Room Service'),
                             where_values_list=[hotel_id])
                         staff_tuples = self.cursor.fetchall()
-                        if staff_tuples is not None and staff_tuples[0][0]:
+                        if staff_tuples and staff_tuples[0][0]:
                             room_service_staff_df = self.update_staff(
                                 {'assigned_hotel_id': hotel_id,
                                  'assigned_room_number': room_number},
@@ -1725,7 +1724,9 @@ class Apps(object):
             if 'check_out_time' in reservation_dict and \
                     reservation_dict['check_out_time']:
                 staff_transact_df = self._check_out(
-                    reservation_id, reservation_dict['check_out_time'])
+                    reservation_id,
+                    str(pd.to_datetime(
+                        reservation_dict['check_out_time']).date()))
                 data_frame = pd.concat((data_frame, staff_transact_df), axis=1)
             return data_frame
         except AssertionError, error:
