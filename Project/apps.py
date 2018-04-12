@@ -2424,13 +2424,19 @@ class Apps(object):
 
     def report_occupancy_by_city(self, query_date):
         """
-        TODO - Comment
+        Generates a report of occupancy from all hotels, grouped by city.
 
         Parameters:
-            :param query_date:
+            :param query_date: The date for which the occupancy will be reported
 
         Returns:
-            :return:
+            :return: Pandas dataframe containing a row for each city,
+            with the columns:
+              City, State: The city and state with the following occupancy stats
+              Rooms Occupied: The number of rooms (of the row's room type)
+                              occupied on the query date.
+              Total Rooms: The total number of rooms of the row's type.
+              % Occupancy: The percent occupancy for the room type.
         """
 
         df = pd.read_sql(REPORT_OCCUPANCY_BY_CITY,
@@ -2440,14 +2446,22 @@ class Apps(object):
 
     def report_occupancy_by_date_range(self, query_start, query_end):
         """
-        TODO - Comment
+        Generates a report of the occupancy over a date range
 
         Parameters:
-            :param query_start:
-            :param query_end:
+            :param query_start: The date for which to start the report
+            :param query_end: The date for which to end the report
 
         Returns:
-            :return:
+            :return: Pandas dataframe containing a single row with the columns:
+              Actual Bookings: The number of bookings made during the query
+                               date range, where bookings is calculated by the
+                               by the sum of reserved rooms for each night.
+              Total Possible Bookings: The total number of bookings possible,
+                                       based on the number of rooms and the
+                                       length of the query date range.
+              % Occupancy: The percentage of actual bookings divided by total
+                           possible bookings.
         """
 
         df = pd.read_sql(REPORT_OCCUPANCY_BY_DATE_RANGE,
@@ -2458,13 +2472,19 @@ class Apps(object):
 
     def report_staff_by_role(self, hotel_id):
         """
-        TODO - Comment
+        Report all the staff in a given hotel
+        sorted by their role (department and title)
 
         Parameters:
-            :param hotel_id:
+            :param hotel_id: The hotel id for which to report staff.
 
         Returns:
-            :return:
+            :return: Pandas dataframe containing a list of staff that work
+            for the given hotel, with the columns:
+              Department
+              Title
+              Staff Name
+              Staff ID
         """
 
         df = pd.read_sql(REPORT_STAFF_BY_ROLE,
@@ -2474,13 +2494,17 @@ class Apps(object):
 
     def report_customer_interactions(self, reservation_id):
         """
-        TODO - Comment
+        Generates a report of all customer interactions for a given reservation
 
         Parameters:
-            :param reservation_id:
+            :param reservation_id: The reservation for which to report
+            customer interactions.
 
         Returns:
-            :return:
+            :return: Pandas dataframe containing a list of all staff that
+            served a given reservation, with the columns:
+              Staff Name
+              Staff ID
         """
 
         df = pd.read_sql(REPORT_CUSTOMER_INTERACTIONS,
@@ -2490,15 +2514,18 @@ class Apps(object):
 
     def report_revenue_single_hotel(self, start_date, end_date, hotel_id):
         """
-        TODO - Comment
+        Generate a report of the revenue for a given hotel.
 
         Parameters:
-            :param start_date:
-            :param end_date:
-            :param hotel_id:
+            :param start_date: The revenue report query start date.
+            :param end_date: The revenue report query end date.
+            :param hotel_id: The hotel id for which to report revenue.
 
         Returns:
-            :return:
+            :return: Pandas dataframe containing the revenue for the given hotel
+            over the queried date range, with the columns:
+              Hotel Name
+              Revenue
         """
 
         df = pd.read_sql(REPORT_REVENUE_SINGLE_HOTEL,
@@ -2508,14 +2535,17 @@ class Apps(object):
 
     def report_revenue_all_hotels(self, start_date, end_date):
         """
-        TODO - Comment
+        Generate a report of the revenue for all hotels.
 
         Parameters:
-            :param start_date:
-            :param end_date:
+            :param start_date: The revenue report query start date.
+            :param end_date: The revenue report query end date.
 
         Returns:
-            :return:
+            :return: Pandas dataframe containing the revenue for all hotels
+            over the queried date range, with the columns:
+              Hotel Name
+              Revenue
         """
 
         df = pd.read_sql(REPORT_REVENUE_ALL_HOTELS,
