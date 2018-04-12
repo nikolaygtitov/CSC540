@@ -55,8 +55,7 @@ Here the output of UI
 ```
 
 All of the following queries are performed in the back-end on the default MySQL
-MariaDB NCSU Server at [classdb2.csc.ncsu.edu]
-(https://courses.ncsu.edu/csc540/lec/001/wrap/FAQ_general.html):
+MariaDB NCSU Server at [classdb2.csc.ncsu.edu](https://courses.ncsu.edu/csc540/lec/001/wrap/FAQ_general.html):
 * __*SELECT*__
 * __*INSERT*__
 * __*UPDATE*__
@@ -136,8 +135,7 @@ changed, ignore both options below (unless DBMS used is at the NCSU MySQL
 Server).
 * Option 1: Establish connection through NCSU VPN. Installation of Cisco
 AnyConnect VPN Software is required. Installation instructions of Cisco
-AnyConnect can be found [here]
-(https://oit.ncsu.edu/campus-it/campus-data-network/network-security/vpn/)
+AnyConnect can be found [here](https://oit.ncsu.edu/campus-it/campus-data-network/network-security/vpn/)
 
 * Option 2: Pull or copy source code to the NCSU remote machine and run the
 program there:
