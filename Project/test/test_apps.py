@@ -1069,6 +1069,100 @@ class TestApps(SQLUnitTestBase):
         self.assertEqual(0, len(df.index))
         apps.cursor.close()
 
+    def test_add_room(self):
+        apps = Apps(self._con, False)
+        load_demo_data(self._con)
+        df = apps.add_room({
+            'hotel_id': 2,
+            'room_number': 4,
+            'category': 'Deluxe',
+            'occupancy': 3,
+            'rate': 250
+        })
+        row = df.ix[0]
+        self.assertEqual('Deluxe', row['category'])
+        self.assertEqual(3, row['occupancy'])
+        self.assertEqual(250, row['rate'])
+        df = apps.get_data_frame('*', 'Rooms', {
+            'hotel_id': 2,
+            'room_number': 4
+        })
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual('Deluxe', row['category'])
+        self.assertEqual(3, row['occupancy'])
+        self.assertEqual(250, row['rate'])
+        apps.cursor.close()
+
+    def test_add_room_conflict(self):
+        apps = Apps(self._con, False)
+        load_demo_data(self._con)
+        try:
+            df = apps.add_room({
+                'hotel_id': 1,
+                'room_number': 1,
+                'category': 'Deluxe',
+                'occupancy': 3,
+                'rate': 250
+            })
+            self.assertTrue(False)
+        except mariadb.Error:
+            pass
+        apps.cursor.close()
+
+    def test_update_room_id(self):
+        apps = Apps(self._con, False)
+        load_demo_data(self._con)
+        df = apps.update_room({
+            'category': 'Deluxe',
+            'occupancy': 3,
+            'rate': 250
+        }, {
+            'hotel_id': 1,
+            'room_number': 1
+        })
+        row = df.ix[0]
+        self.assertEqual('Deluxe', row['category'])
+        self.assertEqual(3, row['occupancy'])
+        self.assertEqual(250, row['rate'])
+        df = apps.get_data_frame('*', 'Rooms', {
+            'hotel_id': 1,
+            'room_number': 1
+        })
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual('Deluxe', row['category'])
+        self.assertEqual(3, row['occupancy'])
+        self.assertEqual(250, row['rate'])
+        apps.cursor.close()
+
+    def test_delete_room(self):
+        apps = Apps(self._con, False)
+        load_demo_data(self._con)
+        df = apps.add_room({
+            'hotel_id': 2,
+            'room_number': 4,
+            'category': 'Deluxe',
+            'occupancy': 3,
+            'rate': 250
+        })
+        df = apps.get_data_frame('*', 'Rooms', {
+            'hotel_id': 2,
+            'room_number': 4
+        })
+        self.assertEqual(1, len(df.index))
+        df = apps.delete_room({
+            'hotel_id': 2,
+            'room_number': 4
+        })
+        self.assertEqual(0, len(df.index))
+        df = apps.get_data_frame('*', 'Rooms', {
+            'hotel_id': 2,
+            'room_number': 4
+        })
+        self.assertEqual(0, len(df.index))
+        apps.cursor.close()
+
     def test_report_occupancy_by_hotel(self):
         apps = Apps(self._con, True)
         self._insert_test_data()

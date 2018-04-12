@@ -2390,13 +2390,22 @@ class Apps(object):
     # Reports apps implemented below.
     def report_occupancy_by_hotel(self, query_date):
         """
-        TODO - Comment
+        Generates a report of occupancy for all hotels on the query date,
+        showing the number of rooms occupied and the percentage occupancy.
 
         Parameters:
-            :param query_date:
+            :param query_date: The date for which the occupancy will be reported
 
         Returns:
-            :return:
+            :return: Pandas dataframe containing a row for each hotel, with the
+            columns:
+              Hotel Name: The name of hotel with the following occupancy
+                          statistics
+              Rooms Occupied: The total number of rooms occupied on the query
+                              date for the given hotel.
+              Total Rooms: The total number of rooms in the hotel.
+              % Occupancy: The percent occupancy of the hotel, calculated by
+                           the rooms occupied divided by the total rooms.
         """
 
         df = pd.read_sql(REPORT_OCCUPANCY_BY_HOTEL,
@@ -2406,13 +2415,19 @@ class Apps(object):
 
     def report_occupancy_by_room_type(self, query_date):
         """
-        TODO - Comment
+        Generates a report of occupancy across all hotels, grouped by room type.
 
         Parameters:
-            :param query_date:
+            :param query_date: The date for which the occupancy will be reported
 
         Returns:
-            :return:
+            :return: Pandas dataframe containing a row for each room type,
+            with the columns:
+              Room Type: The room type with the following occupancy stats.
+              Rooms Occupied: The number of rooms (of the row's room type)
+                              occupied on the query date.
+              Total Rooms: The total number of rooms of the row's type.
+              % Occupancy: The percent occupancy for the room type.
         """
 
         df = pd.read_sql(REPORT_OCCUPANCY_BY_ROOM_TYPE,
