@@ -411,7 +411,7 @@ class TestApps(SQLUnitTestBase):
         row = df.ix[0]
         self.assertEqual('FirstTest LastTest', row['name'])
         self.assertEqual('Room Service Staff', row['title'])
-        self.assertEqual('1985-04-05', row['date_of_birth'])
+        self.assertEqual('1985-04-05', str(row['date_of_birth']))
         self.assertEqual('Service', row['department'])
         self.assertEqual('(919)-555-1111', row['phone_number'])
         self.assertEqual('TestStreet', row['street'])
@@ -421,16 +421,17 @@ class TestApps(SQLUnitTestBase):
         self.assertNotIn('Serves_reservation_id', row)
         # Assign staff to room when created
         df = apps.add_staff(
-            {'name': 'FirstTestTwo LastTestTwo', 'title': 'Room Service Staff',
+            {'id': 100,
+             'name': 'FirstTestTwo LastTestTwo', 'title': 'Room Service Staff',
              'date_of_birth': '1989-03-10', 'department': 'Service',
              'phone_number': '(919)-666-2222', 'street': 'TestStreetTwo',
              'zip': '27606', 'works_for_hotel_id': 9,
              'assigned_hotel_id': 9, 'assigned_room_number': 100})
-        self.assertEqual(1, len(df.index))
+        self.assertEqual(2, len(df.index))
         row = df.ix[0]
         self.assertEqual('FirstTestTwo LastTestTwo', row['name'])
         self.assertEqual('Room Service Staff', row['title'])
-        self.assertEqual('1989-03-10', row['date_of_birth'])
+        self.assertEqual('1989-03-10', str(row['date_of_birth']))
         self.assertEqual('Service', row['department'])
         self.assertEqual('(919)-666-2222', row['phone_number'])
         self.assertEqual('TestStreetTwo', row['street'])
@@ -438,7 +439,8 @@ class TestApps(SQLUnitTestBase):
         self.assertEqual(9, row['works_for_hotel_id'])
         self.assertEqual(9, row['assigned_hotel_id'])
         self.assertEqual(100, row['assigned_room_number'])
-        self.assertEqual(11, row['Serves_staff_id'])
+        row = df.ix[1]
+        self.assertEqual(100, row['Serves_staff_id'])
         self.assertEqual(9, row['Serves_reservation_id'])
         apps.cursor.close()
 
