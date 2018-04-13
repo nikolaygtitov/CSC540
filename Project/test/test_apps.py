@@ -6,12 +6,14 @@ from unittest_base import SQLUnitTestBase
 from Project.apps import Apps
 from Project.demo_data import load_demo_data
 
+
 class TestApps(SQLUnitTestBase):
 
     @staticmethod
     def _connect_to_test_db():
-        con = mariadb.connect(host='classdb2.csc.ncsu.edu', user='nfschnoo', password='001027748',
-                              database='nfschnoo')
+        con = mariadb.connect(host='classdb2.csc.ncsu.edu', user='ngtitov',
+                              password='001029047',
+                              database='ngtitov')
         return con
 
     def test_get_data_frame_star_no_where(self):
@@ -35,7 +37,7 @@ class TestApps(SQLUnitTestBase):
         apps = Apps(self._con, True)
         self._insert_test_data()
         df = apps.get_data_frame('*', 'Hotels',
-                                 {'name':'Wolf Inn Los Angeles Sharks'})
+                                 {'name': 'Wolf Inn Los Angeles Sharks'})
         self.assertEqual(1, len(df.index))
         row = df.ix[0]
         self.assertEqual('Wolf Inn Los Angeles Sharks', row['name'])
@@ -48,7 +50,7 @@ class TestApps(SQLUnitTestBase):
         apps = Apps(self._con, True)
         self._insert_test_data()
         df = apps.get_data_frame('name, zip', 'Hotels',
-                                 {'phone_number':'213-628-8344'})
+                                 {'phone_number': '213-628-8344'})
         self.assertEqual(1, len(df.index))
         row = df.ix[0]
         self.assertEqual('Wolf Inn Los Angeles Sharks', row['name'])
@@ -59,7 +61,7 @@ class TestApps(SQLUnitTestBase):
         apps = Apps(self._con, True)
         self._insert_test_data()
         df = apps.get_data_frame('name', 'Hotels',
-                                 {'phone_number':'213-628-8344'})
+                                 {'phone_number': '213-628-8344'})
         self.assertEqual(1, len(df.index))
         row = df.ix[0]
         self.assertEqual('Wolf Inn Los Angeles Sharks', row['name'])
@@ -1131,13 +1133,10 @@ class TestApps(SQLUnitTestBase):
         apps = Apps(self._con, False)
         load_demo_data(self._con)
         try:
-            df = apps.add_room({
-                'hotel_id': 1,
-                'room_number': 1,
-                'category': 'Deluxe',
-                'occupancy': 3,
-                'rate': 250
-            })
+            df = apps.add_room({'hotel_id': 1, 'room_number': 1,
+                                'category': 'Deluxe', 'occupancy': 3,
+                                'rate': 250})
+            self.assertEquals(1, len(df))
             self.assertTrue(False)
         except mariadb.Error:
             pass
@@ -1158,10 +1157,8 @@ class TestApps(SQLUnitTestBase):
         self.assertEqual('Deluxe', row['category'])
         self.assertEqual(3, row['occupancy'])
         self.assertEqual(250, row['rate'])
-        df = apps.get_data_frame('*', 'Rooms', {
-            'hotel_id': 1,
-            'room_number': 1
-        })
+        df = apps.get_data_frame('*', 'Rooms', {'hotel_id': 1,
+                                                'room_number': 1})
         self.assertEqual(1, len(df.index))
         row = df.ix[0]
         self.assertEqual('Deluxe', row['category'])
@@ -1179,6 +1176,7 @@ class TestApps(SQLUnitTestBase):
             'occupancy': 3,
             'rate': 250
         })
+        self.assertEquals(1, len(df))
         df = apps.get_data_frame('*', 'Rooms', {
             'hotel_id': 2,
             'room_number': 4
