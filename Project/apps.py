@@ -1801,7 +1801,7 @@ class Apps(object):
                     to be updated cannot be identified. Identification ' \
                     'attributes are not specified.\n'
                 for attribute, value in reservation_dict.items():
-                    if attribute != 'check_in_time' or \
+                    if attribute != 'check_in_time' and \
                             attribute != 'check_out_time':
                         assert value, \
                             'Exception: Attribute \'{}\' must be specified ' \
@@ -1868,7 +1868,7 @@ class Apps(object):
                 where_clause_dict)
             return data_frame
         except AssertionError, error:
-            return error
+            raise error
         except maria_db.Error as error:
             raise error
 
