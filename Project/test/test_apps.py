@@ -10,8 +10,9 @@ class TestApps(SQLUnitTestBase):
 
     @staticmethod
     def _connect_to_test_db():
-        con = mariadb.connect(host='classdb2.csc.ncsu.edu', user='nfschnoo', password='001027748',
-                              database='nfschnoo')
+        con = mariadb.connect(host='classdb2.csc.ncsu.edu', user='ngtitov',
+                              password='001029047',
+                              database='ngtitov')
         return con
 
     def test_get_data_frame_star_no_where(self):
@@ -617,20 +618,20 @@ class TestApps(SQLUnitTestBase):
         self.assertEqual(500, row1['room_number'])
         self.assertEqual(2, row1['customer_id'])
         self.assertEqual('2018-04-08 15:15:15', str(row1['check_in_time']))
-        self.assertEqual(10, row1['Staff_id'])
-        self.assertEqual(9, row1['Staff_assigned_hotel_id'])
+        self.assertEqual(9, row1['Staff_id'])
+        self.assertEqual(9, row1['Staff_assigned_hotel'])
         self.assertEqual(500, row1['Staff_assigned_room'])
-        self.assertEqual(10, row1['Serves_staff_id'])
-        self.assertEqual(14, row1['Serves_reservation_id'])
-        self.assertEqual(9, row2['Staff_id'])
-        self.assertEqual(9, row2['Staff_assigned_hotel_id'])
+        self.assertEqual(9, row1['Serves_staff_id'])
+        self.assertEqual(10, row1['Serves_reservation_id'])
+        self.assertEqual(10, row2['Staff_id'])
+        self.assertEqual(9, row2['Staff_assigned_hotel'])
         self.assertEqual(500, row2['Staff_assigned_room'])
-        self.assertEqual(9, row2['Serves_staff_id'])
-        self.assertEqual(14, row2['Serves_reservation_id'])
-        self.assertNotIn('Transaction_id', row)
-        self.assertNotIn('Transaction_amount', row)
-        self.assertNotIn('Transaction_type', row)
-        self.assertNotIn('Transaction_date', row)
+        self.assertEqual(10, row2['Serves_staff_id'])
+        self.assertEqual(10, row2['Serves_reservation_id'])
+        self.assertNotIn('Transaction_id', row2)
+        self.assertNotIn('Transaction_amount', row2)
+        self.assertNotIn('Transaction_type', row2)
+        self.assertNotIn('Transaction_date', row2)
         apps.cursor.close()
 
     def test_add_reservation_presidential_check_in_check_out(self):
@@ -644,25 +645,26 @@ class TestApps(SQLUnitTestBase):
              'room_number': 500, 'customer_id': 2,
              'check_in_time': '2018-04-15 15:15:15',
              'check_out_time': '2018-04-20 04:04:04'})
-        self.assertEqual(1, len(df.index))
-        row = df.ix[0]
-        self.assertEqual(5, row['number_of_guests'])
-        self.assertEqual('2018-04-15', str(row['start_date']))
-        self.assertEqual('2018-04-20', str(row['end_date']))
-        self.assertEqual(9, row['hotel_id'])
-        self.assertEqual(500, row['room_number'])
-        self.assertEqual('2018-04-15 15:15:15', str(row['check_in_time']))
-        self.assertEqual('2018-04-20 04:04:04', str(row['check_out_time']))
-        self.assertEqual(10, row['Transaction_id'])
-        self.assertEqual('50000.00', row['Transaction_amount'])
+        self.assertEqual(2, len(df.index))
+        row1 = df.ix[0]
+        row2 = df.ix[1]
+        self.assertEqual(5, row1['number_of_guests'])
+        self.assertEqual('2018-04-15', str(row1['start_date']))
+        self.assertEqual('2018-04-20', str(row1['end_date']))
+        self.assertEqual(9, row1['hotel_id'])
+        self.assertEqual(500, row1['room_number'])
+        self.assertEqual('2018-04-15 15:15:15', str(row1['check_in_time']))
+        self.assertEqual('2018-04-20 04:04:04', str(row1['check_out_time']))
+        self.assertEqual(9, row2['Transaction_id'])
+        self.assertEqual(50000.0, row2['Transaction_amount'])
         self.assertEqual('5-night(s) Room Reservation Charge',
-                         row['Transaction_type'])
-        self.assertEqual('2018-04-20 04:04:04', str(row['Transaction_date']))
-        self.assertNotIn('Staff_id', row)
-        self.assertNotIn('Staff_assigned_hotel_id', row)
-        self.assertNotIn('Staff_assigned_room', row)
-        self.assertNotIn('Serves_staff_id', row)
-        self.assertNotIn('Serves_reservation_id', row)
+                         row2['Transaction_type'])
+        self.assertEqual('2018-04-20 04:04:04', str(row2['Transaction_date']))
+        self.assertNotIn('Staff_id', row1)
+        self.assertNotIn('Staff_assigned_hotel_id', row1)
+        self.assertNotIn('Staff_assigned_room', row1)
+        self.assertNotIn('Serves_staff_id', row1)
+        self.assertNotIn('Serves_reservation_id', row1)
         apps.cursor.close()
 
     def test_update_reservation(self):

@@ -1339,7 +1339,11 @@ class Apps(object):
                     staff_df = staff_df.rename(
                         index=str, columns={'id': 'Staff_id',
                                             'name': 'Staff_name',
-                                            'title': 'Staff_title'})
+                                            'title': 'Staff_title',
+                                            'assigned_hotel_id':
+                                                'Staff_assigned_hotel',
+                                            'assigned_room_number':
+                                                'Staff_assigned_room'})
                     data_frame = pd.concat((staff_df, serves_df_result), axis=1)
                     return data_frame
                 else:
@@ -1724,9 +1728,7 @@ class Apps(object):
             if 'check_out_time' in reservation_dict and \
                     reservation_dict['check_out_time']:
                 staff_transact_df = self._check_out(
-                    reservation_id,
-                    str(pd.to_datetime(
-                        reservation_dict['check_out_time']).date()))
+                    reservation_id, reservation_dict['check_out_time'])
                 data_frame = pd.concat((data_frame, staff_transact_df), axis=1)
             return data_frame
         except AssertionError, error:
@@ -1966,7 +1968,8 @@ class Apps(object):
                     'Exception: Description of type of the transaction must ' \
                     'be specified and must be non-empty.\n'
                 assert 'date' in transaction_dict and \
-                       len(transaction_dict['date']) == 10, \
+                       pd.to_datetime(transaction_dict['date'],
+                                      errors='coerce') != pd.NaT, \
                     'Exception: Date of the transaction must follow the DATE ' \
                     'format: YYYY-MM-DD.\n'
             # Execute insert query

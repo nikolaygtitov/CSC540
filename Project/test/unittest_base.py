@@ -264,7 +264,7 @@ class SQLUnitTestBase(unittest.TestCase):
             ['Service Dude', 'Catering Staff', '1956-05-09',
              'Cooking Hell Department', '(919)-111-0101',
              'Service Staff St., Apt. 59', '27606', 9, None, None],
-            ['Catering Dude', 'Catering Staff', '1945-05-09',
+            ['Catering Dude', 'Room Service Staff', '1945-05-09',
              'Cooking Hell Department', '(919)-777-0202',
              'Cooking Staff St., Apt. A', '27606', 9, None, None]
 
