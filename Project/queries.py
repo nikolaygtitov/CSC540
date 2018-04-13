@@ -86,7 +86,7 @@ SELECT (SELECT SUM(GREATEST(0, DATEDIFF(LEAST(%s, end_date),
 GREATEST(%s, start_date)))) 
 FROM Reservations) AS 'Actual Bookings', (SELECT COUNT(hotel_id) * 
 DATEDIFF(%s, %s) FROM Rooms) AS 'Total Possible Bookings', 
-((SELECT SUM(GREATEST(0, LEAST(%s, end_date) - GREATEST(%s, start_date))) 
+((SELECT SUM(GREATEST(0, DATEDIFF(LEAST(%s, end_date), GREATEST(%s, start_date)))) 
 FROM Reservations) / (SELECT COUNT(hotel_id) * DATEDIFF(%s, %s) FROM Rooms)) * 
 100 AS '% Occupancy'
 """
