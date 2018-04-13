@@ -10,9 +10,8 @@ class TestApps(SQLUnitTestBase):
 
     @staticmethod
     def _connect_to_test_db():
-        con = mariadb.connect(host='classdb2.csc.ncsu.edu', user='ngtitov',
-                              password='001029047',
-                              database='ngtitov')
+        con = mariadb.connect(host='classdb2.csc.ncsu.edu', user='nfschnoo', password='001027748',
+                              database='nfschnoo')
         return con
 
     def test_get_data_frame_star_no_where(self):
@@ -459,7 +458,7 @@ class TestApps(SQLUnitTestBase):
         self.assertEqual(1, len(df.index))
         row = df.ix[0]
         self.assertEqual(9, row['id'])
-        self.assertEqual('1945-05-09', row['date_of_birth'])
+        self.assertEqual('1945-05-09', str(row['date_of_birth']))
         self.assertEqual('(919)-222-0202', row['phone_number'])
         self.assertEqual('Staff Updated St., Apt. A', row['street'])
         self.assertEqual(9, row['assigned_hotel_id'])
@@ -467,6 +466,10 @@ class TestApps(SQLUnitTestBase):
         self.assertEqual(9, row['Serves_staff_id'])
         self.assertEqual(9, row['Serves_reservation_id'])
         apps.cursor.close()
+
+    def test_update_staff_where_id(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
         # Free staff from reservation based on ID
         df = apps.update_staff(
             {'assigned_hotel_id': None, 'assigned_room_number': None},
@@ -474,8 +477,8 @@ class TestApps(SQLUnitTestBase):
         self.assertEqual(1, len(df.index))
         row = df.ix[0]
         self.assertEqual(9, row['id'])
-        self.assertEqual('NULL', row['assigned_hotel_id'])
-        self.assertEqual('NULL', row['assigned_room_number'])
+        self.assertIsNone(row['assigned_hotel_id'])
+        self.assertIsNone(row['assigned_room_number'])
         apps.cursor.close()
 
     def test_delete_staff(self):
@@ -1197,7 +1200,7 @@ class TestApps(SQLUnitTestBase):
         apps = Apps(self._con, True)
         self._insert_test_data()
         df = apps.report_occupancy_by_hotel('2017-01-16')
-        self.assertEqual(8, len(df.index))
+        self.assertEqual(9, len(df.index))
         self.assertEqual('Wolf Inn Miami Panthers', df['Hotel Name'].ix[5])
         self.assertEqual(1, df['Rooms Occupied'].ix[5])
         self.assertEqual(1, df['Total Rooms'].ix[5])
@@ -1236,8 +1239,56 @@ class TestApps(SQLUnitTestBase):
         print df
         self.assertEqual(1, len(df.index))
         self.assertEqual(25.0, df['Actual Bookings'].ix[0])
-        self.assertEqual(8760, df['Total Possible Bookings'].ix[0])
-        self.assertEqual(1.8721, df['% Occupancy'].ix[0])
+        self.assertEqual(10950, df['Total Possible Bookings'].ix[0])
+        self.assertEqual(0.2283, df['% Occupancy'].ix[0])
+        self._con.commit()
+        apps.cursor.close()
+
+    def test_report_occupancy_by_date_range_left_overlap(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        df = apps.report_occupancy_by_date_range('2017-01-13', '2017-01-17')
+        print df
+        self.assertEqual(1, len(df.index))
+        self.assertEqual(2.0, df['Actual Bookings'].ix[0])
+        self.assertEqual(40, df['Total Possible Bookings'].ix[0])
+        self.assertEqual(5.0, df['% Occupancy'].ix[0])
+        self._con.commit()
+        apps.cursor.close()
+
+    def test_report_occupancy_by_date_range_right_overlap(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        df = apps.report_occupancy_by_date_range('2017-01-17', '2017-01-27')
+        print df
+        self.assertEqual(1, len(df.index))
+        self.assertEqual(5.0, df['Actual Bookings'].ix[0])
+        self.assertEqual(100, df['Total Possible Bookings'].ix[0])
+        self.assertEqual(5.0, df['% Occupancy'].ix[0])
+        self._con.commit()
+        apps.cursor.close()
+
+    def test_report_occupancy_by_date_range_left_boundary(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        df = apps.report_occupancy_by_date_range('2017-01-13', '2017-01-15')
+        print df
+        self.assertEqual(1, len(df.index))
+        self.assertEqual(0, df['Actual Bookings'].ix[0])
+        self.assertEqual(20, df['Total Possible Bookings'].ix[0])
+        self.assertEqual(0, df['% Occupancy'].ix[0])
+        self._con.commit()
+        apps.cursor.close()
+
+    def test_report_occupancy_by_date_range_right_boundary(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        df = apps.report_occupancy_by_date_range('2017-01-22', '2017-01-24')
+        print df
+        self.assertEqual(1, len(df.index))
+        self.assertEqual(0, df['Actual Bookings'].ix[0])
+        self.assertEqual(20, df['Total Possible Bookings'].ix[0])
+        self.assertEqual(0, df['% Occupancy'].ix[0])
         self._con.commit()
         apps.cursor.close()
 

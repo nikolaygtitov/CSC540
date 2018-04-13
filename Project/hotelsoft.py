@@ -360,6 +360,8 @@ class HotelSoft(object):
                         print('Enter one or more fields to identify it.')
                     print('<<Press enter to ignore a parameter>>\n')
 
+                    search_result = []
+
                     # Enter one or more parameters to find the entry
                     for index, arg in enumerate(
                             action.api_info.attr_names['where']):

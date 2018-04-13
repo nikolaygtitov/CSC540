@@ -1295,21 +1295,22 @@ class Apps(object):
                     to be updated cannot be identified. Identification ' \
                     'attributes are not specified.\n'
                 for attribute, value in staff_dict.items():
-                    if attribute != 'assigned_hotel_id' or \
+                    if attribute != 'assigned_hotel_id' and \
                             attribute != 'assigned_room_number':
                         assert value, \
                             'Exception: Attribute \'{}\' must be specified ' \
                             'to be updated.\n'.format(attribute)
             # Select only columns that are modified and query for them
             select_attr = ', '.join([attr for attr in staff_dict.iterkeys()])
+            if not select_attr.startswith('id'):
+                select_attr = 'id, ' + select_attr
             if 'id' not in staff_dict and 'id' in where_clause_dict and \
                     where_clause_dict['id']:
-                select_attr = 'id, ' + select_attr
                 staff_tuples = [where_clause_dict['id']]
             else:
                 self._execute_simple_select_query('id', 'Staff',
                                                   where_clause_dict)
-                staff_tuples = self.cursor.fetchall()
+                staff_tuples = [x[0] for x in self.cursor.fetchall()]
             # If staff gets assigned to a room, add it into Serves table
             if staff_tuples and staff_tuples is not None and \
                     'assigned_hotel_id' in staff_dict and \
