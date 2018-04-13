@@ -456,9 +456,10 @@ class TestApps(SQLUnitTestBase):
              'assigned_hotel_id': 9, 'assigned_room_number': 100},
             {'name': 'Service Dude'})
         self.assertEqual(1, len(df.index))
+        print df
         row = df.ix[0]
         self.assertEqual(9, row['id'])
-        self.assertEqual('1945-05-09', row['date_of_birth'])
+        self.assertEqual('1945-05-09', str(row['date_of_birth']))
         self.assertEqual('(919)-222-0202', row['phone_number'])
         self.assertEqual('Staff Updated St., Apt. A', row['street'])
         self.assertEqual(9, row['assigned_hotel_id'])
@@ -466,15 +467,21 @@ class TestApps(SQLUnitTestBase):
         self.assertEqual(9, row['Serves_staff_id'])
         self.assertEqual(9, row['Serves_reservation_id'])
         apps.cursor.close()
+
+    def test_update_staff_where_id(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
         # Free staff from reservation based on ID
         df = apps.update_staff(
             {'assigned_hotel_id': None, 'assigned_room_number': None},
             {'id': 9})
         self.assertEqual(1, len(df.index))
+        print df
         row = df.ix[0]
+        print row
         self.assertEqual(9, row['id'])
-        self.assertEqual('NULL', row['assigned_hotel_id'])
-        self.assertEqual('NULL', row['assigned_room_number'])
+        self.assertIsNone(row['assigned_hotel_id'])
+        self.assertIsNone(row['assigned_room_number'])
         apps.cursor.close()
 
     def test_delete_staff(self):
