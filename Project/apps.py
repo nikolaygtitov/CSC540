@@ -586,7 +586,7 @@ class Apps(object):
                         staff_tuples = self.cursor.fetchall()
                         catering_staff_df = None
                         room_service_staff_df = None
-                        if staff_tuples is not None and staff_tuples[0][0]:
+                        if staff_tuples and staff_tuples[0][0]:
                             catering_staff_df = self.update_staff(
                                 {'assigned_hotel_id': hotel_id,
                                  'assigned_room_number': room_number},
