@@ -17,8 +17,8 @@ cleaning, gyms, room service, and special requests. It generates and maintains
 billing accounts for each customer stay. It generates report occupancy by
 hotel, room category, date range, and city.
 
-The database system is developed for Wolf Inns and is used by hotels operators
-and employees including management staff, front desk representatives, room
+The database system is developed for Wolf Inns and is used by hotel operators
+and employees, including management staff, front desk representatives, room
 service, billing, and catering staff.
 
 The Popular Hotel Chain database system resolves constraints on availability

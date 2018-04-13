@@ -7,6 +7,10 @@ Project for CSC 540
 Description of the Project and Software read in the main program: hotelsoft.py
 
 Description of the util.py file:
+This file provides a library of functions used throughout this project.
+One of these functions provides a simple way to wrap code in a sql transaction, that
+will automatically commit or rollback on an error.
+Another function provides a mechanism to print any exception caught.
 
 @version: 1.0
 @todo: Demo
@@ -27,6 +31,19 @@ from contextlib import contextmanager
 
 @contextmanager
 def sql_transaction(con):
+    """
+    Implements SQL commit/rollback transaction.
+    Any code that executes successfully will commit.
+    If an exception is caught, the transaction will rollback,
+    then re-raise the exception.
+
+    Example:
+    with sql_transaction(db):
+        <sql_operation_1>
+        <sql_operation_2>
+    :param con: The database connection
+    :return: None
+    """
     try:
         yield
         con.commit()
@@ -37,6 +54,10 @@ def sql_transaction(con):
 
 @contextmanager
 def print_error():
+    """
+    Prints any exception caught in the wrapped code.
+    :return: None
+    """
     try:
         yield
     except Exception as error:

@@ -7,6 +7,10 @@ Project for CSC 540
 Description of the Project and Software read in the main program: hotelsoft.py
 
 Description of the demo_data.py file:
+This file contains the data that will be used for the project demo.
+The load_demo_data will setup a database with this data.
+This file can be executed independently (as a python script), and will
+load the demo data.
 
 @version: 1.0
 @todo: Demo
@@ -35,6 +39,13 @@ scp * unity_id@remote.eos.ncsu.edu:/afs/unity.ncsu.edu/users/u/unity_id/CSC540
 
 
 def _drop_tables(db):
+    """
+    Drop all tables in the proper order.
+    On an error (e.g., table doesn't exist), it will
+    continue dropping the remaining tables.
+    :param db: The database connection
+    :return: None
+    """
     cursor = db.cursor()
     try:
         cursor.execute('DROP TABLE Serves')
@@ -72,6 +83,11 @@ def _drop_tables(db):
 
 
 def _create_tables(db):
+    """
+    Create all tables used in this project in the required order.
+    :param db: The database connection
+    :return: None
+    """
     cursor = db.cursor()
     cursor.execute("""
         CREATE TABLE ZipToCityState (
@@ -190,6 +206,13 @@ def _create_tables(db):
 
 
 def load_demo_data(db):
+    """
+    Load the demo data into the database.
+    This function will drop all project tables,
+    create the tables, then load the data.
+    :param db: The database connection
+    :return: None
+    """
 
     _drop_tables(db)
     _create_tables(db)
