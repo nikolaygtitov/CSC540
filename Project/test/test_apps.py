@@ -684,8 +684,8 @@ class TestApps(SQLUnitTestBase):
         self.assertEqual(1, len(df.index))
         row = df.ix[0]
         self.assertEqual(10, row['id'])
-        self.assertEqual('2018-04-11', row['start_date'])
-        self.assertEqual('2018-04-17', row['end_date'])
+        self.assertEqual('2018-04-11', str(row['start_date']))
+        self.assertEqual('2018-04-18', str(row['end_date']))
         df = apps.update_reservation(
             {'number_of_guests': 1, 'start_date': '2018-04-15',
              'end_date': '2018-04-17', 'check_in_time': '2018-04-15 15:15:15'},
@@ -694,9 +694,9 @@ class TestApps(SQLUnitTestBase):
         row = df.ix[0]
         self.assertEqual(10, row['id'])
         self.assertEqual(1, row['number_of_guests'])
-        self.assertEqual('2018-04-15', row['start_date'])
-        self.assertEqual('2018-04-17', row['end_date'])
-        self.assertEqual('2018-04-15 15:15:15', row['check_in_time'])
+        self.assertEqual('2018-04-15', str(row['start_date']))
+        self.assertEqual('2018-04-17', str(row['end_date']))
+        self.assertEqual('2018-04-15 15:15:15', str(row['check_in_time']))
         self.assertNotIn('Staff_id', row)
         self.assertNotIn('Staff_assigned_hotel_id', row)
         self.assertNotIn('Staff_assigned_room', row)
@@ -714,12 +714,12 @@ class TestApps(SQLUnitTestBase):
         self.assertEqual(1, len(df.index))
         row = df.ix[0]
         self.assertEqual(10, row['id'])
-        self.assertEqual('2018-04-17 05:05:05', row['check_out_time'])
-        self.assertEqual(10, row['Transaction_id'])
-        self.assertEqual('200.00', row['Transaction_amount'])
+        self.assertEqual('2018-04-17 05:05:05', str(row['check_out_time']))
+        self.assertEqual(9, row['Transaction_id'])
+        self.assertEqual(200.0, row['Transaction_amount'])
         self.assertEqual('2-night(s) Room Reservation Charge',
                          row['Transaction_type'])
-        self.assertEqual('2018-04-17 05:05:05', row['Transaction_date'])
+        self.assertEqual('2018-04-17 05:05:05', str(row['Transaction_date']))
         self.assertNotIn('Staff_id', row)
         self.assertNotIn('Staff_assigned_hotel_id', row)
         self.assertNotIn('Staff_assigned_room', row)
@@ -736,12 +736,12 @@ class TestApps(SQLUnitTestBase):
         row = df.ix[0]
         self.assertEqual(10, row['id'])
         self.assertEqual(5, row['number_of_guests'])
-        self.assertEqual('2018-04-20', row['start_date'])
-        self.assertEqual('2018-04-23', row['end_date'])
+        self.assertEqual('2018-04-20', str(row['start_date']))
+        self.assertEqual('2018-04-23', str(row['end_date']))
         self.assertEqual(500, row['room_number'])
         self.assertEqual(2, row['customer_id'])
-        self.assertEqual('NULL', row['check_in_time'])
-        self.assertEqual('NULL', row['check_out_time'])
+        self.assertIsNone(row['check_in_time'])
+        self.assertIsNone(row['check_out_time'])
         self.assertNotIn('Staff_id', row)
         self.assertNotIn('Staff_assigned_hotel_id', row)
         self.assertNotIn('Staff_assigned_room', row)
@@ -760,16 +760,16 @@ class TestApps(SQLUnitTestBase):
         row1 = df.ix[0]
         row2 = df.ix[1]
         self.assertEqual(10, row1['id'])
-        self.assertEqual('2018-04-20 20:20:20', row1['check_in_time'])
-        self.assertEqual(10, row1['Staff_id'])
-        self.assertEqual(9, row1['Staff_assigned_hotel_id'])
+        self.assertEqual('2018-04-20 20:20:20', str(row1['check_in_time']))
+        self.assertEqual(9, row1['Staff_id'])
+        self.assertEqual(9, row1['Staff_assigned_hotel'])
         self.assertEqual(500, row1['Staff_assigned_room'])
-        self.assertEqual(10, row1['Serves_staff_id'])
+        self.assertEqual(9, row1['Serves_staff_id'])
         self.assertEqual(10, row1['Serves_reservation_id'])
-        self.assertEqual(9, row2['Staff_id'])
-        self.assertEqual(9, row2['Staff_assigned_hotel_id'])
+        self.assertEqual(10, row2['Staff_id'])
+        self.assertEqual(9, row2['Staff_assigned_hotel'])
         self.assertEqual(500, row2['Staff_assigned_room'])
-        self.assertEqual(9, row2['Serves_staff_id'])
+        self.assertEqual(10, row2['Serves_staff_id'])
         self.assertEqual(10, row2['Serves_reservation_id'])
         self.assertNotIn('Transaction_id', row)
         self.assertNotIn('Transaction_amount', row)
@@ -781,22 +781,22 @@ class TestApps(SQLUnitTestBase):
         df = apps.update_reservation(
             {'check_out_time': '2018-04-23 11:11:11'},
             {'id': 10})
-        self.assertEqual(3, len(df.index))
+        self.assertEqual(2, len(df.index))
         row1 = df.ix[0]
         row2 = df.ix[1]
         self.assertEqual(10, row1['id'])
-        self.assertEqual('2018-04-23 11:11:11', row1['check_out_time'])
+        self.assertEqual('2018-04-23 11:11:11', str(row1['check_out_time']))
         self.assertEqual(10, row1['Staff_id'])
-        self.assertEqual('NULL', row1['Staff_assigned_hotel_id'])
-        self.assertEqual('NULL', row1['Staff_assigned_room'])
+        self.assertIsNone(row1['Staff_assigned_hotel_id'])
+        self.assertIsNone(row1['Staff_assigned_room'])
         self.assertEqual(9, row2['Staff_id'])
-        self.assertEqual('NULL', row2['Staff_assigned_hotel_id'])
-        self.assertEqual('NULL', row2['Staff_assigned_room'])
-        self.assertEqual(11, row1['Transaction_id'])
-        self.assertEqual('30000.00', row1['Transaction_amount'])
+        self.assertIsNone(row2['Staff_assigned_hotel_id'])
+        self.assertIsNone(row2['Staff_assigned_room'])
+        self.assertEqual(10, row1['Transaction_id'])
+        self.assertEqual(30000.00, row1['Transaction_amount'])
         self.assertEqual('3-night(s) Room Reservation Charge',
                          row1['Transaction_type'])
-        self.assertEqual('2018-04-23 11:11:11', row1['Transaction_date'])
+        self.assertEqual('2018-04-23 11:11:11', str(row1['Transaction_date']))
         apps.cursor.close()
 
     def test_delete_reservation(self):
