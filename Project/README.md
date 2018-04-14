@@ -12,10 +12,11 @@ limited to storing, updating, and deleting data. The database maintains a
 variety of information records about hotels located in various cities around
 the country, including staff, rooms, customers, and billing records.
 
-For each customer stay, the software maintains service records, such as phone bills, dry
-cleaning, gyms, room service, and special requests. The software also generates and maintains
-billing accounts for each customer stay. Lastly, the software generates a variety of reports, 
-including report occupancy by hotel, room category, date range, and city.
+For each customer stay, the software maintains service records, such as phone
+bills, dry cleaning, gyms, room service, and special requests. The software
+also generates and maintains billing accounts for each customer stay. Lastly,
+the software generates a variety of reports, including report occupancy by
+hotel, room category, date range, and city.
 
 The database system is developed for Wolf Inns and is used by hotel operators
 and employees, including management staff, front desk representatives, room
@@ -176,14 +177,14 @@ sequence of events:
   If any of the tables do not exist prior of dropping it, it ignores the error 
   and continues dropping the remaining tables.
   2. Creates all tables used in this project in the required order. All of the 
-  tables get created with accordance of the Project Design stated in the *Project 
-  Report 1* and *Project Report 2*.
+  tables get created with accordance of the Project Design stated in the
+  *Project Report 1* and *Project Report 2*.
   3. Loads the Demo Data into the DBMS used as the initial state during the 
   project demo.
 #### *queries.py*
-This file contains the statically defined complex queries.
-These are the queries used by the project programs to generate reports,
-generate the bill, and query room availability.
+This file contains the statically defined complex queries. These are the
+queries used by the project programs to generate reports, generate the bill,
+and query room availability.
 #### *util.py*
 This file provides a library of functions used throughout the project programs.
 It contains two functions that do the following:
