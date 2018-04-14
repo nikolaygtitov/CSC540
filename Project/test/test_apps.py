@@ -486,11 +486,45 @@ class TestApps(SQLUnitTestBase):
     def test_update_staff_assign_to_checked_out_room(self):
         apps = Apps(self._con, True)
         self._insert_test_data()
-        # Assign Staff to checked-out room. Must give an Exception:
+        # Assign Staff to checked-out room. Must give an Exception.
         df = apps.update_staff(
             {'assigned_hotel_id': 2, 'assigned_room_number': 200},
             {'id': 1})
         error = 'Cannot assign staff to a room \'200\' in hotel \'2\' for ' \
+                'which customer either did not check-in or already checked-out.'
+        self.assertTrue(error in str(df))
+        self.assertRaises(AssertionError)
+        apps.cursor.close()
+
+    def test_update_staff_assign_to_not_checked_in_room(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        # Add new Presidential Reservation with NO check-in time
+        df = apps.add_reservation(
+            {'number_of_guests': 2, 'start_date': '2018-04-11',
+             'end_date': '2018-04-18', 'hotel_id': 9,
+             'room_number': 100, 'customer_id': 1})
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual(10, row['id'])
+        self.assertEqual('2018-04-11', str(row['start_date']))
+        self.assertEqual('2018-04-18', str(row['end_date']))
+        self.assertIsNone(row['check_in_time'])
+        self.assertIsNone(row['check_out_time'])
+        self.assertNotIn('Staff_id', row)
+        self.assertNotIn('Staff_assigned_hotel', row)
+        self.assertNotIn('Staff_assigned_room', row)
+        self.assertNotIn('Serves_staff_id', row)
+        self.assertNotIn('Serves_reservation_id', row)
+        self.assertNotIn('Transaction_id', row)
+        self.assertNotIn('Transaction_amount', row)
+        self.assertNotIn('Transaction_type', row)
+        self.assertNotIn('Transaction_date', row)
+        # Assign Staff to NOT checked-in room. Must give an Exception.
+        df = apps.update_staff(
+            {'assigned_hotel_id': 9, 'assigned_room_number': 500},
+            {'id': 9})
+        error = 'Cannot assign staff to a room \'500\' in hotel \'9\' for ' \
                 'which customer either did not check-in or already checked-out.'
         self.assertTrue(error in str(df))
         self.assertRaises(AssertionError)
@@ -874,9 +908,8 @@ class TestApps(SQLUnitTestBase):
         self.assertNotIn('Staff_id', row)
         self.assertNotIn('Staff_assigned_hotel', row)
         self.assertNotIn('Staff_assigned_room', row)
-        self.assertNotIn('Staff_id', row)
-        self.assertNotIn('Staff_assigned_hotel', row)
-        self.assertNotIn('Staff_assigned_room', row)
+        self.assertNotIn('Serves_staff_id', row)
+        self.assertNotIn('Serves_reservation_id', row)
         apps.cursor.close()
 
     def test_delete_reservation(self):
