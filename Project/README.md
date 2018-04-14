@@ -12,10 +12,10 @@ limited to storing, updating, and deleting data. The database maintains a
 variety of information records about hotels located in various cities around
 the country, including staff, rooms, customers, and billing records.
 
-For each customer stay it maintains service records, such as phone bills, dry
-cleaning, gyms, room service, and special requests. It generates and maintains
-billing accounts for each customer stay. It generates report occupancy by
-hotel, room category, date range, and city.
+For each customer stay, the software maintains service records, such as phone bills, dry
+cleaning, gyms, room service, and special requests. The software also generates and maintains
+billing accounts for each customer stay. Lastly, the software generates a variety of reports, 
+including report occupancy by hotel, room category, date range, and city.
 
 The database system is developed for Wolf Inns and is used by hotel operators
 and employees, including management staff, front desk representatives, room
@@ -25,7 +25,7 @@ The Popular Hotel Chain database system resolves constraints on availability
 and pricing of rooms, maintaining proper customer, billing, check-in, and
 check-out information. Users of the database may perform different tasks
 concurrently, each consisting of multiple sequential operations that have an
-affect on the database.
+effect on the database.
 
 There are four major tasks that are performed by corresponding users on the
 database:
@@ -33,6 +33,7 @@ database:
 2. Maintaining Service Records
 3. Maintaining Billing Accounts
 4. Reports
+
 ### Description of the Software:
 This program allows retrieving, storing, manipulating and deleting any data
 from the DBMS through various user-friendly applications instead of direct
@@ -49,9 +50,52 @@ The entire front-end interaction between a user and the program takes place via
 UI, which is a menu driven system that enables interaction with the back-end
 database.
 
-The following is a sample of menu driven system of the implemented UI:
+The following is a sample of menu driven system of the implemented UI, as well as the output of a sample database transaction:
 ```
-Here the output of UI
+MAIN MENU
+Select a menu option:
+  1. Information Processing
+  2. Service Records
+  3. Billing
+  4. Reports
+  5. Load Test Data
+  6. Exit
+-> 1
+INFORMATION PROCESSING
+Select a menu option:
+  1. Manage hotel information
+  2. Manage room information
+  3. Manage staff information
+  4. Manage customer information
+  5. Check room availability
+  6. Reservations / Check-ins / Check-outs
+  7. Back to main menu
+-> 1
+MANAGE HOTEL INFORMATION
+Select a menu option:
+  1. Enter a new hotel
+  2. Update a hotel
+  3. Delete a hotel
+  4. Return to previous menu
+  5. Back to main menu
+-> 1
+ADD A NEW HOTEL
+Enter the following fields:
+id(Hotel ID): 
+name(e.g. Wolf Inn Raleigh): Wolf Inn Cary
+street(e.g. 100 Main Street): 101 Broadway  
+zip(e.g. 24354): 27511
+phone_number(e.g. 919-555-1212): 800-555-1212
+City and state required
+city: Cary
+state: NC
+
+MenuAction Successful ✓
++----+------+---------------+--------------+-------+----------------+--------+---------+
+|    |   id | name          | street       |   zip | phone_number   | city   | state   |
+|----+------+---------------+--------------+-------+----------------+--------+---------|
+|  0 |   23 | Wolf Inn Cary | 101 Broadway | 27511 | 800-555-1212   | Cary   | NC      |
++----+------+---------------+--------------+-------+----------------+--------+---------+
 ```
 
 All of the following queries are performed in the back-end on the default MySQL
