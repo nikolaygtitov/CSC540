@@ -420,7 +420,7 @@ class Apps(object):
         staff_tuples = self.cursor.fetchall()
         staff_df_result = None
         transaction_df = None
-        if staff_tuples is not None:
+        if staff_tuples and staff_tuples[0]:
             for staff_id in staff_tuples:
                 # Free all assigned staff by setting assigned hotel and
                 # assigned room to NULL
@@ -433,7 +433,7 @@ class Apps(object):
                 staff_df_result = staff_df_result.rename(
                     index=str,
                     columns={'id': 'Staff_id',
-                             'assigned_hotel_id': 'Staff_assigned_hotel_id',
+                             'assigned_hotel_id': 'Staff_assigned_hotel',
                              'assigned_room_number': 'Staff_assigned_room'})
         # Add Room Charge transaction into Transactions table
         # Determine amount needs to be charged for the reservation
@@ -447,7 +447,7 @@ class Apps(object):
                                           'Reservations',
                                           {'id': reservation_id})
         number_nights = self.cursor.fetchall()
-        if amount is not None and number_nights is not None:
+        if amount and amount[0] and number_nights and number_nights[0]:
             transaction_df = self.add_transaction(
                 {'amount': amount[0][0],
                  'type': '{}-night(s) Room Reservation Charge'.format(
@@ -534,11 +534,12 @@ class Apps(object):
             self._execute_select_query('id', 'Reservations', where_clause,
                                        [hotel_id, room_number])
             reservation_tuples = self.cursor.fetchall()
-            assert len(reservation_tuples) == 1, \
+            assert reservation_tuples and len(reservation_tuples) == 1 and \
+                reservation_tuples[0], \
                 'Cannot assign staff to a room \'{}\' in hotel \'{}\' for ' \
                 'which customer either did not check-in or already ' \
                 'checked-out.\n'.format(room_number, hotel_id) \
-                if len(reservation_tuples) == 0 else \
+                if not reservation_tuples[0] else \
                 'Found multiple active reservations for room \'{}\' in hotel ' \
                 '\'{}\' with a checked-in customer. Cannot assign staff to ' \
                 'multiple room simultaneously.\n'
@@ -557,11 +558,11 @@ class Apps(object):
                                               {'hotel_id': hotel_id,
                                                'room_number': room_number})
             room_tuple = self.cursor.fetchall()
-            if room_tuple is not None:
+            if room_tuple and len(room_tuple) == 1 and room_tuple[0]:
                 room_category = room_tuple[0][0].split()
                 if 'presidential' in (category.lower() for category in
                                       room_category):
-                    # This is Presidential Suite
+                    # This is Presidential Suite.
                     # Verify that this reservation is still active
                     self._execute_simple_select_query(
                         'check_out_time', 'Reservations',
@@ -573,6 +574,8 @@ class Apps(object):
                         # It needs to assign one available Catering staff
                         # and one Room Service as dedicated staff.
                         # Determine their Staff ID
+                        catering_staff_df = None
+                        room_service_staff_df = None
                         where_clause = "works_for_hotel_id=%s AND " \
                                        "title LIKE '%{}%'  AND " \
                                        "(assigned_hotel_id IS NULL OR " \
@@ -584,9 +587,7 @@ class Apps(object):
                             where_clause=where_clause.format('Catering'),
                             where_values_list=[hotel_id])
                         staff_tuples = self.cursor.fetchall()
-                        catering_staff_df = None
-                        room_service_staff_df = None
-                        if staff_tuples and staff_tuples[0][0]:
+                        if staff_tuples and staff_tuples[0]:
                             catering_staff_df = self.update_staff(
                                 {'assigned_hotel_id': hotel_id,
                                  'assigned_room_number': room_number},
@@ -597,7 +598,7 @@ class Apps(object):
                             where_clause=where_clause.format('Room Service'),
                             where_values_list=[hotel_id])
                         staff_tuples = self.cursor.fetchall()
-                        if staff_tuples and staff_tuples[0][0]:
+                        if staff_tuples and staff_tuples[0]:
                             room_service_staff_df = self.update_staff(
                                 {'assigned_hotel_id': hotel_id,
                                  'assigned_room_number': room_number},
@@ -1175,7 +1176,8 @@ class Apps(object):
                     'Exception: Title of the staff member must be specified ' \
                     'and must be non-empty.\n'
                 assert 'date_of_birth' in staff_dict and \
-                       len(staff_dict['date_of_birth']) == 10, \
+                       datetime.strptime(staff_dict['date_of_birth'],
+                                         '%Y-%m-%d'), \
                     'Exception: Date of birth must follow the DATE format: ' \
                     'YYYY-MM-DD.\n'
                 assert 'department' in staff_dict and \
@@ -1294,6 +1296,11 @@ class Apps(object):
                     'Exception: Cannot update tuple(s) in the table. Tuple(s) \
                     to be updated cannot be identified. Identification ' \
                     'attributes are not specified.\n'
+                if 'date_of_birth' in staff_dict:
+                    datetime.strptime(staff_dict['date_of_birth'],
+                                      '%Y-%m-%d'), \
+                        'Exception: Date of birth must follow the DATE ' \
+                        'format: YYYY-MM-DD.\n'
                 for attribute, value in staff_dict.items():
                     if attribute != 'assigned_hotel_id' and \
                             attribute != 'assigned_room_number':
@@ -1472,7 +1479,8 @@ class Apps(object):
                     'Exception: Name of the customer must be specified and ' \
                     'must be non-empty.\n'
                 assert 'date_of_birth' in customer_dict and \
-                       len(customer_dict['date_of_birth']) == 10, \
+                       datetime.strptime(customer_dict['date_of_birth'],
+                                         '%Y-%m-%d'), \
                     'Exception: Date of birth must be specified and must ' \
                     'follow the DATE format: YYYY-MM-DD.\n'
                 assert 'phone_number' in customer_dict and \
@@ -1544,6 +1552,11 @@ class Apps(object):
                     'Exception: Cannot update tuple(s) in the table. Tuple(s) \
                     to be updated cannot be identified. Identification ' \
                     'attributes are not specified.\n'
+                if 'date_of_birth' in customer_dict:
+                    datetime.strptime(customer_dict['date_of_birth'],
+                                      '%Y-%m-%d'), \
+                        'Exception: Date of birth must be specified and must ' \
+                        'follow the DATE format: YYYY-MM-DD.\n'
                 for attribute, value in customer_dict.items():
                     if attribute != 'account_number' or \
                             attribute != 'is_hotel_card':
@@ -1677,11 +1690,13 @@ class Apps(object):
                     'Exception: Number of guests must be specified and must ' \
                     'be between 1 and 9 inclusive.\n'
                 assert 'start_date' in reservation_dict and \
-                       len(reservation_dict['start_date']) == 10, \
+                       datetime.strptime(reservation_dict['start_date'],
+                                         '%Y-%m-%d'), \
                     'Exception: Start date of the reservation must be ' \
                     'specified and must follow the DATE format: YYYY-MM-DD.\n'
                 assert 'end_date' in reservation_dict and \
-                       len(reservation_dict['end_date']) == 10, \
+                       datetime.strptime(reservation_dict['end_date'],
+                                         '%Y-%m-%d'), \
                     'Exception: End date of the reservation must be ' \
                     'specified and must follow the DATE format: YYYY-MM-DD.\n'
                 start_date = datetime.strptime(reservation_dict['start_date'],
@@ -1691,16 +1706,19 @@ class Apps(object):
                 assert start_date <= end_date, \
                     'Exception: Start date must be prior the end date.\n'
                 if 'check_in_time' in reservation_dict:
-                    assert len(reservation_dict['check_in_time']) == 19, \
+                    assert pd.to_datetime(reservation_dict['check_in_time'],
+                                          errors='coerce') is not pd.NaT, \
                         'Exception: Check-in time of the reservation must be ' \
                         'specified and must follow the DATETIME format: ' \
                         'YYYY-MM-DD HH:MM:SS.\n'
                 if 'check_out_time' in reservation_dict:
-                    assert len(reservation_dict['check_out_time']) == 19, \
+                    assert pd.to_datetime(reservation_dict['check_out_time'],
+                                          errors='coerce') is not pd.NaT, \
                         'Exception: Check-out time of the reservation must ' \
                         'be specified and must follow the DATETIME format: ' \
                         'YYYY-MM-DD HH:MM:SS.\n'
-                    assert len(reservation_dict['check_in_time']) == 19, \
+                    assert pd.to_datetime(reservation_dict['check_in_time'],
+                                          errors='coerce') is not pd.NaT, \
                         'Exception: Check-in time of the reservation must be ' \
                         'specified and must follow the DATETIME format: ' \
                         'YYYY-MM-DD HH:MM:SS.\n'
@@ -1806,6 +1824,17 @@ class Apps(object):
                         assert value, \
                             'Exception: Attribute \'{}\' must be specified ' \
                             'to be updated.\n'.format(attribute)
+                    else:
+                        assert pd.to_datetime(value,
+                                              errors='coerce') is not pd.NaT, \
+                            'Exception: \'{}\' of the reservation must be ' \
+                            'specified and must follow the DATETIME format: ' \
+                            'YYYY-MM-DD HH:MM:SS.\n'.format(attribute)
+                    if attribute == 'start_date' or attribute == 'end_date':
+                        datetime.strptime(value, '%Y-%m-%d'), \
+                            'Exception: {} of the reservation must be ' \
+                            'specified and must follow the DATE format: ' \
+                            'YYYY-MM-DD.\n'.format(attribute)
             # Select only columns that are modified and query for them
             select_attr = ', '.join(
                 [attr for attr in reservation_dict.iterkeys()])
@@ -1823,7 +1852,7 @@ class Apps(object):
             if 'check_in_time' in reservation_dict and \
                     reservation_dict['check_in_time'] and \
                     'check_out_time' not in reservation_dict and \
-                    reservation_tuples is not None:
+                    reservation_tuples and reservation_tuples[0]:
                 staff_df_result = None
                 for reservation in reservation_tuples:
                     # Check if neither check-in or check-out has never been
@@ -1970,9 +1999,9 @@ class Apps(object):
                     'be specified and must be non-empty.\n'
                 assert 'date' in transaction_dict and \
                        pd.to_datetime(transaction_dict['date'],
-                                      errors='coerce') != pd.NaT, \
+                                      errors='coerce') is not pd.NaT, \
                     'Exception: Date of the transaction must follow the DATE ' \
-                    'format: YYYY-MM-DD.\n'
+                    'format: YYYY-MM-DD HH:MM:SS.\n'
             # Execute insert query
             self._execute_insert_query(transaction_dict, 'Transactions')
             # Query for this inserted tuple and return it as Pandas DataFrame
@@ -2032,6 +2061,11 @@ class Apps(object):
                     assert value, \
                         'Exception: Attribute \'{}\' must be specified to be ' \
                         'updated.\n'.format(attribute)
+                    if attribute == 'date':
+                        assert pd.to_datetime(transaction_dict['date'],
+                                              errors='coerce') is not pd.NaT, \
+                            'Exception: Date of the transaction must follow ' \
+                            'the DATE format: YYYY-MM-DD HH:MM:SS.\n'
             # Select only columns that are modified and query for them
             select_attr = ', '.join(
                 [attr for attr in transaction_dict.iterkeys()])
