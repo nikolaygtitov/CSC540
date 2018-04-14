@@ -539,7 +539,7 @@ class Apps(object):
                 'Cannot assign staff to a room \'{}\' in hotel \'{}\' for ' \
                 'which customer either did not check-in or already ' \
                 'checked-out.\n'.format(room_number, hotel_id) \
-                if not reservation_tuples[0] else \
+                if not reservation_tuples else \
                 'Found multiple active reservations for room \'{}\' in hotel ' \
                 '\'{}\' with a checked-in customer. Cannot assign staff to ' \
                 'multiple room simultaneously.\n'

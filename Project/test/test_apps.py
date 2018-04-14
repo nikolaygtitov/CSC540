@@ -483,6 +483,19 @@ class TestApps(SQLUnitTestBase):
         self.assertIsNone(row['assigned_room_number'])
         apps.cursor.close()
 
+    def test_update_staff_assign_to_checked_out_room(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        # Assign Staff to checked-out room. Must give an Exception:
+        df = apps.update_staff(
+            {'assigned_hotel_id': 2, 'assigned_room_number': 200},
+            {'id': 1})
+        error = 'Cannot assign staff to a room \'200\' in hotel \'2\' for ' \
+                'which customer either did not check-in or already checked-out.'
+        self.assertTrue(error in str(df))
+        self.assertRaises(AssertionError)
+        apps.cursor.close()
+
     def test_delete_staff(self):
         apps = Apps(self._con, True)
         self._insert_test_data()
