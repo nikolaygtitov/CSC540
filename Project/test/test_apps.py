@@ -881,13 +881,22 @@ class TestApps(SQLUnitTestBase):
         # This fails for me. Replacing with below
         # self.assertIsNone(row1['Staff_assigned_hotel'])
         # self.assertIsNone(row1['Staff_assigned_room'])
-        self.assertTrue(math.isnan(row1['Staff_assigned_hotel']))
-        self.assertTrue(math.isnan(row1['Staff_assigned_room']))
+
+        def nan_to_none(x):
+            if x is None:
+                return None
+            elif math.isnan(float(x)):
+                return None
+            else:
+                return x
+
+        self.assertIsNone(nan_to_none(row1['Staff_assigned_hotel']))
+        self.assertIsNone(nan_to_none(row1['Staff_assigned_room']))
         self.assertEqual(9, row2['Staff_id'])
         # self.assertIsNone(row2['Staff_assigned_hotel'])
         # self.assertIsNone(row2['Staff_assigned_room'])
-        self.assertTrue(math.isnan(row2['Staff_assigned_hotel']))
-        self.assertTrue(math.isnan(row2['Staff_assigned_room']))
+        self.assertIsNone(nan_to_none(row2['Staff_assigned_hotel']))
+        self.assertIsNone(nan_to_none(row2['Staff_assigned_room']))
         self.assertEqual(10, row1['Transaction_id'])
         self.assertEqual(30000.00, row1['Transaction_amount'])
         self.assertEqual('3-night(s) Room Reservation Charge',
