@@ -7,10 +7,12 @@ Project for CSC 540
 Description of the Project and Software read in the main program: hotelsoft.py
 
 Description of the util.py file:
-This file provides a library of functions used throughout this project.
-One of these functions provides a simple way to wrap code in a sql transaction, that
-will automatically commit or rollback on an error.
-Another function provides a mechanism to print any exception caught.
+This file provides a library of functions used throughout the project programs.
+It contains two functions that do the following:
+1) sql_transaction() function provides a simple way to wrap code in a SQL
+transaction, that will automatically commit or rollback on an error.
+2) print_error() function provides a mechanism to print any exception caught in
+any of the programs.
 
 @version: 1.0
 @todo: Demo
@@ -41,8 +43,12 @@ def sql_transaction(con):
     with sql_transaction(db):
         <sql_operation_1>
         <sql_operation_2>
-    :param con: The database connection
-    :return: None
+
+    Parameters:
+        :param con: The database connection
+
+    Returns:
+        :return: None
     """
     try:
         yield
@@ -56,7 +62,9 @@ def sql_transaction(con):
 def print_error():
     """
     Prints any exception caught in the wrapped code.
-    :return: None
+
+    Returns:
+        :return: None
     """
     try:
         yield

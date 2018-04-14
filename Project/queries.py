@@ -8,7 +8,7 @@ Description of the Project and Software read in the main program: hotelsoft.py
 
 Description of the queries.py file:
 This file contains the statically defined complex queries.
-These are the queries used by the project to generate reports,
+These are the queries used by the project programs to generate reports,
 generate the bill, and query room availability.
 
 @version: 1.0

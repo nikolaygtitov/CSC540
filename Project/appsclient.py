@@ -7,8 +7,10 @@ Project for CSC 540
 Description of the Project and Software read in the main program: hotelsoft.py
 
 Description of the appsclient.py file:
-This file contains the client classes for communicating directly with the
-Apps.py API.  These classes are intended to be instantiated by HotelSoft.py.
+The file contains the client classes for a direct communication with the APIs
+(apps.py).  These classes are intended to be instantiated by the main program
+hotelsoft.py. Once the classes are instantiated, they serve as a mediator or
+interface between UI (hotelsoft.py) and APIs (apps.py).
 See hotelsoft.py for execution instructions.
 
 @version: 1.0

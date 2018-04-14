@@ -7,10 +7,22 @@ Project for CSC 540
 Description of the Project and Software read in the main program: hotelsoft.py
 
 Description of the demo_data.py file:
-This file contains the data that will be used for the project demo.
-The load_demo_data will setup a database with this data.
-This file can be executed independently (as a python script), and will
-load the demo data.
+This is independent Python program that must be executed completely apart from
+the rest of the Project programs. This Python script loads the Demo Data given
+by a teaching staff into the DBMS as a pre-demo data that must exist in the
+tables prior the Project Demo.
+The file contains the Demo Data that is used for generating the initial state
+of the DBMS prior the project demo. The program does the following:
+1) _drop_tables() function drops all of the existing tables to clean up DBMS of
+any existing data. If any of the tables do not exist prior of dropping it, it
+ignores the error and continues dropping the remaining tables.
+2) _create_tables() function creates all tables used in this project in the
+required order. All of the tables get created with accordance of the Project
+Design stated in the Project Report 1 and Project Report 2.
+3) load_demo_data() function does a clean up and creates all the tables by
+calling internal private helper functions _drop_tables() and _create_tables().
+It loads the Demo Data into the DBMS used as the initial state during the
+project demo.
 
 @version: 1.0
 @todo: Demo
@@ -40,11 +52,20 @@ scp * unity_id@remote.eos.ncsu.edu:/afs/unity.ncsu.edu/users/u/unity_id/CSC540
 
 def _drop_tables(db):
     """
-    Drop all tables in the proper order.
-    On an error (e.g., table doesn't exist), it will
-    continue dropping the remaining tables.
-    :param db: The database connection
-    :return: None
+    Drops all tables in the proper order.
+
+    This is private function of the script and not intended to be referenced
+    by any of the Project programs. It is referenced only by load_demo_data()
+    function.
+    On an error (e.g., table does not exist), it continues dropping the
+    remaining tables by ignoring the error. The ultimate result of this
+    function is all previously stored data must be removed from DBMS.
+
+    Parameters:
+        :param db: The database connection
+
+    Returns:
+        :return: None
     """
     cursor = db.cursor()
     try:
@@ -84,9 +105,20 @@ def _drop_tables(db):
 
 def _create_tables(db):
     """
-    Create all tables used in this project in the required order.
-    :param db: The database connection
-    :return: None
+    Creates all tables used in this project in the required order.
+
+    This is private function of the script and not intended to be referenced
+    by any of the Project programs. It is referenced only by load_demo_data()
+    function.
+    All of the tables get created with accordance of the Project Design stated
+    in the Project Report 1 and Project Report 2. The following CREATE queries
+    are directly taken from the Project Report 2 without any modifications.
+
+    Parameters:
+        :param db: The database connection
+
+    Returns:
+        :return: None
     """
     cursor = db.cursor()
     cursor.execute("""
@@ -207,11 +239,22 @@ def _create_tables(db):
 
 def load_demo_data(db):
     """
-    Load the demo data into the database.
-    This function will drop all project tables,
-    create the tables, then load the data.
-    :param db: The database connection
-    :return: None
+    Loads the Demo Data into the DBMS used as the initial state during the
+    project demo.
+
+    This function does the following:
+    1) Drops all project tables by calling internal private helper function
+    _drop_tables()
+    2) Creates the tables by calling internal private helper function
+    _create_tables()
+    3) Loads the Demo Data given by a teaching staff as a pre-demo data that
+    must exist in the tables prior the Project Demo.
+
+    Parameters:
+        :param db: The database connection
+
+    Returns:
+        :return: None
     """
 
     _drop_tables(db)

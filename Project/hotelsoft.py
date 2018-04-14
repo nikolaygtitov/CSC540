@@ -458,9 +458,11 @@ class HotelSoft(object):
 
     def store_menu(self, menu):
         """
-        Stores a menu in a lambda function to be run later
+        Stores a menu in a lambda function to be run later.
+
         Parameters:
             :param menu: Menu of interest
+
         Returns:
             :return: Lambda function associated with menu
         """
