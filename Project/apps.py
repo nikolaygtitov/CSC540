@@ -1875,7 +1875,7 @@ class Apps(object):
             # ii) Add new Room Charge transaction into Transactions table
             if 'check_out_time' in reservation_dict and \
                     reservation_dict['check_out_time'] and \
-                    reservation_tuples is not None:
+                    reservation_tuples and reservation_tuples[0]:
                 df_result = None
                 for reservation in reservation_tuples:
                     # Check if check-out has never been done previously
