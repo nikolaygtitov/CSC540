@@ -799,6 +799,73 @@ class TestApps(SQLUnitTestBase):
         self.assertEqual('2018-04-23 11:11:11', str(row1['Transaction_date']))
         apps.cursor.close()
 
+    def test_update_reservation_presidential_in_out_no_staff_available(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        # Assign Catering and Room Service Staff to regular room per request
+        df = apps.update_staff(
+            {'assigned_hotel_id': 9, 'assigned_room_number': 100},
+            {'id': 9})
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual(9, row['id'])
+        self.assertEqual(9, row['assigned_hotel_id'])
+        self.assertEqual(100, row['assigned_room_number'])
+        df = apps.update_staff(
+            {'assigned_hotel_id': 9, 'assigned_room_number': 100},
+            {'id': 10})
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual(10, row['id'])
+        self.assertEqual(9, row['assigned_hotel_id'])
+        self.assertEqual(100, row['assigned_room_number'])
+        # Create Presidential Suite reservation. Since there is no available
+        # Staff it must not assign any Staff to a this room.
+        df = apps.add_reservation(
+            {'number_of_guests': 4, 'start_date': '2018-04-15',
+             'end_date': '2018-04-17', 'hotel_id': 9,
+             'room_number': 500, 'customer_id': 2,
+             'check_in_time': '2018-04-15 16:17:18'})
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual(10, row['id'])
+        self.assertEqual(4, row['number_of_guests'])
+        self.assertEqual(9, row['hotel_id'])
+        self.assertEqual('2018-04-15', str(row['start_date']))
+        self.assertEqual('2018-04-17', str(row['end_date']))
+        self.assertEqual('2018-04-15 16:17:18', str(row['check_in_time']))
+        self.assertNotIn('Staff_id', row)
+        self.assertNotIn('Staff_assigned_hotel', row)
+        self.assertNotIn('Staff_assigned_room', row)
+        self.assertNotIn('Serves_staff_id', row)
+        self.assertNotIn('Serves_reservation_id', row)
+        self.assertNotIn('Transaction_id', row)
+        self.assertNotIn('Transaction_amount', row)
+        self.assertNotIn('Transaction_type', row)
+        self.assertNotIn('Transaction_date', row)
+        # Check-out Presidential Suite. Since no Staff is assigned to it,
+        # it must not free any Staff, but it must add add new transaction
+        # 'Room Charge'.
+        df = apps.update_reservation(
+            {'check_out_time': '2018-04-17 12:43:10'},
+            {'id': 10})
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual(10, row['id'])
+        self.assertEqual('2018-04-17 12:43:10', str(row['check_out_time']))
+        self.assertEqual(9, row['Transaction_id'])
+        self.assertEqual(20000.00, row['Transaction_amount'])
+        self.assertEqual('2-night(s) Room Reservation Charge',
+                         row['Transaction_type'])
+        self.assertEqual('2018-04-17 12:43:10', str(row['Transaction_date']))
+        self.assertNotIn('Staff_id', row)
+        self.assertNotIn('Staff_assigned_hotel', row)
+        self.assertNotIn('Staff_assigned_room', row)
+        self.assertNotIn('Staff_id', row)
+        self.assertNotIn('Staff_assigned_hotel', row)
+        self.assertNotIn('Staff_assigned_room', row)
+        apps.cursor.close()
+
     def test_delete_reservation(self):
         apps = Apps(self._con, True)
         self._insert_test_data()
