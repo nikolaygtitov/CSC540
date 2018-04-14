@@ -4,7 +4,7 @@
 
 ## Wolf Inn: Popular Hotel Chain Database System
 The design and development processes of Database Management System for WolfInns
-are completed in the Project Report 1 and Project Report 2.
+are completed in the *Project Report 1* and *Project Report 2*.
 ### Description of the Project:
 The Popular Hotel Chain database system is designed and built to manage and
 maintain information of hotels, rooms, staff, and customers, including but not
@@ -50,7 +50,8 @@ The entire front-end interaction between a user and the program takes place via
 UI, which is a menu driven system that enables interaction with the back-end
 database.
 
-The following is a sample of menu driven system of the implemented UI, as well as the output of a sample database transaction:
+The following is a sample of menu driven system of the implemented UI, as well 
+as the output of a sample database transaction:
 ```
 MAIN MENU
 Select a menu option:
@@ -159,16 +160,36 @@ corresponding attributes specified
 call *update_staff()* API if corresponding attributes specified
 * *update_reservation()* - also performs *check-in()/check-out()* APIs and may
 call *update_staff()* API if corresponding attributes specified
-#### *apihelper.py*
-Describe it here... Copy from comments
 #### *appsclient.py*
-Describe it here... Copy from comments
+The file contains the client classes for a direct communication with the APIs 
+(*apps.py*).  These classes are intended to be instantiated by the main program 
+*hotelsoft.py*. Once the classes are instantiated, they serve as a mediator or 
+interface between UI (*hotelsoft.py*) and APIs (*apps.py*).
 #### *demo_data.py*
-Describe it here... Copy from comments
+This is independent Python program that must be executed completely apart from
+the rest of the Project programs. This Python script loads the Demo Data given 
+by a teaching staff into the DBMS as a pre-demo data that must exist in the
+tables prior the Project Demo. The file contains the Demo Data that is used for 
+generating the initial state of the DBMS prior the project demo in following 
+sequence of events:
+  1. Drops  all of the existing tables to clean up DBMS of any existing data. 
+  If any of the tables do not exist prior of dropping it, it ignores the error 
+  and continues dropping the remaining tables.
+  2. Creates all tables used in this project in the required order. All of the 
+  tables get created with accordance of the Project Design stated in the *Project 
+  Report 1* and *Project Report 2*.
+  3. Loads the Demo Data into the DBMS used as the initial state during the 
+  project demo.
 #### *queries.py*
-Describe it here... Copy from comments
+This file contains the statically defined complex queries.
+These are the queries used by the project programs to generate reports,
+generate the bill, and query room availability.
 #### *util.py*
-Describe it here... Copy from comments
+This file provides a library of functions used throughout the project programs.
+It contains two functions that do the following:
+  1. Provides a simple way to wrap code in a SQL transaction, that will 
+  automatically commit or rollback on an error.
+  2. Provides a mechanism to print any exception caught in any of the programs.
 
 ### Database Management System
 Currently the program initiates connection with the default MySQL MariaDB
@@ -194,9 +215,10 @@ libraries or tools.
 ### Intended Users:
 The program is written without any security constraints, such as user
 permissions and others. All the data is fully retrievable from the MariaDB
-MySQL regardless permissions.
+MySQL regardless of given permissions.
 
 ## Run the Software:
+### Run the Project Program:
 To start the program that connects to a default DBMS (MariaDB MySQL Server at
 the NCSU) run the following command:
 ```
@@ -212,6 +234,14 @@ inserted or updated obeys MySQL constraints, run the program with `-c` option:
 ```
  > python hotesoft.py -c
 ```
+### Load the Project Demo Data:
+In order to load the Demo Data given by a teaching staff into the DBMS, execute 
+the following command:
+```
+python demo_data.py
+```
+The above command executes an independent Python program that loads the 
+Demo Data into the DBMS.
 
 ## Configurations and Specifications:
 The following describes environment configurations and software specifications. 
@@ -226,7 +256,12 @@ readline 5.1
 * DBMS must contain all necessary/required tables for proper and correct
 software behavior
   * To create required tables in the DBMS, run the following:
-* Tables may contain some data or be empty
+* Tables may contain some arbitrary data or be empty
+#### Prerequisites for Project Demo:
+* All of the above Prerequisites except:
+  * Tables must contain the Demo Data given by a teaching staff prior the 
+  Project Demo. To load the project Demo Data see above section: Run the 
+  Software
 ### Constraints and Assumptions:
 The following is list of reasonable assumptions our team had to make due to the
 absence of real customer and lack of all/additional requirements and
