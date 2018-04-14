@@ -720,10 +720,53 @@ class TestApps(SQLUnitTestBase):
         self.assertNotIn('Serves_reservation_id', row1)
         apps.cursor.close()
 
+    def test_update_past_reservation_with_check_in_and_check_out_times(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        # Update Presidential reservation that had already happened in the
+        # past (thus it must have check-in and check-out times already stored)
+        # with new check-in and check-out times.
+        # Must Not assign any Staff
+        # Must Not add any data into Serves table
+        # Must Not add new transaction
+        df = apps.update_reservation(
+            {'check_in_time': '2018-01-18 10:12:14'}, {'id': 7})
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual(7, row['id'])
+        self.assertEqual('2018-01-18 10:12:14', str(row['check_in_time']))
+        self.assertNotIn('Staff_id', row)
+        self.assertNotIn('Staff_assigned_hotel', row)
+        self.assertNotIn('Staff_assigned_room', row)
+        self.assertNotIn('Serves_staff_id', row)
+        self.assertNotIn('Serves_reservation_id', row)
+        self.assertNotIn('Transaction_id', row)
+        self.assertNotIn('Transaction_amount', row)
+        self.assertNotIn('Transaction_type', row)
+        self.assertNotIn('Transaction_date', row)
+        # New Check-out time
+        df = apps.update_reservation(
+            {'check_out_time': '2018-02-26 15:04:26'}, {'id': 8})
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual(8, row['id'])
+        self.assertEqual('2018-02-26 15:04:26', str(row['check_out_time']))
+        self.assertNotIn('Staff_id', row)
+        self.assertNotIn('Staff_assigned_hotel', row)
+        self.assertNotIn('Staff_assigned_room', row)
+        self.assertNotIn('Serves_staff_id', row)
+        self.assertNotIn('Serves_reservation_id', row)
+        self.assertNotIn('Transaction_id', row)
+        self.assertNotIn('Transaction_amount', row)
+        self.assertNotIn('Transaction_type', row)
+        self.assertNotIn('Transaction_date', row)
+        apps.cursor.close()
+
     def test_update_reservation(self):
         apps = Apps(self._con, True)
         self._insert_test_data()
-        # Update Non-Presidential with check-in time and 2 more attributes.
+        # Update Non-Presidential reservation with check-in time and 2 more
+        # attributes.
         # No Staff must be assigned
         df = apps.add_reservation(
             {'number_of_guests': 2, 'start_date': '2018-04-11',
