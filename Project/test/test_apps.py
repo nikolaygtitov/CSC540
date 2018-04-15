@@ -488,13 +488,10 @@ class TestApps(SQLUnitTestBase):
         apps = Apps(self._con, True)
         self._insert_test_data()
         # Assign Staff to checked-out room. Must give an Exception.
-        df = apps.update_staff(
-            {'assigned_hotel_id': 2, 'assigned_room_number': 200},
-            {'id': 1})
-        error = 'Cannot assign staff to a room \'200\' in hotel \'2\' for ' \
-                'which customer either did not check-in or already checked-out.'
-        self.assertTrue(error in str(df))
-        self.assertRaises(AssertionError)
+        with self.assertRaises(AssertionError):
+            apps.update_staff(
+                {'assigned_hotel_id': 2, 'assigned_room_number': 200},
+                {'id': 1})
         apps.cursor.close()
 
     def test_update_staff_assign_to_not_checked_in_room(self):
@@ -522,13 +519,10 @@ class TestApps(SQLUnitTestBase):
         self.assertNotIn('Transaction_type', row)
         self.assertNotIn('Transaction_date', row)
         # Assign Staff to NOT checked-in room. Must give an Exception.
-        df = apps.update_staff(
-            {'assigned_hotel_id': 9, 'assigned_room_number': 500},
-            {'id': 9})
-        error = 'Cannot assign staff to a room \'500\' in hotel \'9\' for ' \
-                'which customer either did not check-in or already checked-out.'
-        self.assertTrue(error in str(df))
-        self.assertRaises(AssertionError)
+        with self.assertRaises(AssertionError):
+            apps.update_staff(
+                {'assigned_hotel_id': 9, 'assigned_room_number': 500},
+                {'id': 9})
         apps.cursor.close()
 
     def test_delete_staff(self):
@@ -538,6 +532,48 @@ class TestApps(SQLUnitTestBase):
         self.assertEqual(0, len(df.index))
         df = apps.get_data_frame('*', 'Staff')
         self.assertEqual(9, len(df.index))
+        apps.cursor.close()
+
+    def test_add_customer(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        # Add new customer
+        df = apps.add_customer(
+            {'name': 'CustomerFirst CustomerLast',
+             'date_of_birth': '1956-03-30',
+             'phone_number': '(919)-999-5555',
+             'email': 'customer@gmail.com',
+             'street': 'Kazan street',
+             'zip': '27606',
+             'ssn': '100-00-0001',
+             'account_number': None,
+             'is_hotel_card': False})
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual('CustomerFirst CustomerLast', row['name'])
+        self.assertEqual('1956-03-30', str(row['date_of_birth']))
+        self.assertEqual('(919)-999-5555', row['phone_number'])
+        self.assertEqual('customer@gmail.com', row['email'])
+        self.assertEqual('Kazan street', row['street'])
+        self.assertEqual('27606', row['zip'])
+        self.assertEqual('100-00-0001', row['ssn'])
+        self.assertIsNone(row['account_number'])
+        self.assertEqual(0, row['is_hotel_card'])
+        apps.cursor.close()
+
+    def test_update_customer_based_on_name(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        # Update new customer with new account number and hotel card
+        df = apps.update_customer(
+            {'account_number': '101010',
+             'is_hotel_card': True},
+            {'name': 'Dana White'})
+        self.assertEqual(1, len(df.index))
+        row = df.ix[0]
+        self.assertEqual(5, row['id'])
+        self.assertEqual('101010', row['account_number'])
+        self.assertEqual(1, row['is_hotel_card'])
         apps.cursor.close()
 
     def test_add_reservation(self):
@@ -1367,6 +1403,93 @@ class TestApps(SQLUnitTestBase):
             'room_number': 4
         })
         self.assertEqual(0, len(df.index))
+        apps.cursor.close()
+
+    def test_generate_bill_no_discount_update_to_card_get_discount(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        # Add few more transactions to make greater total amount for
+        # Reservation ID 8
+        df = apps.add_transaction({
+            'amount': 1023.63,
+            'type': 'Testing',
+            'date': '2018-04-15 15:23:54',
+            'reservation_id': 8})
+        self.assertEquals(1, len(df))
+        row = df.ix[0]
+        self.assertEqual(1023.63, row['amount'])
+        self.assertEqual(8, row['reservation_id'])
+        # Generate a bill with a discount
+        df_list = apps.generate_bill(8)
+        self.assertEquals(2, len(df_list))
+        itemized_df = df_list[0]
+        total_amount_due_df = df_list[1]
+        # Itemized transactions
+        self.assertEquals(3, len(itemized_df))
+        row1 = itemized_df.ix[0]
+        row2 = itemized_df.ix[1]
+        row3 = itemized_df.ix[2]
+        self.assertEquals(1, row1['Transaction ID'])
+        self.assertEquals(8893.37, row1['Amount'])
+        self.assertEquals('4-nights room reservation', row1['Description'])
+        self.assertEquals('2018-01-20 11:52:19', str(row1['Date']))
+        self.assertEquals(7, row2['Transaction ID'])
+        self.assertEquals(83.00, row2['Amount'])
+        self.assertEquals(
+            'Room Service: Extra towels, and other bathroom accessories',
+            row2['Description'])
+        self.assertEquals('2018-02-26 06:34:23', str(row2['Date']))
+        self.assertEquals(9, row3['Transaction ID'])
+        self.assertEquals(1023.63, row3['Amount'])
+        self.assertEquals('Testing', row3['Description'])
+        self.assertEquals('2018-04-15 15:23:54', str(row3['Date']))
+        # Total amount due with Hotels credit card
+        self.assertEquals(1, len(total_amount_due_df))
+        row = total_amount_due_df.ix[0]
+        self.assertEquals(10000.00, row['Cost'])
+        self.assertEquals(500, row['Discount'])
+        self.assertEquals(9500.00, row['Total Amount Due'])
+        # Update the customer with id 4 to Hotels credit card False - not a
+        # hotel credit card.
+        # It must NOT get a discount
+        df = apps.update_customer(
+            {'account_number': None, 'is_hotel_card': None}, {'id': 4})
+        self.assertEquals(1, len(df))
+        row = df.ix[0]
+        self.assertEquals(4, row['id'])
+        self.assertIsNone(row['account_number'])
+        self.assertIsNone(row['is_hotel_card'])
+        # Generate a bill with NO discount
+        df_list = apps.generate_bill(8)
+        self.assertEquals(2, len(df_list))
+        itemized_df = df_list[0]
+        total_amount_due_df = df_list[1]
+        # Itemized transactions
+        self.assertEquals(3, len(itemized_df))
+        row1 = itemized_df.ix[0]
+        row2 = itemized_df.ix[1]
+        row3 = itemized_df.ix[2]
+        self.assertEquals(1, row1['Transaction ID'])
+        self.assertEquals(8893.37, row1['Amount'])
+        self.assertEquals('4-nights room reservation', row1['Description'])
+        self.assertEquals('2018-01-20 11:52:19', str(row1['Date']))
+        self.assertEquals(7, row2['Transaction ID'])
+        self.assertEquals(83.00, row2['Amount'])
+        self.assertEquals(
+            'Room Service: Extra towels, and other bathroom accessories',
+            row2['Description'])
+        self.assertEquals('2018-02-26 06:34:23', str(row2['Date']))
+        self.assertEquals(9, row3['Transaction ID'])
+        self.assertEquals(1023.63, row3['Amount'])
+        self.assertEquals('Testing', row3['Description'])
+        self.assertEquals('2018-04-15 15:23:54', str(row3['Date']))
+        # Total amount due without Hotels credit card
+        # Must not get a 5% discount
+        self.assertEquals(1, len(total_amount_due_df))
+        row = total_amount_due_df.ix[0]
+        self.assertEquals(10000.00, row['Cost'])
+        self.assertEquals(0, row['Discount'])
+        self.assertEquals(10000.00, row['Total Amount Due'])
         apps.cursor.close()
 
     def test_report_occupancy_by_hotel(self):

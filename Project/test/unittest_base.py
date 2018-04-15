@@ -305,17 +305,15 @@ class SQLUnitTestBase(unittest.TestCase):
         ]
         for row in customer_data:
             if len(row) == 9:
-                cursor.execute("INSERT INTO "
-                               "Customers(name, date_of_birth, phone_number,"
-                               "email, street, zip, ssn, "
-                               "account_number, is_hotel_card)"
-                               "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                               row)
+                cursor.execute(
+                    "INSERT INTO Customers(name, date_of_birth, phone_number, "
+                    "email, street, zip, ssn, account_number, is_hotel_card) "
+                    "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)", row)
             else:
-                cursor.execute("INSERT INTO "
-                               "Customers(name, date_of_birth, phone_number,"
-                               "email, street, zip, ssn)"
-                               "VALUES(%s, %s, %s, %s, %s, %s, %s)", row)
+                cursor.execute(
+                    "INSERT INTO Customers(name, date_of_birth, phone_number, "
+                    "email, street, zip, ssn) VALUES(%s, %s, %s, %s, %s, %s, "
+                    "%s)", row)
 
         # Reservations
         reservation_data = [
