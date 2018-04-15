@@ -1061,7 +1061,7 @@ class Apps(object):
                 select_attr, 'Rooms', room_dict, where_clause_dict)
             return data_frame
         except AssertionError, error:
-            return error
+            raise error
         except maria_db.Error as error:
             raise error
 
@@ -1376,7 +1376,7 @@ class Apps(object):
                 select_attr, 'Staff', staff_dict, where_clause_dict)
             return data_frame
         except AssertionError, error:
-            return error
+            raise error
         except maria_db.Error as error:
             raise error
 
@@ -1573,7 +1573,7 @@ class Apps(object):
                 select_attr, 'Customers', customer_dict, where_clause_dict)
             return data_frame
         except AssertionError, error:
-            return error
+            raise error
         except maria_db.Error as error:
             raise error
 

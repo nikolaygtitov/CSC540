@@ -110,10 +110,23 @@ MariaDB NCSU Server at [classdb2.csc.ncsu.edu](https://courses.ncsu.edu/csc540/l
 ### File Contents and Descriptions:
 The following is the list of existing files required by the program and their
 content.
+#### *__init__.py*
+This is an empty file as the easiest use of *__init__.py* as it is stated in
+the Python documentation. It initializes a python packages and treats the
+directories as containing packages.
+
+
+This file is required in order for the tests files (in the */test/* directory)
+to properly import all the Project symbols.
+
+
+For more details about the use of *__init__.py* file, please read the python
+[documentation](https://docs.python.org/3/tutorial/modules.html#packages),
+section 6.4, Packages.
 #### *hotelsoft.py*
-This is the main file that gets executed from the prompt by a user to initiate
-the program. It connects to the NCSU MySQL MariaDB Server as specified in the
-default MySQL settings/parameters in the code. 
+This is the __*main*__ file that gets executed from the prompt by a user to
+initiate the program. It connects to the NCSU MySQL MariaDB Server as specified
+in the default MySQL settings/parameters in the code.
 
 In order to connect to different
 database, please consider changing the following default database parameters
@@ -166,21 +179,6 @@ The file contains the client classes for a direct communication with the APIs
 (*apps.py*).  These classes are intended to be instantiated by the main program 
 *hotelsoft.py*. Once the classes are instantiated, they serve as a mediator or 
 interface between UI (*hotelsoft.py*) and APIs (*apps.py*).
-#### *demo_data.py*
-This is independent Python program that must be executed completely apart from
-the rest of the Project programs. This Python script loads the Demo Data given 
-by a teaching staff into the DBMS as a pre-demo data that must exist in the
-tables prior the Project Demo. The file contains the Demo Data that is used for 
-generating the initial state of the DBMS prior the project demo in following 
-sequence of events:
-  1. Drops  all of the existing tables to clean up DBMS of any existing data. 
-  If any of the tables do not exist prior of dropping it, it ignores the error 
-  and continues dropping the remaining tables.
-  2. Creates all tables used in this project in the required order. All of the 
-  tables get created with accordance of the Project Design stated in the
-  *Project Report 1* and *Project Report 2*.
-  3. Loads the Demo Data into the DBMS used as the initial state during the 
-  project demo.
 #### *queries.py*
 This file contains the statically defined complex queries. These are the
 queries used by the project programs to generate reports, generate the bill,
@@ -191,6 +189,21 @@ It contains two functions that do the following:
   1. Provides a simple way to wrap code in a SQL transaction, that will 
   automatically commit or rollback on an error.
   2. Provides a mechanism to print any exception caught in any of the programs.
+#### *demo_data.py*
+This is independent Python program that must be executed completely apart from
+the rest of the Project programs. This Python script loads the Demo Data given
+by a teaching staff into the DBMS as a pre-demo data that must exist in the
+tables prior the Project Demo. The file contains the Demo Data that is used for
+generating the initial state of the DBMS prior the project demo in following
+sequence of events:
+  1. Drops  all of the existing tables to clean up DBMS of any existing data.
+  If any of the tables do not exist prior of dropping it, it ignores the error
+  and continues dropping the remaining tables.
+  2. Creates all tables used in this project in the required order. All of the
+  tables get created with accordance of the Project Design stated in the
+  *Project Report 1* and *Project Report 2*.
+  3. Loads the Demo Data into the DBMS used as the initial state during the
+  project demo.
 
 ### Database Management System
 Currently the program initiates connection with the default MySQL MariaDB
@@ -201,7 +214,7 @@ changed, ignore both options below (unless DBMS used is at the NCSU MySQL
 Server).
 * Option 1: Establish connection through NCSU VPN. Installation of Cisco
 AnyConnect VPN Software is required. Installation instructions of Cisco
-AnyConnect can be found [here](https://oit.ncsu.edu/campus-it/campus-data-network/network-security/vpn/)
+AnyConnect can be found [here](https://oit.ncsu.edu/campus-it/campus-data-network/network-security/vpn/).
 
 * Option 2: Pull or copy source code to the NCSU remote machine and run the
 program there:
@@ -280,6 +293,10 @@ check option `-c`.
   * Maximum occupancy of any room at any hotel must not exceed *9 (nine)*
   guests.
   * The number of room(s) does not change once the Hotel is in use.
+* Rooms
+  * Room rate is measured per day.
+  * A room must always be available unless it is reserved by a customer (e.g.
+  no maintenance, unexpected indefinite repairs, and etc.)
 * Staff
   * Each member of hotel Staff is uniquely identified by his or her ID.
   * Each member of the Staff has at most one phone number.
@@ -308,7 +325,6 @@ check option `-c`.
 * Transactions
   * Each transaction ID is unique across the system.
 * Other
-  * Room rate is measured per day.
   * All addresses are composed of *4* components: *street, city, state,* and
   *zip*
   * A zip code uniquely identifies both a city and state (e.g. *zip* code
