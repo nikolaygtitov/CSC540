@@ -610,6 +610,15 @@ def main():
         MenuAction('delete_res', 'DELETE A RESERVATION',
                    AppsParams.reservations, wolf_inn.client.delete))
     wolf_inn.add_menu_action(
+        MenuAction('insert_serves', 'ADD A CUSTOMER INTERACTION', AppsParams.serves,
+                   wolf_inn.client.insert))
+    wolf_inn.add_menu_action(
+        MenuAction('update_serves', 'UPDATE A CUSTOMER INTERACTION', AppsParams.serves,
+                   wolf_inn.client.update))
+    wolf_inn.add_menu_action(
+        MenuAction('delete_serves', 'DELETE A CUSTOMER INTERACTION', AppsParams.serves,
+                   wolf_inn.client.delete))
+    wolf_inn.add_menu_action(
         MenuAction('insert_charge', 'APPLY A TRANSACTION TO A RESERVATION',
                    AppsParams.transactions, wolf_inn.client.insert))
     wolf_inn.add_menu_action(
@@ -792,6 +801,15 @@ def main():
         MenuOption('Back to main menu', wolf_inn.store_menu('main')))
 
     # Add service menu options
+    wolf_inn.get_menu('service').add(
+        MenuOption('Add a customer interaction',
+                   wolf_inn.store_action('insert_serves', 'service')))
+    wolf_inn.get_menu('service').add(
+        MenuOption('Update a customer interaction',
+                   wolf_inn.store_action('update_serves', 'service')))
+    wolf_inn.get_menu('service').add(
+        MenuOption('Delete a customer interaction',
+                    wolf_inn.store_action('delete_serves', 'service')))
     wolf_inn.get_menu('service').add(
         MenuOption('Add a service charge',
                    wolf_inn.store_action('insert_charge', 'service')))

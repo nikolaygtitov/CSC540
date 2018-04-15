@@ -178,7 +178,6 @@ class TestApps(SQLUnitTestBase):
         param_dict = {'set':{'ssn':'333-22-1111'}, 'where':{'id':1}}
         api_info = AppsParams.customers
         result = client.update(param_dict, api_info)
-        print result
         self.assertEqual(1, len(result.index))
         row = result.ix[0]
         self.assertEqual(1, row['id'])
@@ -219,7 +218,6 @@ class TestApps(SQLUnitTestBase):
         param_dict = {'set':{'check_in_time':'2018-4-4 2:00:00'}, 'where':{'id':1}}
         api_info = AppsParams.reservations
         result = client.update(param_dict, api_info)
-        print result
         self.assertEqual(1, len(result.index))
         row = result.ix[0]
         self.assertEqual(1, row['id'])
@@ -232,6 +230,41 @@ class TestApps(SQLUnitTestBase):
         api_info = AppsParams.reservations
         result = client.delete(param_dict, api_info)
         self.assertEqual(0, len(result.index))
+
+    def test_room_avail_with_id(self):
+        client = AppsClient(self._con, True)
+        self._insert_test_data()
+        param_dict = {'set':{'start_date':'2018-01-01', 'end_date':'2018-05-05', 'hotel_id':1}}
+        api_info = AppsParams.room_avail
+        result = client.get_report_with_dict(param_dict, api_info)
+        self.assertEqual(1, len(result.index))
+        row = result.ix[0]
+        self.assertEqual(100, row['Room Number'])
+        self.assertEqual('1', str(row['Hotel ID']))
+
+    def test_room_avail_with_name(self):
+        client = AppsClient(self._con, True)
+        self._insert_test_data()
+        param_dict = {'set':{'start_date':'2018-01-01', 'end_date':'2018-05-05', 
+            'name':'Wolf Inn Raleigh Hurricanes'}}
+        api_info = AppsParams.room_avail
+        result = client.get_report_with_dict(param_dict, api_info)
+        self.assertEqual(1, len(result.index))
+        row = result.ix[0]
+        self.assertEqual(100, row['Room Number'])
+        self.assertEqual('1', str(row['Hotel ID']))
+
+    def test_room_avail_with_zip(self):
+        client = AppsClient(self._con, True)
+        self._insert_test_data()
+        param_dict = {'set':{'start_date':'2018-01-01', 'end_date':'2018-05-05', 
+            'zip':'27965'}}
+        api_info = AppsParams.room_avail
+        result = client.get_report_with_dict(param_dict, api_info)
+        self.assertEqual(1, len(result.index))
+        row = result.ix[0]
+        self.assertEqual(100, row['Room Number'])
+        self.assertEqual('1', str(row['Hotel ID']))
 
 if __name__ == '__main__':
     unittest.main()
