@@ -110,8 +110,8 @@ MariaDB NCSU Server at [classdb2.csc.ncsu.edu](https://courses.ncsu.edu/csc540/l
 ### File Contents and Descriptions:
 The following is the list of existing files required by the program and their
 content.
-#### *__init__.py*
-This is an empty file as the easiest use of *__init__.py* as it is stated in
+#### \_\_[*init*\_\_.py](https://github.ncsu.edu/ngtitov/CSC540/blob/master/Project/__init__.py)
+This is an empty file as the easiest use of *\_\_init__.py* as it is stated in
 the Python documentation. It initializes a python packages and treats the
 directories as containing packages.
 
@@ -120,10 +120,10 @@ This file is required in order for the tests files (in the */test/* directory)
 to properly import all the Project symbols.
 
 
-For more details about the use of *__init__.py* file, please read the python
+For more details about the use of *\_\_init__.py* file, please read the python
 [documentation](https://docs.python.org/3/tutorial/modules.html#packages),
 section 6.4, Packages.
-#### *hotelsoft.py*
+#### [*hotelsoft.py*](https://github.ncsu.edu/ngtitov/CSC540/blob/master/Project/hotelsoft.py)
 This is the __*main*__ file that gets executed from the prompt by a user to
 initiate the program. It connects to the NCSU MySQL MariaDB Server as specified
 in the default MySQL settings/parameters in the code.
@@ -139,7 +139,7 @@ This file contains the classes comprising the user interface for the WolfInn
 Database Management System. The UI is a menu driven system that enables
 interaction with the backend database. The UI functions communicate with the
 Apps API through a Client class which aggregates common functionality.
-#### *apps.py*
+#### [*apps.py*](https://github.ncsu.edu/ngtitov/CSC540/blob/master/Project/hotelsoft.py)
 This file provides all required APIs for full interaction between front-end and
 back-end programs. The APIs are constructed with the wrappers around MySQL
 queries allowing the front-end (UI) to call appropriate functions performing
@@ -174,22 +174,22 @@ corresponding attributes specified
 call *update_staff()* API if corresponding attributes specified
 * *update_reservation()* - also performs *check-in()/check-out()* APIs and may
 call *update_staff()* API if corresponding attributes specified
-#### *appsclient.py*
+#### [*appsclient.py*](https://github.ncsu.edu/ngtitov/CSC540/blob/master/Project/appsclient.py)
 The file contains the client classes for a direct communication with the APIs 
 (*apps.py*).  These classes are intended to be instantiated by the main program 
 *hotelsoft.py*. Once the classes are instantiated, they serve as a mediator or 
 interface between UI (*hotelsoft.py*) and APIs (*apps.py*).
-#### *queries.py*
+#### [*queries.py*](https://github.ncsu.edu/ngtitov/CSC540/blob/master/Project/queries.py)
 This file contains the statically defined complex queries. These are the
 queries used by the project programs to generate reports, generate the bill,
 and query room availability.
-#### *util.py*
+#### [*util.py*](https://github.ncsu.edu/ngtitov/CSC540/blob/master/Project/util.py)
 This file provides a library of functions used throughout the project programs.
 It contains two functions that do the following:
   1. Provides a simple way to wrap code in a SQL transaction, that will 
   automatically commit or rollback on an error.
   2. Provides a mechanism to print any exception caught in any of the programs.
-#### *demo_data.py*
+#### [*demo_data.py*](https://github.ncsu.edu/ngtitov/CSC540/blob/master/Project/demo_data.py)
 This is independent Python program that must be executed completely apart from
 the rest of the Project programs. This Python script loads the Demo Data given
 by a teaching staff into the DBMS as a pre-demo data that must exist in the
