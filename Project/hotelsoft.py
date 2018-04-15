@@ -434,23 +434,23 @@ class HotelSoft(object):
             # Package up the set and where dictionaries and call api
             param_dict = {'set': set_dict, 'where': where_dict}
 
-            # Need this to execute actions with no arguments
-            # i.e. no arguments to pass, nothing to print
-            results = None
+            # Need the if statement to execute actions with no arguments 
+            # (e.g. Load Demo Data)
             if action.type == 'exec':
                 action.handler()
             else:
                 results = action.handler(param_dict, action.api_info)
-            print '\nMenuAction Successful ' + u"\u2713"
-            if isinstance(results, list):
-                for result in results:
-                    print tabulate(result,
+                if isinstance(results, list) and action.type != 'exec':
+                    for result in results:
+                        print tabulate(result,
                                    headers=result.columns.values.tolist(),
                                    tablefmt='psql')
-            else:
-                print tabulate(results,
+                else:
+                    print tabulate(results,
                                headers=results.columns.values.tolist(),
                                tablefmt='psql')
+
+            print '\nQuery Successful ' + u"\u2713"
             print('\n')
 
         # Run the next menu
