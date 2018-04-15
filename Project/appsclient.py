@@ -344,7 +344,7 @@ class AppsClient(object):
             item_dict = {k: set_dict[k] for k in api_info.attr_names['set']
                          if k in set_dict}
             where_clause_dict = {k: where_dict[k]
-                                 for k in api_info.attr_names['set']
+                                 for k in api_info.attr_names['where']
                                  if k in where_dict}
             # select the correct API and submit
             result = {
@@ -356,6 +356,7 @@ class AppsClient(object):
                 'Transactions': lambda x, y: self.apps.update_transaction(x, y)
             }[api_info.table_name](item_dict, where_clause_dict)
 
+            print item_dict, where_clause_dict
             if zip_result is not None:
                 result = result.merge(zip_result, left_on='zip',
                                       right_on='zip', how='outer')
