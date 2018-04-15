@@ -186,8 +186,8 @@ class AppsParams(object):
         'Serves', 
         {'where': ['staff_id', 'reservation_id'],
          'set': ['staff_id', 'reservation_id']}, 
-         {'where': ['staff_id', 'reservation_id'],
-         'set': ['staff_id', 'reservation_id']})
+         {'where': ['e.g. 1', 'e.g. 2'],
+         'set': ['e.g. 1', 'e.g. 2']})
     gen_bill = ReportAttributes(
         'Generate_bill', {'set': ['reservation_id']}, {'set': ['e.g. 1']})
     occ_hotel = ReportAttributes(
