@@ -169,7 +169,7 @@ class AppsParams(object):
         {'where': ['id', 'number_of_guests', 'start_date', 'end_date',
                    'hotel_id', 'room_number', 'customer_id', 'check_in_time',
                    'check_out_time'],
-         'set': ['id', 'check_out_time']},
+         'set': ['check_out_time']},
         {'where': ['Reservation ID', 'e.g. 2', 'YYYY-MM-DD', 'YYYY-MM-DD',
                    'e.g. 1', 'e.g. 100', 'e.g. 1', 'YYYY-MM-DD HH:MM:SS',
                    'YYYY-MM-DD HH:MM:SS'],
@@ -356,7 +356,6 @@ class AppsClient(object):
                 'Transactions': lambda x, y: self.apps.update_transaction(x, y)
             }[api_info.table_name](item_dict, where_clause_dict)
 
-            print item_dict, where_clause_dict
             if zip_result is not None:
                 result = result.merge(zip_result, left_on='zip',
                                       right_on='zip', how='outer')
