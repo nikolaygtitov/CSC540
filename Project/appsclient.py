@@ -169,7 +169,7 @@ class AppsParams(object):
         {'where': ['id', 'number_of_guests', 'start_date', 'end_date',
                    'hotel_id', 'room_number', 'customer_id', 'check_in_time',
                    'check_out_time'],
-         'set': ['id', 'check_out_time']},
+         'set': ['check_out_time']},
         {'where': ['Reservation ID', 'e.g. 2', 'YYYY-MM-DD', 'YYYY-MM-DD',
                    'e.g. 1', 'e.g. 100', 'e.g. 1', 'YYYY-MM-DD HH:MM:SS',
                    'YYYY-MM-DD HH:MM:SS'],
@@ -344,7 +344,7 @@ class AppsClient(object):
             item_dict = {k: set_dict[k] for k in api_info.attr_names['set']
                          if k in set_dict}
             where_clause_dict = {k: where_dict[k]
-                                 for k in api_info.attr_names['set']
+                                 for k in api_info.attr_names['where']
                                  if k in where_dict}
             # select the correct API and submit
             result = {

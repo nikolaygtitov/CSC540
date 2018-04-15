@@ -168,8 +168,10 @@ AND %s))
 #     - reservation_id: Reservation ID for which total amount due is
 #       calculated applying discount
 GENERATE_BILL_TOTAL_AMOUNT_DUE = """
-SELECT SUM(amount) AS 'Cost', discount_percentage * SUM(amount) AS 'Discount', 
-SUM(amount) - (discount_percentage * SUM(amount)) AS 'Total Amount Due'
+SELECT SUM(amount) AS 'Cost', 
+ROUND(discount_percentage * SUM(amount), 2) AS 'Discount', 
+ROUND(SUM(amount) - (discount_percentage * SUM(amount)), 2) AS 
+'Total Amount Due' 
 FROM Transactions, (SELECT IFNULL(is_hotel_card, 0) * 0.05 AS 
 'discount_percentage' FROM Reservations JOIN Customers ON 
 Reservations.customer_id = Customers.id WHERE Reservations.id = %s) as Discount
@@ -182,7 +184,7 @@ WHERE reservation_id = %s
 #       calculated (does not include discount)
 GENERATE_BILL_ITEMIZED_CHARGES = """
 SELECT id AS 'Transaction ID', amount AS 'Amount', type AS 'Description', 
-date AS 'Date' 
+date AS 'Date'  
 FROM Transactions
 WHERE reservation_id = %s
 """

@@ -1061,7 +1061,7 @@ class Apps(object):
                 select_attr, 'Rooms', room_dict, where_clause_dict)
             return data_frame
         except AssertionError, error:
-            return error
+            raise error
         except maria_db.Error as error:
             raise error
 
@@ -1376,7 +1376,7 @@ class Apps(object):
                 select_attr, 'Staff', staff_dict, where_clause_dict)
             return data_frame
         except AssertionError, error:
-            return error
+            raise error
         except maria_db.Error as error:
             raise error
 
@@ -1558,7 +1558,7 @@ class Apps(object):
                         'Exception: Date of birth must be specified and must ' \
                         'follow the DATE format: YYYY-MM-DD.\n'
                 for attribute, value in customer_dict.items():
-                    if attribute != 'account_number' or \
+                    if attribute != 'account_number' and \
                             attribute != 'is_hotel_card':
                         assert value, \
                             'Exception: Attribute \'{}\' must be specified ' \
@@ -1573,7 +1573,7 @@ class Apps(object):
                 select_attr, 'Customers', customer_dict, where_clause_dict)
             return data_frame
         except AssertionError, error:
-            return error
+            raise error
         except maria_db.Error as error:
             raise error
 
@@ -2386,9 +2386,10 @@ class Apps(object):
             two different queries.
 
         Returns:
-            :return: Concatenated Pandas DataFrames (two-dimensional
+            :return: List with two Pandas DataFrames (two-dimensional
             size-mutable, heterogeneous tabular data structure with labeled
-            axes) retrieved from pandas.read_sql() function for two queries:
+            axes) retrieved from pandas.read_sql() function for two queries in
+            stored in the list respectively:
                 - GENERATE_BILL_TOTAL_AMOUNT_DUE: generates a bill for total
                 amount
                 - GENERATE_BILL_ITEMIZED_CHARGES: generates a bill for itemized
@@ -2396,17 +2397,17 @@ class Apps(object):
         """
         if self.check:
             # Perform validation
-            assert reservation_id is not None, \
+            assert reservation_id is not None and reservation_id, \
                 'Exception: Invalid Reservation ID. Please specify valid ' \
                 'Reservation ID.\n'
         # Construct total amount due Pandas DataFrame
         total_due_df = pd.read_sql(GENERATE_BILL_TOTAL_AMOUNT_DUE,
                                    con=self.maria_db_connection,
-                                   params=reservation_id * 2)
+                                   params=[reservation_id] * 2)
         # Construct list of itemized charges as Pandas DataFrame
         itemized_df = pd.read_sql(GENERATE_BILL_ITEMIZED_CHARGES,
                                   con=self.maria_db_connection,
-                                  params=reservation_id)
+                                  params=[reservation_id])
         # Return two concatenated Pandas DataFrames
         return [itemized_df, total_due_df]
         # return pd.concat((total_due_df, itemized_df), axis=1)
