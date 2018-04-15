@@ -2333,21 +2333,17 @@ class Apps(object):
             del dictionary['start_date']
             del dictionary['end_date']
             # Generate the entire SELECT query
-            nested_where_clause = ROOM_AVAILABILITY_NESTED_WHERE_CLAUSE.format(
-                start_date, end_date, start_date, end_date, start_date,
-                end_date)
+            nested_where_clause = ROOM_AVAILABILITY_NESTED_WHERE_CLAUSE
             # Generate final WHERE clause
             if 'hotel_id' in dictionary:
                 nested_where_clause = nested_where_clause + \
-                               ' AND hotel_id = {} ))'.format(
-                                   dictionary['hotel_id'])
+                               ' AND hotel_id = %s ))'
             else:
                 nested_where_clause = nested_where_clause + '))'
             where_clause = ' AND '.join(
                 [attr + '=%s' for attr in dictionary.iterkeys()]) + ' AND ' \
                 if dictionary else ''
             where_clause = where_clause + nested_where_clause
-            where_clause = where_clause % tuple(dictionary.values())
 
             # Build select query
             select_query = 'SELECT {} FROM {} WHERE {}'.format(
@@ -2355,10 +2351,13 @@ class Apps(object):
                 ROOM_AVAILABILITY_TABLE_STATEMENT,
                 where_clause
             )
-
+            params = dictionary.values() + [start_date, end_date] * 3
+            if 'hotel_id' in dictionary:
+                params.append(dictionary['hotel_id'])
             # SELECT statement is ready. Get Pandas DataFrame and return it.
             # Execute select query
             data_frame = pd.read_sql(select_query,
+                                     params=params,
                                      con=self.maria_db_connection)
             return data_frame
         except AssertionError, error:

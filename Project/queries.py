@@ -158,9 +158,9 @@ Rooms.hotel_id = Hotels.id
 # Parameters: None
 ROOM_AVAILABILITY_NESTED_WHERE_CLAUSE = """
 (Rooms.hotel_id, room_number) NOT IN (SELECT hotel_id, room_number FROM Reservations 
-WHERE ((('{}' BETWEEN start_date AND end_date) OR ('{}' between start_date 
-AND end_date) OR (start_date BETWEEN '{}' AND '{}') OR (end_date BETWEEN '{}' 
-AND '{}'))
+WHERE (((%s BETWEEN start_date AND end_date) OR (%s between start_date 
+AND end_date) OR (start_date BETWEEN %s AND %s) OR (end_date BETWEEN %s 
+AND %s))
 """
 
 # Query to generate a bill for total amount per specific reservation
