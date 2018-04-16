@@ -12,9 +12,9 @@ class TestApps(SQLUnitTestBase):
 
     @staticmethod
     def _connect_to_test_db():
-        con = mariadb.connect(host='classdb2.csc.ncsu.edu', user='ngtitov',
-                              password='001029047',
-                              database='ngtitov')
+        con = mariadb.connect(host='classdb2.csc.ncsu.edu', user='nfschnoo',
+                              password='001027748',
+                              database='nfschnoo')
         return con
 
     def test_get_data_frame_star_no_where(self):
@@ -602,6 +602,115 @@ class TestApps(SQLUnitTestBase):
         self.assertNotIn('Serves_staff_id', row)
         self.assertNotIn('Serves_reservation_id', row)
         apps.cursor.close()
+
+    def test_reservation_conflict(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        # Create Reservation
+        apps.add_reservation(
+            {'number_of_guests': 2, 'start_date': '2018-04-11',
+             'end_date': '2018-04-18', 'hotel_id': 9,
+             'room_number': 100, 'customer_id': 1})
+        with self.assertRaises(Exception):
+            apps.add_reservation(
+                {'number_of_guests': 2, 'start_date': '2018-04-11',
+                 'end_date': '2018-04-18', 'hotel_id': 9,
+                 'room_number': 100, 'customer_id': 1})
+
+    def test_reservation_conflict_left_bound(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        # Create Reservation
+        apps.add_reservation(
+            {'number_of_guests': 2, 'start_date': '2018-04-11',
+             'end_date': '2018-04-18', 'hotel_id': 9,
+             'room_number': 100, 'customer_id': 1})
+        with self.assertRaises(Exception):
+            apps.add_reservation(
+                {'number_of_guests': 2, 'start_date': '2018-04-8',
+                 'end_date': '2018-04-12', 'hotel_id': 9,
+                 'room_number': 100, 'customer_id': 1})
+
+    def test_reservation_conflict_right_bound(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        # Create Reservation
+        apps.add_reservation(
+            {'number_of_guests': 2, 'start_date': '2018-04-11',
+             'end_date': '2018-04-18', 'hotel_id': 9,
+             'room_number': 100, 'customer_id': 1})
+        with self.assertRaises(Exception):
+            apps.add_reservation(
+                {'number_of_guests': 2, 'start_date': '2018-04-17',
+                 'end_date': '2018-04-19', 'hotel_id': 9,
+                 'room_number': 100, 'customer_id': 1})
+
+    def test_reservation_conflict_outside(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        # Create Reservation
+        apps.add_reservation(
+            {'number_of_guests': 2, 'start_date': '2018-04-11',
+             'end_date': '2018-04-18', 'hotel_id': 9,
+             'room_number': 100, 'customer_id': 1})
+        with self.assertRaises(Exception):
+            apps.add_reservation(
+                {'number_of_guests': 2, 'start_date': '2018-04-08',
+                 'end_date': '2018-04-19', 'hotel_id': 9,
+                 'room_number': 100, 'customer_id': 1})
+
+    def test_reservation_conflict_inside(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        # Create Reservation
+        apps.add_reservation(
+            {'number_of_guests': 2, 'start_date': '2018-04-11',
+             'end_date': '2018-04-18', 'hotel_id': 9,
+             'room_number': 100, 'customer_id': 1})
+        with self.assertRaises(Exception):
+            apps.add_reservation(
+                {'number_of_guests': 2, 'start_date': '2018-04-12',
+                 'end_date': '2018-04-13', 'hotel_id': 9,
+                 'room_number': 100, 'customer_id': 1})
+
+    def test_reservation_no_conflict_different_room(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        # Create Reservation
+        apps.add_reservation(
+            {'number_of_guests': 2, 'start_date': '2018-04-11',
+             'end_date': '2018-04-18', 'hotel_id': 9,
+             'room_number': 100, 'customer_id': 1})
+        apps.add_reservation(
+            {'number_of_guests': 2, 'start_date': '2018-04-11',
+             'end_date': '2018-04-18', 'hotel_id': 2,
+             'room_number': 200, 'customer_id': 1})
+
+    def test_reservation_no_conflict_left_bound(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        # Create Reservation
+        apps.add_reservation(
+            {'number_of_guests': 2, 'start_date': '2018-04-11',
+             'end_date': '2018-04-18', 'hotel_id': 9,
+             'room_number': 100, 'customer_id': 1})
+        apps.add_reservation(
+            {'number_of_guests': 2, 'start_date': '2018-04-8',
+             'end_date': '2018-04-11', 'hotel_id': 2,
+             'room_number': 200, 'customer_id': 1})
+
+    def test_reservation_no_conflict_right_bound(self):
+        apps = Apps(self._con, True)
+        self._insert_test_data()
+        # Create Reservation
+        apps.add_reservation(
+            {'number_of_guests': 2, 'start_date': '2018-04-11',
+             'end_date': '2018-04-18', 'hotel_id': 9,
+             'room_number': 100, 'customer_id': 1})
+        apps.add_reservation(
+            {'number_of_guests': 2, 'start_date': '2018-04-18',
+             'end_date': '2018-04-20', 'hotel_id': 2,
+             'room_number': 200, 'customer_id': 1})
 
     def test_add_reservation_check_in_time_non_presidential(self):
         # Create Non-Presidential reservation with check-in time, but no

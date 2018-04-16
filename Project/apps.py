@@ -613,6 +613,18 @@ class Apps(object):
                                 catering_staff_df, ignore_index=True)
         return None
 
+    def _check_reservation_conflict(self):
+        """
+        Raise AssertionError if two or more reservations are defined with the
+        same room in overlapping reservation dates.
+        :return: None
+        """
+        self.cursor.execute(CHECK_RESERVATION_CONFLICT)
+        conflicts = self.cursor.fetchall()
+        if conflicts and len(conflicts) > 0 and conflicts[0]:
+            raise Exception('Exception: A room can only be reserved by one '
+                            'reservation at any given time.')
+
     # Implementation of the program applications for the ZipToCityState table
     def add_zip(self, zip_dict):
         """
@@ -1722,6 +1734,7 @@ class Apps(object):
                         'Exception: Check-in time of the reservation must be ' \
                         'specified and must follow the DATETIME format: ' \
                         'YYYY-MM-DD HH:MM:SS.\n'
+
             # Execute insert query
             self._execute_insert_query(reservation_dict, 'Reservations')
             reservation_id = self.cursor.lastrowid
@@ -1740,6 +1753,8 @@ class Apps(object):
                     staff_id=None,
                     reservation_id=reservation_id)
                 data_frame = pd.concat((data_frame, staff_df), axis=1)
+                # Check for reservation conflicts:
+                self._check_reservation_conflict()
                 return data_frame
             # If check-out, do all check-out logic: i) Free dedicated staff
             # (should not be any dedicated staff since this is new reservation)
@@ -1749,6 +1764,8 @@ class Apps(object):
                 staff_transact_df = self._check_out(
                     reservation_id, reservation_dict['check_out_time'])
                 data_frame = pd.concat((data_frame, staff_transact_df), axis=1)
+            # Check for reservation conflicts:
+            self._check_reservation_conflict()
             return data_frame
         except AssertionError, error:
             raise error
@@ -1870,6 +1887,8 @@ class Apps(object):
                     select_attr, 'Reservations', reservation_dict,
                     where_clause_dict)
                 data_frame = pd.concat((data_frame, staff_df_result), axis=1)
+                # Check for reservation conflicts:
+                self._check_reservation_conflict()
                 return data_frame
             # If check-out, do all check-out logic: i) Free dedicated staff,
             # ii) Add new Room Charge transaction into Transactions table
@@ -1889,12 +1908,16 @@ class Apps(object):
                     select_attr, 'Reservations', reservation_dict,
                     where_clause_dict)
                 data_frame = pd.concat((data_frame, df_result), axis=1)
+                # Check for reservation conflicts:
+                self._check_reservation_conflict()
                 return data_frame
             # Execute update query - It is not check-in or check-out
             # Also queries for updated tuple and returns it as Pandas DataFrame
             data_frame = self._execute_update_query(
                 select_attr, 'Reservations', reservation_dict,
                 where_clause_dict)
+            # Check for reservation conflicts:
+            self._check_reservation_conflict()
             return data_frame
         except AssertionError, error:
             raise error

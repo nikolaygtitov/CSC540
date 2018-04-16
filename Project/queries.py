@@ -163,6 +163,23 @@ AND end_date) OR (start_date BETWEEN %s AND %s) OR (end_date BETWEEN %s
 AND %s))
 """
 
+# Check reservations for conflicts - same room at same time.
+# Parameters: None
+CHECK_RESERVATION_CONFLICT = """
+SELECT *
+FROM Reservations as R1
+WHERE EXISTS
+    (SELECT id from Reservations as R2
+     WHERE ((R1.id <> R2.id) AND
+            (R1.hotel_id = R2.hotel_id) AND
+            (R1.room_number = R2.room_number) AND
+            ((R1.start_date BETWEEN R2.start_date AND R2.end_date) OR 
+             (R1.end_date BETWEEN R2.start_date AND R2.end_date) OR
+             (R2.start_date BETWEEN R1.start_date AND R1.end_date) OR
+             (R2.end_date BETWEEN R1.start_date AND R1.end_date)))
+    )
+"""
+
 # Query to generate a bill for total amount per specific reservation
 # Parameters:
 #     - reservation_id: Reservation ID for which total amount due is
