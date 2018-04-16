@@ -368,7 +368,7 @@ def load_demo_data(db):
 
 if __name__ == '__main__':
     import mysql.connector as maria_db
-    con = maria_db.connect(host='classdb2.csc.ncsu.edu', user='nfschnoo',
-                           password='001027748', database='nfschnoo')
+    con = maria_db.connect(host='classdb2.csc.ncsu.edu', user='ngtitov',
+                           password='001029047', database='ngtitov')
 
     load_demo_data(con)
