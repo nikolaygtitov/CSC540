@@ -2355,6 +2355,9 @@ class Apps(object):
             end_date = dictionary['end_date']
             del dictionary['start_date']
             del dictionary['end_date']
+            # Zip is ambiguous so change it to a Hotels.zip
+            if 'zip' in dictionary:
+                dictionary['Hotels.zip'] = dictionary.pop('zip')
             # Generate the entire SELECT query
             nested_where_clause = ROOM_AVAILABILITY_NESTED_WHERE_CLAUSE
             # Generate final WHERE clause

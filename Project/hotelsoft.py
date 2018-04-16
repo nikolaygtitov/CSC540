@@ -538,9 +538,9 @@ def get_db():
             #                       password='2CGxZg27R3utum',
             #                       database='pdscott2')
             db = maria_db.connect(host='classdb2.csc.ncsu.edu',
-                                  user='nfschnoo',
-                                  password='001027748',
-                                  database='nfschnoo')
+                                  user='ngtitov',
+                                  password='001029047',
+                                  database='ngtitov')
             return db
         except maria_db.Error:
             print ('Unable to establish database connection')
