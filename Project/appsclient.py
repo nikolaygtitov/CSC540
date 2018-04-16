@@ -183,7 +183,11 @@ class AppsParams(object):
          'set': ['Transaction ID', 'e.g. 25.00', 'e.g. Room service',
                  'YYYY-MM-DD', 'e.g. 1']})
     serves = CrudAttributes(
-        'Serves', ['staff_id', 'reservation_id'], ['e.g. 1', 'e.g. 1'])
+        'Serves', 
+        {'where': ['staff_id', 'reservation_id'],
+         'set': ['staff_id', 'reservation_id']}, 
+         {'where': ['e.g. 1', 'e.g. 2'],
+         'set': ['e.g. 1', 'e.g. 2']})
     gen_bill = ReportAttributes(
         'Generate_bill', {'set': ['reservation_id']}, {'set': ['e.g. 1']})
     occ_hotel = ReportAttributes(
@@ -305,7 +309,8 @@ class AppsClient(object):
                 'Staff': lambda x: self.apps.add_staff(x),
                 'Customers': lambda x: self.apps.add_customer(x),
                 'Reservations': lambda x: self.apps.add_reservation(x),
-                'Transactions': lambda x: self.apps.add_transaction(x)
+                'Transactions': lambda x: self.apps.add_transaction(x),
+                'Serves': lambda x: self.apps.add_serves(x)
             }[api_info.table_name](item_dict)
             if zip_result is not None:
                 result = result.merge(zip_result, left_on='zip',
@@ -353,7 +358,8 @@ class AppsClient(object):
                 'Staff': lambda x, y: self.apps.update_staff(x, y),
                 'Customers': lambda x, y: self.apps.update_customer(x, y),
                 'Reservations': lambda x, y: self.apps.update_reservation(x, y),
-                'Transactions': lambda x, y: self.apps.update_transaction(x, y)
+                'Transactions': lambda x, y: self.apps.update_transaction(x, y),
+                'Serves': lambda x, y: self.apps.update_serves(x, y)
             }[api_info.table_name](item_dict, where_clause_dict)
 
             if zip_result is not None:
@@ -387,7 +393,8 @@ class AppsClient(object):
                 'Staff': lambda x: self.apps.delete_staff(x),
                 'Customers': lambda x: self.apps.delete_customer(x),
                 'Reservations': lambda x: self.apps.delete_reservation(x),
-                'Transactions': lambda x: self.apps.delete_transaction(x)
+                'Transactions': lambda x: self.apps.delete_transaction(x),
+                'Serves': lambda x: self.apps.delete_serves(x)
             }[api_info.table_name](where_dict)
 
             return result

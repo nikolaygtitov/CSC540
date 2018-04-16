@@ -2247,7 +2247,7 @@ class Apps(object):
             # Execute update query
             # Also queries for updated tuple and returns it as Pandas DataFrame
             data_frame = self._execute_update_query(
-                '*', 'Rooms', serves_dict, where_clause_dict)
+                '*', 'Serves', serves_dict, where_clause_dict)
             return data_frame
         except AssertionError, error:
             raise error
