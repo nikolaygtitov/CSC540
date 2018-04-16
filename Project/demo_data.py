@@ -49,6 +49,8 @@ scp * unity_id@remote.eos.ncsu.edu:/afs/unity.ncsu.edu/users/u/unity_id/CSC540
           Preston Scott
 """
 
+import mysql.connector as maria_db
+
 
 def _drop_tables(db):
     """
@@ -367,8 +369,6 @@ def load_demo_data(db):
 
 
 if __name__ == '__main__':
-    import mysql.connector as maria_db
     con = maria_db.connect(host='classdb2.csc.ncsu.edu', user='ngtitov',
                            password='001029047', database='ngtitov')
-
     load_demo_data(con)
