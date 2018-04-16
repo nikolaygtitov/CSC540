@@ -694,7 +694,7 @@ def main():
     wolf_inn.get_menu('main').add(
         MenuOption('Information Processing', wolf_inn.store_menu('info')))
     wolf_inn.get_menu('main').add(
-        MenuOption('Service Records', wolf_inn.store_menu('service')))
+        MenuOption('Service Records / Maintain Bill', wolf_inn.store_menu('service')))
     wolf_inn.get_menu('main').add(
         MenuOption('Billing', wolf_inn.store_menu('billing')))
     wolf_inn.get_menu('main').add(
@@ -820,7 +820,7 @@ def main():
         MenuOption('Delete a customer interaction',
                    wolf_inn.store_action('delete_serves', 'service')))
     wolf_inn.get_menu('service').add(
-        MenuOption('Add a service charge',
+        MenuOption('Add a service charge / Maintain Bill',
                    wolf_inn.store_action('insert_charge', 'service')))
     wolf_inn.get_menu('service').add(
         MenuOption('Update a service charge',
