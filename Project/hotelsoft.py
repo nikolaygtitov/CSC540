@@ -341,8 +341,8 @@ class HotelSoft(object):
                 # Update and delete queries build a "where" dictionary
                 if action.type == 'update' or action.type == 'delete':
 
-                    preview_table = self.client.select(None,
-                                                       action.api_info.table_name)
+                    preview_table = self.client.select(
+                        None, action.api_info.table_name)
                     if isinstance(preview_table, pd.DataFrame):
                         print tabulate(
                             preview_table,
@@ -368,11 +368,11 @@ class HotelSoft(object):
                                 action.api_info.attr_names['where']):
                             example = '(%s)' % \
                                       action.api_info.examples['where'][index]
-                            val = (arg in where_dict and '[%s]' % where_dict[arg]
-                                   or '')
+                            val = (arg in where_dict and '[%s]' %
+                                   where_dict[arg] or '')
                             item = raw_input(
-                                ('%s %s %s' % (arg, example, val)).strip() + ': ').\
-                                strip()
+                                ('%s %s %s' % (arg, example, val)).strip() +
+                                ': ').strip()
                             if item != '':
                                 where_dict[arg] = item
                             # Try to find row - we may be able to end early
@@ -401,7 +401,8 @@ class HotelSoft(object):
                             where_dict = {}
 
                     if number_found > 1:
-                        print('WARNING: multiple items will be %sd' % action.type)
+                        print('WARNING: multiple items will be %sd' %
+                              action.type)
 
                 # Insert and update queries build a "set" dictionary
                 if action.type == 'insert' or action.type == 'update' or \
@@ -414,7 +415,8 @@ class HotelSoft(object):
                         print('(Press enter to ignore a parameter)')
 
                     # Enter the normal parameters
-                    for index, arg in enumerate(action.api_info.attr_names['set']):
+                    for index, arg in enumerate(
+                            action.api_info.attr_names['set']):
                         item = raw_input(
                             arg + '(%s): ' %
                             action.api_info.examples['set'][index]).strip()
@@ -424,7 +426,8 @@ class HotelSoft(object):
                     # If a zip is entered, see if it is already present
                     # If not, prompt for a city and state
                     if 'zip' in set_dict:
-                        zip_present = self.client.zip_is_present(set_dict['zip'])
+                        zip_present = self.client.zip_is_present(
+                            set_dict['zip'])
                         if not zip_present:
                             print('City and state required')
                             for arg in action.api_info.secondary_args:
@@ -443,9 +446,9 @@ class HotelSoft(object):
                     results = action.handler(param_dict, action.api_info)
                     if isinstance(results, list) and action.type != 'exec':
                         for result in results:
-                            print tabulate(result,
-                                           headers=result.columns.values.tolist(),
-                                           tablefmt='psql')
+                            print tabulate(
+                                result, headers=result.columns.values.tolist(),
+                                tablefmt='psql')
                     else:
                         print tabulate(results,
                                        headers=results.columns.values.tolist(),
@@ -484,13 +487,13 @@ class HotelSoft(object):
             choice = int(raw_input('-> '))
             if choice < 1 or choice > len(menu.options):
                 raise ValueError('Out of range')
+            menu.options[choice - 1].handler()
         except ValueError:
             print('Invalid input')
             return HotelSoft.get_choice(menu)
         except KeyboardInterrupt:
             print('\nReturning to last menu.')
             HotelSoft.get_choice(menu)
-        menu.options[choice - 1].handler()
 
     def start(self, menu):
         self.get_choice(self.get_menu(menu))
@@ -569,7 +572,6 @@ def main():
 
     # Init main software instance
     wolf_inn = HotelSoft('WOLF INN RALEIGH', db, check)
-
 
     # Add menu actions with handler functions to be called when they execute
     # MenuAction(table_name, type, title, table, handler):
@@ -694,7 +696,8 @@ def main():
     wolf_inn.get_menu('main').add(
         MenuOption('Information Processing', wolf_inn.store_menu('info')))
     wolf_inn.get_menu('main').add(
-        MenuOption('Service Records / Maintain Bill', wolf_inn.store_menu('service')))
+        MenuOption('Service Records / Maintain Bill',
+                   wolf_inn.store_menu('service')))
     wolf_inn.get_menu('main').add(
         MenuOption('Billing', wolf_inn.store_menu('billing')))
     wolf_inn.get_menu('main').add(
