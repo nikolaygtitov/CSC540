@@ -331,128 +331,132 @@ class HotelSoft(object):
             :param last_menu: Menu to revert to on fail or finish of action
         """
         with print_error():
-            # Dictionaries for housing query arguments
-            set_dict = {}
-            where_dict = {}
+            try:
+                # Dictionaries for housing query arguments
+                set_dict = {}
+                where_dict = {}
 
-            print(action.title)
+                print(action.title)
 
-            # Update and delete queries build a "where" dictionary
-            if action.type == 'update' or action.type == 'delete':
+                # Update and delete queries build a "where" dictionary
+                if action.type == 'update' or action.type == 'delete':
 
-                preview_table = self.client.select(None,
-                                                   action.api_info.table_name)
-                if isinstance(preview_table, pd.DataFrame):
-                    print tabulate(
-                        preview_table,
-                        headers=preview_table.columns.values.tolist(),
-                        tablefmt='psql')
-
-                number_found = 0
-
-                # Loop runs until user finds an item to update or delete
-                while number_found == 0:
-                    if action.type == 'update':
-                        print('\nWhich item do you want to update?')
-                        print('Enter one or more fields to identify it.')
-                    if action.type == 'delete':
-                        print('\nWhich item do you want to delete?')
-                        print('Enter one or more fields to identify it.')
-                    print('<<Press enter to ignore a parameter>>\n')
-
-                    search_result = []
-
-                    # Enter one or more parameters to find the entry
-                    for index, arg in enumerate(
-                            action.api_info.attr_names['where']):
-                        example = '(%s)' % \
-                                  action.api_info.examples['where'][index]
-                        val = (arg in where_dict and '[%s]' % where_dict[arg]
-                               or '')
-                        item = raw_input(
-                            ('%s %s %s' % (arg, example, val)).strip() + ': ').\
-                            strip()
-                        if item != '':
-                            where_dict[arg] = item
-                        # Try to find row - we may be able to end early
-                        search_result = self.client.select(
-                            where_dict, action.api_info.table_name)
-                        number_found = len(search_result)
-                        if number_found <= 1:
-                            break
-                    # See if that item can be found
-                    # If not, re-prompt and try again
-                    if number_found > 0:
-                        print('\n')
+                    preview_table = self.client.select(None,
+                                                       action.api_info.table_name)
+                    if isinstance(preview_table, pd.DataFrame):
                         print tabulate(
-                            search_result,
-                            headers=search_result.columns.values.tolist(),
+                            preview_table,
+                            headers=preview_table.columns.values.tolist(),
                             tablefmt='psql')
-                        if number_found > 1:
-                            continue_filter = not raw_input(
-                                'Multiple items found. Continue to filter? '
-                                '(y/n): ').lower().startswith('n')
-                            if continue_filter:
-                                number_found = 0
-                    else:
-                        print('\nNo result found for %s' % where_dict)
-                        print('Please try again')
-                        where_dict = {}
 
-                if number_found > 1:
-                    print('WARNING: multiple items will be %sd' % action.type)
+                    number_found = 0
 
-            # Insert and update queries build a "set" dictionary
-            if action.type == 'insert' or action.type == 'update' or \
-                    action.type == 'report':
-                if action.type == 'insert' or action.type == 'report':
-                    print('Enter the following fields:')
-                elif action.type == 'update':
-                    print('\nEnter the new values for the fields you ' +
-                          'wish to update (set):')
-                    print('(Press enter to ignore a parameter)')
+                    # Loop runs until user finds an item to update or delete
+                    while number_found == 0:
+                        if action.type == 'update':
+                            print('\nWhich item do you want to update?')
+                            print('Enter one or more fields to identify it.')
+                        if action.type == 'delete':
+                            print('\nWhich item do you want to delete?')
+                            print('Enter one or more fields to identify it.')
+                        print('<<Press enter to ignore a parameter>>\n')
 
-                # Enter the normal parameters
-                for index, arg in enumerate(action.api_info.attr_names['set']):
-                    item = raw_input(
-                        arg + '(%s): ' %
-                        action.api_info.examples['set'][index]).strip()
-                    if item != '':
-                        set_dict[arg] = item
+                        search_result = []
 
-                # If a zip is entered, see if it is already present
-                # If not, prompt for a city and state
-                if 'zip' in set_dict:
-                    zip_present = self.client.zip_is_present(set_dict['zip'])
-                    if not zip_present:
-                        print('City and state required')
-                        for arg in action.api_info.secondary_args:
-                            item = raw_input(arg + ': ').strip()
+                        # Enter one or more parameters to find the entry
+                        for index, arg in enumerate(
+                                action.api_info.attr_names['where']):
+                            example = '(%s)' % \
+                                      action.api_info.examples['where'][index]
+                            val = (arg in where_dict and '[%s]' % where_dict[arg]
+                                   or '')
+                            item = raw_input(
+                                ('%s %s %s' % (arg, example, val)).strip() + ': ').\
+                                strip()
                             if item != '':
-                                set_dict[arg] = item
+                                where_dict[arg] = item
+                            # Try to find row - we may be able to end early
+                            search_result = self.client.select(
+                                where_dict, action.api_info.table_name)
+                            number_found = len(search_result)
+                            if number_found <= 1:
+                                break
+                        # See if that item can be found
+                        # If not, re-prompt and try again
+                        if number_found > 0:
+                            print('\n')
+                            print tabulate(
+                                search_result,
+                                headers=search_result.columns.values.tolist(),
+                                tablefmt='psql')
+                            if number_found > 1:
+                                continue_filter = not raw_input(
+                                    'Multiple items found. Continue to filter? '
+                                    '(y/n): ').lower().startswith('n')
+                                if continue_filter:
+                                    number_found = 0
+                        else:
+                            print('\nNo result found for %s' % where_dict)
+                            print('Please try again')
+                            where_dict = {}
 
-            # Package up the set and where dictionaries and call api
-            param_dict = {'set': set_dict, 'where': where_dict}
+                    if number_found > 1:
+                        print('WARNING: multiple items will be %sd' % action.type)
 
-            # Need the if statement to execute actions with no arguments 
-            # (e.g. Load Demo Data)
-            if action.type == 'exec':
-                action.handler()
-            else:
-                results = action.handler(param_dict, action.api_info)
-                if isinstance(results, list) and action.type != 'exec':
-                    for result in results:
-                        print tabulate(result,
-                                       headers=result.columns.values.tolist(),
-                                       tablefmt='psql')
+                # Insert and update queries build a "set" dictionary
+                if action.type == 'insert' or action.type == 'update' or \
+                        action.type == 'report':
+                    if action.type == 'insert' or action.type == 'report':
+                        print('Enter the following fields:')
+                    elif action.type == 'update':
+                        print('\nEnter the new values for the fields you ' +
+                              'wish to update (set):')
+                        print('(Press enter to ignore a parameter)')
+
+                    # Enter the normal parameters
+                    for index, arg in enumerate(action.api_info.attr_names['set']):
+                        item = raw_input(
+                            arg + '(%s): ' %
+                            action.api_info.examples['set'][index]).strip()
+                        if item != '':
+                            set_dict[arg] = item
+
+                    # If a zip is entered, see if it is already present
+                    # If not, prompt for a city and state
+                    if 'zip' in set_dict:
+                        zip_present = self.client.zip_is_present(set_dict['zip'])
+                        if not zip_present:
+                            print('City and state required')
+                            for arg in action.api_info.secondary_args:
+                                item = raw_input(arg + ': ').strip()
+                                if item != '':
+                                    set_dict[arg] = item
+
+                # Package up the set and where dictionaries and call api
+                param_dict = {'set': set_dict, 'where': where_dict}
+
+                # Need the if statement to execute actions with no arguments 
+                # (e.g. Load Demo Data)
+                if action.type == 'exec':
+                    action.handler()
                 else:
-                    print tabulate(results,
-                                   headers=results.columns.values.tolist(),
-                                   tablefmt='psql')
+                    results = action.handler(param_dict, action.api_info)
+                    if isinstance(results, list) and action.type != 'exec':
+                        for result in results:
+                            print tabulate(result,
+                                           headers=result.columns.values.tolist(),
+                                           tablefmt='psql')
+                    else:
+                        print tabulate(results,
+                                       headers=results.columns.values.tolist(),
+                                       tablefmt='psql')
 
-            print '\nQuery Successful ' + u"\u2713"
-            print('\n')
+                print '\nQuery Successful ' + u"\u2713"
+                print('\n')
 
+            except KeyboardInterrupt:
+                print('\nReturning to last menu.')
+                self.get_choice(last_menu)
         # Run the next menu
         self.get_choice(last_menu)
 
@@ -483,6 +487,9 @@ class HotelSoft(object):
         except ValueError:
             print('Invalid input')
             return HotelSoft.get_choice(menu)
+        except KeyboardInterrupt:
+            print('\nReturning to last menu.')
+            HotelSoft.get_choice(menu)
         menu.options[choice - 1].handler()
 
     def start(self, menu):
@@ -558,9 +565,11 @@ def main():
 
     # Init database
     db = get_db()
+    print('Logged in as user %s' % db.user)
 
     # Init main software instance
     wolf_inn = HotelSoft('WOLF INN RALEIGH', db, check)
+
 
     # Add menu actions with handler functions to be called when they execute
     # MenuAction(table_name, type, title, table, handler):
@@ -859,6 +868,7 @@ def main():
 
     # Run the program
     wolf_inn.show_title_screen()
+    print('\n** Logged in as user %s **\n' % db.user)
     wolf_inn.start('main')
 
 
