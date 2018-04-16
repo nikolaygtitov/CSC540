@@ -195,6 +195,35 @@ class TestApps(SQLUnitTestBase):
         result = client.delete(param_dict, api_info)
         self.assertEqual(0, len(result.index))
 
+    def test_insert_serves(self):
+        client = AppsClient(self._con, True)
+        self._insert_test_data()
+        param_dict = {'set':{'staff_id':1, 'reservation_id':1}}
+        api_info = AppsParams.serves
+        result = client.insert(param_dict, api_info)
+        self.assertEqual(1, len(result.index))
+        row = result.ix[0]
+        self.assertEqual(1, row['staff_id'])
+        self.assertEqual(1, row['reservation_id'])
+
+    def test_update_serves(self):
+        client = AppsClient(self._con, True)
+        self._insert_test_data()
+        param_dict = {'set':{'staff_id':1, 'reservation_id':2}, 'where':{'staff_id':1, 'reservation_id':3}}
+        api_info = AppsParams.serves
+        result = client.update(param_dict, api_info)
+        self.assertEqual(1, len(result.index))
+        row = result.ix[0]
+        self.assertEqual(1, row['staff_id'])
+        self.assertEqual(2, row['reservation_id'])
+
+    def test_delete_serves(self):
+        client = AppsClient(self._con, True)
+        self._insert_test_data()
+        param_dict = {'where':{'staff_id':1, 'reservation_id':1}}
+        api_info = AppsParams.serves
+        result = client.delete(param_dict, api_info)
+        self.assertEqual(0, len(result.index))
 
     def test_insert_reservation(self):
         client = AppsClient(self._con, True)
