@@ -539,14 +539,15 @@ def get_db():
             # ###############################################################
             # # Default database settings                                   #
             # db = maria_db.connect(host='classdb2.csc.ncsu.edu',           #
-            #                       user='ngtitov',                         #
-            #                       password='001029047',                   #
-            #                       database='ngtitov')                     #
+            #                       user='nfschnoo',                        #
+            #                       password='001027748',                   #
+            #                       database='nfschnoo')                    #
             # ###############################################################
-            # db = maria_db.connect(host='classdb2.csc.ncsu.edu',
-            #                       user='pdscott2',
-            #                       password='2CGxZg27R3utum',
-            #                       database='pdscott2')
+            # db = maria_db.connect(host='classdb2.csc.ncsu.edu',           #
+            #                       user='pdscott2',                        #
+            #                       password='2CGxZg27R3utum',              #
+            #                       database='pdscott2')                    #
+            # ###############################################################
             db = maria_db.connect(host='classdb2.csc.ncsu.edu',
                                   user='ngtitov',
                                   password='001029047',
