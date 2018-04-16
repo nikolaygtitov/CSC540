@@ -232,7 +232,8 @@ def _create_tables(db):
             CONSTRAINT fk_serves_staff_id FOREIGN KEY (staff_id) REFERENCES Staff(id) 
                 ON UPDATE CASCADE ON DELETE CASCADE,
             CONSTRAINT fk_serves_reservation_id FOREIGN KEY (reservation_id) REFERENCES Reservations(id) 
-                ON UPDATE CASCADE ON DELETE CASCADE
+                ON UPDATE CASCADE ON DELETE CASCADE,
+            CONSTRAINT uc_serves UNIQUE (staff_id, reservation_id)
         );""")
     db.commit()
 
