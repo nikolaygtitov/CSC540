@@ -137,10 +137,12 @@ def _create_tables(db):
             street VARCHAR(64) NOT NULL,
             zip VARCHAR(10) NOT NULL,
             phone_number VARCHAR(32) NOT NULL, 
-            CONSTRAINT fk_hotels_ziptocitystate_zip FOREIGN KEY (zip) REFERENCES ZipToCityState(zip) 
-                ON UPDATE CASCADE ON DELETE RESTRICT,
+            CONSTRAINT fk_hotels_ziptocitystate_zip FOREIGN KEY (zip) 
+                REFERENCES ZipToCityState(zip) ON UPDATE CASCADE 
+                ON DELETE RESTRICT,
             CONSTRAINT uc_hotels UNIQUE (street, zip),
-            CHECK(LENGTH(name)>0 AND LENGTH(street)>0 AND LENGTH(phone_number)>0)	
+            CHECK(LENGTH(name)>0 AND LENGTH(street)>0 AND 
+            LENGTH(phone_number)>0)	
         );""")
     cursor.execute("""
         CREATE TABLE Rooms (
@@ -150,8 +152,8 @@ def _create_tables(db):
             occupancy TINYINT UNSIGNED NOT NULL,
             rate DECIMAL(8,2) UNSIGNED NOT NULL,
             PRIMARY KEY (hotel_id, room_number),
-            CONSTRAINT fk_rooms_hotels_id FOREIGN KEY (hotel_id) REFERENCES Hotels(id) 
-                ON UPDATE CASCADE ON DELETE CASCADE,
+            CONSTRAINT fk_rooms_hotels_id FOREIGN KEY (hotel_id) 
+                REFERENCES Hotels(id) ON UPDATE CASCADE ON DELETE CASCADE,
             CHECK(LENGTH(category)>0 AND (occupancy BETWEEN 1 AND 9))
         );""")
 
@@ -168,14 +170,17 @@ def _create_tables(db):
             works_for_hotel_id INT NOT NULL,
             assigned_hotel_id INT,
             assigned_room_number SMALLINT UNSIGNED,
-            CONSTRAINT fk_staff_ziptocitystate_zip FOREIGN KEY (zip) REFERENCES ZipToCityState(zip) 
-                ON UPDATE CASCADE ON DELETE RESTRICT,
-            CONSTRAINT fk_staff_hotels_id FOREIGN KEY (works_for_hotel_id) REFERENCES Hotels(id) 
-                ON UPDATE CASCADE ON DELETE CASCADE,
-            CONSTRAINT fk_staff_rooms_hotel_id_room_number FOREIGN KEY (assigned_hotel_id, assigned_room_number) 
-                REFERENCES Rooms(hotel_id,room_number) ON UPDATE CASCADE ON DELETE SET NULL,
-            CHECK(LENGTH(name)>0 AND LENGTH(title)>0 AND LENGTH(department)>0 AND LENGTH(phone_number)>0 
-                AND LENGTH(street)>0)
+            CONSTRAINT fk_staff_ziptocitystate_zip FOREIGN KEY (zip) 
+                REFERENCES ZipToCityState(zip) ON UPDATE CASCADE 
+                ON DELETE RESTRICT,
+            CONSTRAINT fk_staff_hotels_id FOREIGN KEY (works_for_hotel_id) 
+                REFERENCES Hotels(id) ON UPDATE CASCADE ON DELETE CASCADE,
+            CONSTRAINT fk_staff_rooms_hotel_id_room_number 
+                FOREIGN KEY (assigned_hotel_id, assigned_room_number) 
+                REFERENCES Rooms(hotel_id,room_number) ON UPDATE CASCADE 
+                ON DELETE SET NULL,
+            CHECK(LENGTH(name)>0 AND LENGTH(title)>0 AND LENGTH(department)>0 
+                AND LENGTH(phone_number)>0 AND LENGTH(street)>0)
         );""")
 
     cursor.execute("""
@@ -190,10 +195,12 @@ def _create_tables(db):
             ssn VARCHAR(11) UNIQUE NOT NULL,
             account_number VARCHAR(128) UNIQUE,
             is_hotel_card BOOLEAN,
-            CONSTRAINT fk_customers_ziptocitystate_zip FOREIGN KEY (zip) REFERENCES ZipToCityState(zip) 
-                ON UPDATE CASCADE ON DELETE RESTRICT,
-            CHECK(LENGTH(name)>0 AND LENGTH(phone_number)>0 AND LENGTH(email)>0 AND LENGTH(street)>0 
-                AND LENGTH(ssn)=11 AND LENGTH(account_number)>0)
+            CONSTRAINT fk_customers_ziptocitystate_zip FOREIGN KEY (zip) 
+                REFERENCES ZipToCityState(zip) ON UPDATE CASCADE 
+                ON DELETE RESTRICT,
+            CHECK(LENGTH(name)>0 AND LENGTH(phone_number)>0 AND 
+                LENGTH(email)>3 AND LENGTH(street)>0 AND LENGTH(ssn)=11 AND 
+                LENGTH(account_number)>0 AND email LIKE '%@%')
         );""")
 
     cursor.execute("""
@@ -207,12 +214,15 @@ def _create_tables(db):
             hotel_id INT NOT NULL,
             room_number SMALLINT UNSIGNED NOT NULL,
             customer_id INT NOT NULL,
-            CONSTRAINT fk_reservations_rooms_hotel_id_room_number FOREIGN KEY (hotel_id, room_number) 
-                REFERENCES Rooms(hotel_id, room_number) ON UPDATE CASCADE ON DELETE RESTRICT,
-            CONSTRAINT fk_reservations_customers_id FOREIGN KEY (customer_id) REFERENCES Customers(id) 
+            CONSTRAINT fk_reservations_rooms_hotel_id_room_number FOREIGN KEY 
+                (hotel_id, room_number) REFERENCES Rooms(hotel_id, room_number) 
                 ON UPDATE CASCADE ON DELETE RESTRICT,
-            CHECK((number_of_guests BETWEEN 1 AND 9) AND start_date > end_date AND check_in_time <= start_date 
-                AND check_out_time >= end_date)
+            CONSTRAINT fk_reservations_customers_id FOREIGN KEY (customer_id) 
+                REFERENCES Customers(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+            CHECK((number_of_guests BETWEEN 1 AND 9) AND 
+                start_date < end_date AND 
+                check_in_time >= CAST(start_date AS DATETIME) AND 
+                check_out_time >= CAST(end_date AS DATETIME))
         );""")
 
     cursor.execute("""
@@ -222,7 +232,8 @@ def _create_tables(db):
             type VARCHAR(128) NOT NULL,
             date DATETIME NOT NULL,
             reservation_id INT NOT NULL,
-            CONSTRAINT fk_transactions_reservation_id FOREIGN KEY (reservation_id) REFERENCES Reservations(id) 
+            CONSTRAINT fk_transactions_reservation_id 
+            FOREIGN KEY (reservation_id) REFERENCES Reservations(id) 
                 ON UPDATE CASCADE ON DELETE CASCADE,
             CHECK(LENGTH(type)>0)
         );""")
@@ -231,10 +242,10 @@ def _create_tables(db):
         CREATE TABLE Serves (
             staff_id INT NOT NULL,
             reservation_id INT NOT NULL,
-            CONSTRAINT fk_serves_staff_id FOREIGN KEY (staff_id) REFERENCES Staff(id) 
-                ON UPDATE CASCADE ON DELETE CASCADE,
-            CONSTRAINT fk_serves_reservation_id FOREIGN KEY (reservation_id) REFERENCES Reservations(id) 
-                ON UPDATE CASCADE ON DELETE CASCADE,
+            CONSTRAINT fk_serves_staff_id FOREIGN KEY (staff_id) 
+                REFERENCES Staff(id) ON UPDATE CASCADE ON DELETE CASCADE,
+            CONSTRAINT fk_serves_reservation_id FOREIGN KEY (reservation_id) 
+                REFERENCES Reservations(id) ON UPDATE CASCADE ON DELETE CASCADE,
             CONSTRAINT uc_serves UNIQUE (staff_id, reservation_id)
         );""")
     db.commit()
@@ -267,19 +278,19 @@ def load_demo_data(db):
     print "Loading Demo Data"
     # ZipToCityState
     zip_data = [
-        ['27', 'Raleigh', 'NC'],
-        ['54', 'Rochester', 'NY'],
-        ['28', 'Greensboro', 'NC'],  # Zip: 27
-        ['32', 'Raleigh', 'NC'],
-        ['78', 'Rochester', 'NY'],
-        ['14', 'Dallas', 'TX'],
+        ['27xxx', 'Raleigh', 'NC'],
+        ['54xxx', 'Rochester', 'NY'],
+        ['28xxx', 'Greensboro', 'NC'],  # Zip: 27
+        ['32xxx', 'Raleigh', 'NC'],
+        ['78xxx', 'Rochester', 'NY'],
+        ['14xxx', 'Dallas', 'TX'],
     ]
 
     hotel_data = [
-        [1, 'Hotel A', '21 ABC St', '27', '919'],
-        [2, 'Hotel B', '25 XYZ St', '54', '718'],
-        [3, 'Hotel C', '29 PQR St', '28', '984'],  # Zip: 27
-        [4, 'Hotel D', '28 GHW St', '32', '920'],
+        [1, 'Hotel A', '21 ABC St', '27xxx', '919'],
+        [2, 'Hotel B', '25 XYZ St', '54xxx', '718'],
+        [3, 'Hotel C', '29 PQR St', '28xxx', '984'],  # Zip: 27
+        [4, 'Hotel D', '28 GHW St', '32xxx', '920'],
     ]
 
     room_data = [
@@ -292,27 +303,42 @@ def load_demo_data(db):
     ]
 
     customer_data = [
-        [1001, 'David', '1980-01-30', '123', 'david@gmail.com', '980 TRT St', '27', '593-9846', '1052', False],  # Zip: None
-        [1002, 'Sarah', '1971-01-30', '456', 'sarah@gmail.com', '7720 MHT St', '28', '777-8352', '3020', True],  # Zip: None
-        [1003, 'Joseph', '1987-01-30', '789', 'joseph@gmail.com', '231 DRY St', '78', '858-9430', '2497', False],
-        [1004, 'Lucy', '1985-01-30', '213', 'lucy@gmail.com', '24 BST Dr', '14', '440-9328', None, None],  # Cash
+        [1001, 'David', '1980-01-30', '123', 'david@gmail.com', '980 TRT St',
+         '27xxx', '593-9846-xx', '1052', False],  # Zip: None
+        [1002, 'Sarah', '1971-01-30', '456', 'sarah@gmail.com', '7720 MHT St',
+         '28xxx', '777-8352-xx', '3020', True],  # Zip: None
+        [1003, 'Joseph', '1987-01-30', '789', 'joseph@gmail.com', '231 DRY St',
+         '78xxx', '858-9430-xx', '2497', False],
+        [1004, 'Lucy', '1985-01-30', '213', 'lucy@gmail.com', '24 BST Dr',
+         '14xxx', '440-9328-xx', None, None],  # Cash
     ]
 
     staff_data = [
-        [100, 'Mary', '1978-04-01', 'Management', 'Manager', '654', '90 ABC St', '27', 1],  # Age: 40
-        [101, 'John', '1973-02-14', 'Management', 'Manager', '564', '798 XYZ St', '54', 2],  # Age: 45
-        [102, 'Carol', '1963-01-23', 'Management', 'Manager', '546', '351 MH St', '28', 3],  # Age: 55, Zip: 27
-        [103, 'Emma', '1963-04-02', 'Management', 'Front Desk Staff', '546', '49 ABC St', '27', 1],  # Age: 55
-        [104, 'Ava', '1963-02-03', 'Catering', 'Catering Staff', '777', '425 RG St', '27', 1],  # Age: 55
-        [105, 'Peter', '1966-01-01', 'Management', 'Manager', '724', '475 RG St', '27', 4],
-        [106, 'Olivia', '1990-09-13', 'Management', 'Front Desk Staff', '799', '325 PD St', '27', 4],  # Age: 27
+        [100, 'Mary', '1978-04-01', 'Management', 'Manager', '654',
+         '90 ABC St', '27xxx', 1],  # Age: 40
+        [101, 'John', '1973-02-14', 'Management', 'Manager', '564',
+         '798 XYZ St', '54xxx', 2],  # Age: 45
+        [102, 'Carol', '1963-01-23', 'Management', 'Manager', '546',
+         '351 MH St', '28xxx', 3],  # Age: 55, Zip: 27
+        [103, 'Emma', '1963-04-02', 'Management', 'Front Desk Staff', '546',
+         '49 ABC St', '27xxx', 1],  # Age: 55
+        [104, 'Ava', '1963-02-03', 'Catering', 'Catering Staff', '777',
+         '425 RG St', '27xxx', 1],  # Age: 55
+        [105, 'Peter', '1966-01-01', 'Management', 'Manager', '724',
+         '475 RG St', '27xxx', 4],
+        [106, 'Olivia', '1990-09-13', 'Management', 'Front Desk Staff', '799',
+         '325 PD St', '27xxx', 4],  # Age: 27
     ]
 
     reservation_data = [
-        [1, 1, '2017-05-10', '2017-05-13', '2017-05-10 15:17:00', '2017-05-13 10:22:00', 1, 1, 1001],
-        [2, 2, '2017-05-10', '2017-05-13', '2017-05-10 16:11:00', '2017-05-13 09:27:00', 1, 2, 1002],
-        [3, 1, '2016-05-10', '2016-05-14', '2016-05-10 15:45:00', '2016-05-14 11:10:00', 2, 3, 1003],
-        [4, 2, '2018-05-10', '2018-05-12', '2018-05-10 14:30:00', '2018-05-12 10:00:00', 3, 2, 1004],
+        [1, 1, '2017-05-10', '2017-05-13',
+         '2017-05-10 15:17:00', '2017-05-13 10:22:00', 1, 1, 1001],
+        [2, 2, '2017-05-10', '2017-05-13',
+         '2017-05-10 16:11:00', '2017-05-13 09:27:00', 1, 2, 1002],
+        [3, 1, '2016-05-10', '2016-05-14',
+         '2016-05-10 15:45:00', '2016-05-14 11:10:00', 2, 3, 1003],
+        [4, 2, '2018-05-10', '2018-05-12',
+         '2018-05-10 14:30:00', '2018-05-12 10:00:00', 3, 2, 1004],
     ]
 
     transaction_data = [
